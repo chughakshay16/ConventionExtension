@@ -36,4 +36,28 @@ class ConferencePage
 		 */
 		return new self($pageId,$conferenceId,$type);
 	}
+	public function getId()
+	{
+		return $this->mId;
+	}
+	public function setId($id)
+	{
+		$this->mId=$id;
+	}
+	public function getConferenceId()
+	{
+		return $this->mConferenceId;
+	}
+	public function setConferenceId($id)
+	{
+		$this->mConferenceId=$id;
+	}
+	public function getType()
+	{
+		return $this->mType;
+	}
+	public function setType($type)
+	{
+		$this->mType=4type;
+	}
 }
