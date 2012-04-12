@@ -2,8 +2,9 @@
 class ConferenceAccount
 {
 	private $mConferenceId,$mAccountId,$mUserId,$mGender, $mFirstName, $mLastName,$mPassportInfo, $mRegistrations;
-	
-	public function __construct($mAccountId=null,$mConferenceId,$mUserId,$mGender, $mFirstName, $mLastName,$mPassportInfo=null, $mRegistrations=null){
+
+	public function __construct($mAccountId=null,$mConferenceId,$mUserId,$mGender, $mFirstName, $mLastName,$mPassportInfo=null, 
+	$mRegistrations=null){
 		$this->mConferenceId=$mConferenceId;
 		$this->mAccountId=$mAccountId;
 		$this->mUserId=$mUserId;
@@ -14,23 +15,76 @@ class ConferenceAccount
 		$this->mRegistrations=$mRegistrations;
 
 	}
+	public function getGender()
+	{
+		return $this->mGender;
+	}
+	public function setGender($gender)
+	{
+		$this->mGender=$gender;
+	}
+	public function getFirstName()
+	{
+		return $this->mFirstName;
+	}
+	public function setFirstName($name)
+	{
+		$this->mFirstName=$name;
+	}
+	public function getLastName()
+	{
+		return $this->mLastName;
+	}
+	public function setLastName($name)
+	{
+		$this->mLastName=$name;
+	}
+	public function getPassportInfo()
+	{
+		return $this->mPassportInfo;
+		
+	}
+	public function setPassportInfo($info)
+	{
+		$this->mPassportInfo=$info;
+	}
+	public function getRegistrations()
+	{
+		return $this->mRegistrations;
+	
+	}
+	public function setRegistrations($registrations)
+	{
+		$this->mRegistrations=$registrations;
+	}
+	/**
+	 * @param Int $mConferenceId
+	 * @param Int $mUserId
+	 * @param String$mGender
+	 * @param String $mFirstName
+	 * @param String $mLastName
+	 * @param Object(ConferencePassportInfo) $mPassportInfo
+	 * @param Object(ConferenceRegistration) $mRegistration
+	 * @return ConferenceAccount
+	 */
 	public static function createFromScratch($mConferenceId,$mUserId,$mGender, $mFirstName, $mLastName,$mPassportInfo,$mRegistration=null)
 	{
 		$titleObj=Title::newFromText($title);
 		$pageObj=WikiPage::factory($titleObj);
-		$text=Xml::element('account',array('gender'=>$mGender,'firstName'=>$mFirstName,'lastName'=>$mLastName,'account-conf'=>$conferenceId,'account-user'=>$mUserId));
-		$status=$page->doEdit($text, 'new account added',EDIT_NEW);	
+		$text=Xml::element('account',array('gender'=>$mGender,'firstName'=>$mFirstName,'lastName'=>$mLastName,
+		'account-conf'=>$conferenceId,'account-user'=>$mUserId));
+		$status=$page->doEdit($text, 'new account added',EDIT_NEW);
 		if($status['revision'])
 		$revision=$status['revision'];
 		$id=$revision->getPage();
-		$mPassportInfo=ConferencePassportInfo::createFromScratch($mPassportInfo->getPassportNo(), $id, 
-		$passportInfo->getIssuedBy(), $mPassportInfo->getValidUntil(), $mPassportInfo->getPlace(), 
+		$mPassportInfo=ConferencePassportInfo::createFromScratch($mPassportInfo->getPassportNo(), $id,
+		$passportInfo->getIssuedBy(), $mPassportInfo->getValidUntil(), $mPassportInfo->getPlace(),
 		$mPassportInfo->getDOB(), $mPassportInfo->getCountry());
 		$registrations=array();
 		if(!is_null($mRegistration))
 		{
-		
-			$mRegistration=ConferenceRegistration::createFromScratch($id, $mRegistration->getType(), 
+
+			$mRegistration=ConferenceRegistration::createFromScratch($id, $mRegistration->getType(),
 			$mRegistration->getDietaryRestr(), $mRegistration->getOtherDietOpts(), $mRegistration->getOtherOpts(),
 			$mRegistration->getBadgeInfo(), $mRegistration->getTransaction(), $mRegistration->getEvents());
 			$registrations[]=$mRegistration;
@@ -41,16 +95,18 @@ class ConferenceAccount
 		{
 			$dbw->insert('page_props',array('pp_page'=>$id,'pp_propname'=>$name,'pp_value'=>$value));
 		}
-		return new self($id,$mConferenceId, $mUserId, $mGender, $mFirstName, $mLastName,$mPassportInfo,$registrations);	
+		return new self($id,$mConferenceId, $mUserId, $mGender, $mFirstName, $mLastName,$mPassportInfo,$registrations);
 	}
+	/**
+	 * @param Int $accountId
+	 * @return ConferenceAccount
+	 */
 	public static function loadFromId($accountId)
 	{
 		$article=Article::newFromID($accountId);
 		$text=$article->fetchContent();
-		/**
-		 * parse the text
-		 * it will contain $mConferenceId, $mUserId, $mGender, $mFirstName, $mLastName
-		 */
+		preg_match_all("/<account gender=\"(.*)\" firstName=\"(.*)\" lastName=\"(.*)\" account-conf=\"(.*)\" account-user=\"(.*)\" \/>/",
+		$text,$matches);
 		$dbr=wfGetDB(DB_SLAVE);
 		$row=$dbr->selectRow('page_props',
 		array('pp_page'),
@@ -58,13 +114,13 @@ class ConferenceAccount
 		__METHOD__,
 		array());
 		/*$ids=array();
-		foreach($res as $row)
-		{
-			$ids[]=$row->pp_page;	
-		}	
-		$passportRow=$dbr->selectRow('page_props',
-		array('pp_page'),
-		array('pp_page'=>$ids,'pp_value'=>'passport'));*/
+		 foreach($res as $row)
+		 {
+			$ids[]=$row->pp_page;
+			}
+			$passportRow=$dbr->selectRow('page_props',
+			array('pp_page'),
+			array('pp_page'=>$ids,'pp_value'=>'passport'));*/
 		$passportInfo=ConferencePassportInfo::loadFromId($row->pp_page);
 		$res=$dbr->select('page_props',
 		array('pp_page'),
@@ -74,12 +130,12 @@ class ConferenceAccount
 		$registrations=array();
 		foreach ($res as $row)
 		{
-				$registrations[]=ConferenceRegistration::loadFromId($row->pp_page);
-			
+			$registrations[]=ConferenceRegistration::loadFromId($row->pp_page);
+
 		}
-		return new self($accountId,$mConferenceId,$mUserId,$mGender, $mFirstName, $mLastName,$passportInfo, $registrations);
-		
-		
+		return new self($accountId,$matches[4][0],$matches[5][0],$matches[1][0], $matches[2][0], $matches[3][0],$passportInfo, $registrations);
+
+
 	}
 	public function getConferenceId()
 	{
@@ -105,5 +161,5 @@ class ConferenceAccount
 	{
 		$this->mUserId=$id;
 	}
-	
+
 }

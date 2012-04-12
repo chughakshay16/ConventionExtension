@@ -3,7 +3,39 @@ class ConferenceRegistration
 {
 	private $mId,$mAccountId,$mType,$mdietaryRestr,$mOtherDietOpts,$mOtherOpts,$mBadgeInfo,$mTransaction, $mEvents;
 	
-	public function __construct($mId=null,$mAccountId,$mType,$mdietaryRestr,$mOtherDietOpts,$mOtherOpts,$mBadgeInfo,$mTransaction=null, $mEvents=null){
+	public function getDietaryRestr()
+	{
+		return $this->mdietaryRestr;
+	}
+	public function setDietaryRestr($restr)
+	{
+		$this->mdietaryRestr=$restr;
+	}
+	public function getOtherDietOpts(){
+		return $this->mOtherDietOpts;
+	}
+	public function setOtherDietOpts($opts)
+	{
+		$this->mOtherDietOpts=$opts;
+	}
+	public function getOtherOpts()
+	{
+		return $this->mOtherOpts;
+	}
+	public function setOtherOpts($opts)
+	{
+		$this->mOtherOpts=$opts;
+	}
+	public function getBadgeInfo()
+	{
+		return $this->mBadgeInfo;
+	}
+	public function setBadgeInfo($info)
+	{
+		$this->mBadgeInfo=$info;
+	}
+	public function __construct($mId=null,$mAccountId,$mType,$mdietaryRestr,$mOtherDietOpts,$mOtherOpts,$mBadgeInfo,$mTransaction=null, 
+	$mEvents=null){
 		$this->mId=$mId;
 		$this->mAccountId=$mAccountId;
 		$this->mType=$mType;
@@ -14,11 +46,23 @@ class ConferenceRegistration
 		$this->mTransaction=$mTransaction;
 		$this->mEvents=$mEvents;
 	}
-	public static function createFromScratch($mAccountId,$mType,$mdietaryRestr,$mOtherDietOpts,$mOtherOpts,$mBadgeInfo,$mTransaction=null, $mEvents=null)
+	/**
+	 * @param Int $mAccountId
+	 * @param String $mType
+	 * @param String $mdietaryRestr
+	 * @param String $mOtherDietOpts
+	 * @param String $mOtherOpts
+	 * @param String $mBadgeInfo
+	 * @param Object(ConferenceTransaction) $mTransaction
+	 * @param Object(array of ConferenceEvent objects) $mEvents
+	 */
+	public static function createFromScratch($mAccountId,$mType,$mdietaryRestr,$mOtherDietOpts,$mOtherOpts,$mBadgeInfo,
+	$mTransaction=null, $mEvents=null)
 	{
 		$titleObj=Title::newFromText($title);
 		$pageObj=WikiPage::factory($titleObj);
-		$text=Xml::element('registration',array('regType'=>$mType,'dietaryRestr'=>$mdietaryRestr,'otherDietOpts'=>$mOtherDietOpts,'otherOpts'=>$mOtherOpts,'badge'=>$mBadgeInfo,'registration-account'=>$mAccountId));
+		$text=Xml::element('registration',array('regType'=>$mType,'dietaryRestr'=>$mdietaryRestr,'otherDietOpts'=>$mOtherDietOpts,
+		'otherOpts'=>$mOtherOpts,'badge'=>$mBadgeInfo,'registration-account'=>$mAccountId));
 		$status=$page->doEdit($text, 'new registration added',EDIT_NEW);	
 		if($status['revision'])
 		$revision=$status['revision'];
@@ -45,14 +89,17 @@ class ConferenceRegistration
 			}
 		}
 	}
+	/**
+	 * @param Int $registrationId
+	 * @return ConferenceRegistration
+	 */
 	public static function loadFromId($registrationId)
 	{
 		//$registrationId is the id of the parent registration page
 		$article=Article::newFromID($registrationId);
 		$text=$article->fetchContent();
-		/**
-		 * parse text to get the $accountId
-		 */
+		preg_match_all("/<registration regType=\"(.*)\" dietaryRestr=\"(.*)\" otherDietOpts=\"(.*)\" otherOpts=\"(.*)\" 
+		badge=\"(.*)\" registration-account=\"(.*)\" \/>/", $text, $matches);
 		// fetching children for parent registration page
 		$dbr=wfGetDB(DB_SLAVE);
 		$res=$dbr->select('page_props',
@@ -73,7 +120,8 @@ class ConferenceRegistration
 		/**
 		 * code for fetching details from transactions table
 		 */
-		return new self($registrationId,$mAccountId,$mType,$mdietaryRestr,$mOtherDietOpts,$mOtherOpts,$mBadgeInfo,$mTransaction=null, $events);
+		return new self($registrationId,$matches[6][0],$matches[1][0],$matches[2][0],$matches[3][0],$matches[4][0],
+		$matches[5][0],$mTransaction, $events);
 		
 	}
 	public function getId()
@@ -86,18 +134,18 @@ class ConferenceRegistration
 	}
 	public function getAccountId()
 	{
-	
+		return $this->mAccountId;
 	}
 	public function setAccountId($id)
 	{
-	
+		$this->mAccountId=$id;
 	}
 	public function getType()
 	{
-	
+		return $this->mType;
 	}
 	public function setType($type)
 	{
-	
+		$this->mType=$type;
 	}
 }

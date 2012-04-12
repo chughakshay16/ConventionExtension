@@ -8,27 +8,35 @@ class EventLocation
 		$this->mImageUrl=$url;
 		$this->mLocationId=$lid;
 	}
+	/**
+	 * @param String $roomNo
+	 * @param String $description
+	 * @param String $url
+	 * @return EventLocation
+	 */
 	public static function createFromScratch($roomNo,$description,$url)
 	{
 		$titleObj=Title::newFromText($title);
 		$pageObj=WikiPage::factory($titleObj);
-		$text=Xml::element('location',array('roomNo'=>$roomNo,'description'=>$description,'url'=>$imageUrl));
+		$text=Xml::element('location',array('roomNo'=>$roomNo,'description'=>$description,'url'=>$imageUrl,'type'=>'location'));
 		$status=$page->doEdit($text, 'new location added',EDIT_NEW);	
 		if($status['revision'])
 		$revision=$status['revision'];
 		$locationId=$revision->getPage();
-		//$dbw=wfGetDB(DB_MASTER);
-		//$dbw->insert('page_props',array('pp_page'=>$locationId,'pp_propname'=>'type','pp_value'=>'location'),__METHOD__,array());
+		$dbw=wfGetDB(DB_MASTER);
+		$dbw->insert('page_props',array('pp_page'=>$locationId,'pp_propname'=>'type','pp_value'=>'location'),__METHOD__,array());
 		return new self($roomNo,$description,$url,$locationId);
 	}
+	/**
+	 * @param Int $locationId page_id of the location page
+	 * @return EventLocation
+	 */
 	public static function loadFromId($locationId)
 	{
 		$article=Article::newFromID($locationId);
 		$text=$article->fetchContent();
-		/**
-		 * parse content and get the values for roomNo,description,$url
-		 */
-		return new self($rno, $desc, $url, $id);
+		preg_match_all("/<location roomNo=\"(.*)\" description=\"(.*)\" url=\"(.*)\" type=\"(.*)\" \/>/",$text,$matches);
+		return new self($matches[1][0], $matches[2][0], $matches[3][0], $locationId);
 	}
 	public function getLocationId()
 	{

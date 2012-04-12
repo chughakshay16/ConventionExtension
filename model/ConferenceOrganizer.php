@@ -11,15 +11,13 @@ class ConferenceOrganizer
 		$this->mOrganizerId=$mid;
 			
 	}
-	private function create()
-	{
-		/**
-		 * if($this->mOrganizerId==null)
-		 * 1. create page with XML tag <organizer cat='' post=''>
-		 * 2. set page_properties with parent=conference_id, user=user_id, type='organizer'
-		 * 3. set $this->mOrganizerId= page_id of the page created 
-		 */
-	}
+	/**
+	 * @param Int $cid page_id of the conference page
+	 * @param Int $uid user_id of the organizer
+	 * @param String $cat - category for the organizer
+	 * @param String $post - position within that category for the organizer
+	 * @return ConferenceOrganizer
+	 */
 	public static function createFromScratch($cid,$uid,$cat,$post)
 	{
 		$titleObj=Title::newFromText($title);
@@ -41,9 +39,7 @@ class ConferenceOrganizer
 	{
 		$article=Article::newFromID($organizerId);
 		$text=$article->fetchContent();
-		/**
-		 * parse content
-		 */
+		preg_match_all("/<organizer category=\"(.*)\" post=\"(.*)\" organizer-conf=\"(.*)\" organizer-user=\"(.*)\" \/>/",$text,$matches);
 		/*$dbr=wfGetDB(DB_SLAVE);
 		$res=$dbr->select('page_props',
 		array('pp_propertyname','pp_value'),
@@ -59,7 +55,7 @@ class ConferenceOrganizer
 			else
 			{}
 		}*/
-		return new self($organizerId,$cid, $uid, $cat, $post);
+		return new self($organizerId,$matches[3][0], $matches[4][0], $matches[1][0], $matches[2][0]);
 		
 	}
 	public function getOrganizerId()

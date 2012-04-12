@@ -7,6 +7,11 @@ class ConferencePage
 		$this->mId=$mId;
 		$this->mConferenceId=$mConferenceId;
 	}
+	/**
+	 * @param Int $mConferenceId - page_id of the conference
+	 * @param String $type type of the page(Main page, Registration page...)
+	 * @return ConferencePage
+	 */
 	public static function createFromScratch($mConferenceId, $type)
 	{
 		$titleObj=Title::newFromText($title);
@@ -27,13 +32,17 @@ class ConferencePage
 		}
 		return new self($id,$mConferenceId,$type);
 	}
+	/**
+	 * @param Int $pageId page_id of the conference page
+	 * @return ConferencePage
+	 */
 	public static function loadFromId($pageId)
 	{
 		$article=Article::newFromID($pageId);
 		$text=$article->fetchContent();
-		/**
-		 * parse the text and get the relevant info
-		 */
+		preg_match_all("/<page page-conf=\"(.*)\" page-type=\"(.*)\" \/>/",$text,$matches);
+		$conferenceId=$matches[1][0];
+		$type=$matches[2][0];
 		return new self($pageId,$conferenceId,$type);
 	}
 	public function getId()
@@ -52,12 +61,12 @@ class ConferencePage
 	{
 		$this->mConferenceId=$id;
 	}
-	public function getType()
+	public function gettype()
 	{
 		return $this->mType;
 	}
 	public function setType($type)
 	{
-		$this->mType=4type;
+		$this->mType=$type;
 	}
 }

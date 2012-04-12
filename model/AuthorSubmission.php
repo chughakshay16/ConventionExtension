@@ -4,16 +4,15 @@ class AuthorSubmission
 	private $mSubmissionId,$mAuthorId,$mTitle,$mType,$mAbstract,$mTrack,$mLength,$mSlidesInfo,$mSlotRequest;
 	/**
 	 * 
-	 * Enter description here ...
-	 * @param unknown_type $id
-	 * @param unknown_type $aid
-	 * @param unknown_type $title
-	 * @param unknown_type $type
-	 * @param unknown_type $abstract
-	 * @param unknown_type $track
-	 * @param unknown_type $length
-	 * @param unknown_type $slidesInfo
-	 * @param unknown_type $slotReq
+	 * @param  Int $id
+	 * @param  Int  $aid
+	 * @param String $title
+	 * @param String $type
+	 * @param String $abstract
+	 * @param String $track
+	 * @param Int    $length
+	 * @param String $slidesInfo
+	 * @param String $slotReq
 	 */
 	public function __construct($id, $aid, $title,$type,$abstract, $track, $length, $slidesInfo, $slotReq)
 	{
@@ -28,16 +27,15 @@ class AuthorSubmission
 		$this->mSlotRequest=$slotReq;
 	}
 		/**
-	 * @todo check for conditions if the database call fails
-	 * Enter description here ...
-	 * @param unknown_type $aid
-	 * @param unknown_type $title
-	 * @param unknown_type $type
-	 * @param unknown_type $abstract
-	 * @param unknown_type $track
-	 * @param unknown_type $length
-	 * @param unknown_type $slidesInfo
-	 * @param unknown_type $slotReq
+	 * @param $aid Int page_id of the account page
+ 	 * @param $title String title of the submission
+ 	 * @param $type String type of the submission(presentation, seminar...)
+	 * @param $abstract String
+	 * @param $track String the track to which this track belongs to
+	 * @param $length Int length of the presentation
+	 * @param $slidesInfo String extra slides info
+	 * @param $slotReq String request for specific slot
+	 * @return New AuthorSubmission object
 	 */
 	public static function createFromScratch($aid, $title,$type,$abstract, $track, $length, $slidesInfo, $slotReq)
 	{
@@ -58,13 +56,17 @@ class AuthorSubmission
 		
 		return new self($submissionId, $aid, $title,$type,$abstract, $track, $length, $slidesInfo, $slotReq);
 	}
+	
+	/**
+	 * @param Int $submissionId - page_id of the submission page
+	 * @return AuthorSubmission
+	 */
 	public static function loadFromId($submissionId)
 	{
 		$article=Article::newFromID($submissionId);
 		$text=$article->fetchContent();
-		/**
-		 * parse content
-		 */
+		preg_match_all("/<submission title=\"(.*)\" submissionType=\"(.*)\" abstract=\"(.*)\" track=\"(.*)\" 
+		length=\"(.*)\" slidesInfo=\"(.*)\" slotReq=\"(.*)\" submission-author=\"(.*)\" \/>/",$text,$matches);
 		/*wfProfileIn(__METHOD__.'-db');
 		$dbr=wfGetDB(DB_SLAVE);
 		$res = $dbr->selectRow( 'page_props',
@@ -74,7 +76,56 @@ class AuthorSubmission
 		array()
 		);
 		wfProfileOut(__METHOD__.'-db');*/
-		return new self($submissionId, $res->pp_value, $title, $type, $abstract, $track, $length, $slidesInfo, $slotReq);
+		return new self($submissionId, $matches[8][], $matches[1][0], $matches[2][0], $matches[3][0], $matches[4][0], 
+		$matches[5][0], $matches[6][0], $slotReq[7][0]);
 	}
-	public function __construct(){}
+	public function getId()
+	{
+		return $this->mSubmissionId;
+	}
+	public function setId($id)
+	{
+		$this->mSubmissionId=$id;
+	}
+	public function getTitle()
+	{
+		return $this->mTitle;
+	}
+	public function setTitle($title)
+	{
+		$this->mTitle=$title;
+	}
+	public function getType()
+	{
+		return $this->mType;
+		
+	}
+	public function setType($type)
+	{
+		$this->mType=$type;
+	}
+	public function getAbstract()
+	{
+		return $this->mAbstract;
+	}
+	public function getTrack()
+	{
+		return $this->mTrack;
+	}
+	public function getLength()
+	{
+		return $this->mLength;
+	}
+	public function setAbstract($abstract)
+	{
+		$this->mAbstract=$abstract;
+	}
+	public function setTrack($track)
+	{
+		$this->mTrack=$track;
+	}
+	public function setLength($length)
+	{
+		$this->mLength=$length;
+	}
 }

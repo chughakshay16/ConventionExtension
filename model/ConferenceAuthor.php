@@ -12,11 +12,45 @@ class ConferenceAuthor
 		$this->mSubmissions=$submissions;
 
 	}
+	public function getCountry()
+	{
+		return $this->mCountry;
+	}
+	public function setCounry($county)
+	{
+		$this->mCountry=$country;
+	}
+	public function getAffiliation()
+	{
+		return $this->mAffiliation;
+	}
+	public function setAffiliation($aff)
+	{
+		$this->mAffiliation=$aff;
+	}
+	public function getBlogUrl()
+	{
+		return $this->mBlogUrl;
+	}
+	public function setBlogUrl($url)
+	{
+		$this->mBlogUrl=$url;
+	}
+	/**
+	 * @param Int $cid page_id of the conference page
+	 * @param Int $uid user_id for the speaker
+	 * @param String $country
+	 * @param String $affiliation
+	 * @param String $url
+	 * @param Object(AuthorSubmission) $submission
+	 * @return ConferenceAuthor
+	 */
 	public static function createFromScratch($cid, $uid, $country , $affiliation, $url,$submission=null)
 	{
 		$titleObj=Title::newFromText($title);
 		$pageObj=WikiPage::factory($titleObj);
-		$text=Xml::element('speaker',array('country'=>$country,'affiliation'=>$affiliation,'blogUrl'=>$url,'speaker-conf'=>$cid,'speaker-user'=>$uid));
+		$text=Xml::element('speaker',array('country'=>$country,'affiliation'=>$affiliation,'blogUrl'=>$url,'speaker-conf'=>$cid,
+		'speaker-user'=>$uid));
 		$status=$page->doEdit($text, 'new submission added',EDIT_NEW);
 		if($status['revision'])
 		$revision=$status['revision'];
@@ -34,13 +68,16 @@ class ConferenceAuthor
 		$submissions[]=$submission;
 		return new self($id,$cid, $uid, $country, $affiliation, $url,$submissions);
 	}
+	/**
+	 * @param Int $speakerId page_id of the speaker page
+	 * @return ConferenceAuthor
+	 */
 	public static function loadFromId($speakerId)
 	{
 		$article=Article::newFromID($speakerId);
 		$text=$article->fetchContent();
-		/**
-		 * parse text
-		 */
+		preg_match_all("/<speaker country=\"(.*)\" affiliation=\"(.*)\" blogUrl=\"(.*)\" speaker-conf=\"(.*)\" speaker-user=\"(.*)\" \/>/"
+		,$text,$matches);
 		/*$dbr=wfGetDB(DB_SLAVE);
 		$dbr->select('page_props',
 		array('pp_propertyname','pp_ value'),
@@ -65,7 +102,7 @@ class ConferenceAuthor
 		{
 			$submissions[]=AuthorSubmission::loadFromId($row->pp_page);	
 		}
-		return new self($cid, $uid, $country, $affiliation, $url,$submissions);
+		return new self($matches[4][0], $matches[5][0], $matches[1][0], $matches[2][0], $matches[3][0],$submissions);
 	}
 	public function getAuthorId()
 	{

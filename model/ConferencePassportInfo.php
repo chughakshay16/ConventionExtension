@@ -14,11 +14,22 @@ class ConferencePassportInfo
 		$this->mAccountId=$aid;
 		$this->mId=$id;
 	}
+	/**
+	 * @param String $pno passport number
+	 * @param Int $aid page_id of the account page
+	 * @param String $iby issued by
+	 * @param String(date) $vu valid until
+	 * @param String $pl place
+	 * @param String(date) $dob date of birth
+	 * @param String $ctry country
+	 * @return ConferencePassportInfo
+	 */
 	public static function createFromScratch($pno,$aid,$iby,$vu,$pl,$dob,$ctry)
 	{
 		$titleObj=Title::newFromText($title);
 		$pageObj=WikiPage::factory($titleObj);
-		$text=Xml::element('passport',array('number'=>$pno,'validUntil'=>$vu,'place'=>$pl,'dob'=>$dob,'country'=>$ctry,'issuedBy'=>$iby,'passport-account'=>$aid));
+		$text=Xml::element('passport',array('number'=>$pno,'validUntil'=>$vu,'place'=>$pl,'dob'=>$dob,'country'=>$ctry,'issuedBy'=>$iby,
+		'passport-account'=>$aid));
 		$status=$page->doEdit($text, 'new passport added',EDIT_NEW);	
 		if($status['revision'])
 		$revision=$status['revision'];
@@ -33,23 +44,87 @@ class ConferencePassportInfo
 		return new self($id,$pno, $aid, $iby, $vu, $pl, $dob, $ctry);
 		
 	}
+	/**
+	 * @param Int $passportId page_id of the passport info page
+	 * @return ConferencePassportInfo
+	 */
 	public static function loadFromId($passportId)
 	{
 		$article=Article::newFromID($organizerId);
 		$text=$article->fetchContent();
-		/**
-		 * parse content
-		 */
+		preg_match_all("/<passport number=\"(.*)\" validUntil=\"(.*)\" place=\"(.*)\" dob=\"(.*)\" country=\"(.*)\" issuedBy=\"(.*)\" 
+		passport-account=\"(.*)\" \/>/",$text,$matches);
 		/*$dbr=wfGetDB(DB_SLAVE);
 		$row=$dbr->selectRow('page_props',
 		array('pp_value'),
 		array('pp_page'=>$passportId,'pp_propertyname'=>'parent'),
 		__METHOD__,
 		array());*/
-		return new self($passportId,$pno,$aid, $iby, $vu, $pl, $dob, $ctry);
+		return new self($passportId,$matches[1][0],$matches[7][0], $matches[6][0], $matches[2][0], $matches[3][0], $matches[4][0], 
+		$matches[5][0]);
 	}
 	public function getId()
 	{
 		return $this->mId;
+	}
+	public function setId($id)
+	{
+		$this->mId=$id;
+	}
+	public function getAccountId()
+	{
+		return $this->mAccountId;
+	}
+	public function setAccountId($id)
+	{
+		$this->mAccountId=$id;
+	}
+	public function getPassportNo()
+	{
+		return $this->mPassportNo;
+	}
+	public function setPasssportNo($no)
+	{
+		$this->mPassportNo=$no;
+	}
+	public function getIssuedBy()
+	{
+		return $this->mIssuedBy;
+	}
+	public function setIssuedBy($issued)
+	{
+		$this->mIssuedBy=$issued;
+	}
+	public function getValidUntil()
+	{
+		return $this->mValidUntil;
+	}
+	public function setValidUntil($valid)
+	{
+		$this->mValidUntil=$valid;
+	}
+	public function getPlace()
+	{
+		return $this->mPlace;
+	}
+	public function setPlace($place)
+	{
+		$this->mPlace=$place;
+	}
+	public function getDOB()
+	{
+		return $this->mDob;
+	}
+	public function setDOB($dob)
+	{
+		$this->mDob=$dob;
+	}
+	public function getCountry()
+	{
+		return $this->mCountry;
+	}
+	public function setCountry($country)
+	{
+		$this->mCountry=$country;
 	}
 }

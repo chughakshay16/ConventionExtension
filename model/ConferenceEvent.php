@@ -15,11 +15,22 @@ class ConferenceEvent
 		$this->mGroup=$mGroup;
 		
 	}
+	/**
+	 * @param Int $mConferenceId
+	 * @param Object(EventLocation) $mLocation
+	 * @param String $mStartTime
+	 * @param String $mEndTime
+	 * @param String $mDay
+	 * @param String $mTopic
+	 * @param String $mGroup
+	 * @return ConferenceEvent
+	 */
 	public static function createFromScratch($mConferenceId,$mLocation,$mStartTime,$mEndTime,$mDay,$mTopic,$mGroup)
 	{
 			$title=Title::newFromText();
 			$page=WikiPage::factory($title);
-			$text=Xml::element('event',array('event-conf'=>$mConferenceId,'location'=>$mLocation->getLocationId(),'startTime'=>$mStartTime,'endTime'=>$mEndTime,'day'=>$mDay,'topic'=>$mTopic,'group'=>$mGroup));
+			$text=Xml::element('event',array('event-conf'=>$mConferenceId,'location'=>$mLocation->getLocationId(),
+			'startTime'=>$mStartTime,'endTime'=>$mEndTime,'day'=>$mDay,'topic'=>$mTopic,'group'=>$mGroup));
 			$status=$page->doEdit($text, 'new event added',EDIT_NEW);
 			if($status['revision'])
 			{
@@ -34,13 +45,16 @@ class ConferenceEvent
 			}
 			return new self($mConferenceId,$eventId,$mLocation,$mStartTime,$mEndTime,$mDay,$mTopic,$mGroup);
 	}
+	/**
+	 * @param Int $eventId page_id of the event page
+	 * @return ConferenceEvent
+	 */
 	public static function loadFromId($eventId)
 	{
 		$article=Article::newFromID($eventId);
 		$text=$article->fetchContent();
-		/**
-		 * parse content
-		 */
+		preg_match_all("/<event event-conf=\"(.*)\" location=\"(.*)\" startTime=\"(.*)\" endTime=\"(.*)\" 
+		day=\"(.*)\" topic=\"(.*)\" group=\"(.*)\" \/>/",$text,$matches);
 		/*wfProfileIn(__METHOD__.'-db');
 		$dbr=wfGetDB(DB_SLAVE);
 		$res = $dbr->select( 'page_props',
@@ -57,7 +71,8 @@ class ConferenceEvent
 			else 
 			$location=EventLocation::loadFromId($value->pp_value);
 		}*/
-		return new self($parent,$eventId,$location,$mStartTime,$mEndTime,$mDay,$mTopic,$mGroup);
+		$location=EventLocation::loadFromId($matches[2][0]);
+		return new self($matches[1][0],$eventId,$location,$matches[3][0],$matches[4][0],$matches[5][0],$matches[6][0],$matches[7][0]);
 	}
 	public function getConferenceId()
 	{
@@ -83,4 +98,46 @@ class ConferenceEvent
 	{
 		$this->mLocationId=$id;
 	}
+	public function getStartTime()
+	{
+		return $this->mStartTime;
+	}
+	public function setStartTime($time)
+	{
+		$this->mStartTime=$time;
+	}
+	public function getEndTime()
+	{
+		return $this->mEndTime;
+	}
+	public function setEndTime($time)
+	{
+		$this->mEndTime=$time;
+	}
+	public function getDay()
+	{
+		return $this->mDay;
+	}
+	public function setDay($day)
+	{
+		$this->mDay=$day;
+	}
+	public function getTopic()
+	{
+		return $this->mTopic;
+	}
+	public function setTopic($topic)
+	{
+		$this->mTopic=$topic;
+	}
+	public function getGroup()
+	{
+		return $this->mGroup;
+	}
+	public function setGroup($group)
+	{
+		$this->mGroup=$group;
+	}
+	
+	
 }

@@ -13,46 +13,106 @@ class Conference
 	private $mApplicants;
 	private $mOrganizers;
 	private $mAccounts;
-	
-	public function __construct($mId=null,$mTitle,$mDescription,$mStartDate,$mEndDate,$mVenue,$mCapacity,$mAuthors=null,$mEvents=null,$mApplicants=null,$mOrganizers=null,$mAccounts=null)
+	private $mPages;
+
+	public function __construct($mId=null,$mTitle,$mDescription,$mStartDate,$mEndDate,$mVenue,$mCapacity,$mAuthors=null
+	,$mEvents=null,$mApplicants=null,$mOrganizers=null,$mAccounts=null,$pages=null)
 	{
-			//this is the ideal way of initializing the conference
-			$this->mId=$mId;
-			$this->mTitle=$mTitle;
-			$this->mDescription=$mDescription;
-			$this->mStartDate=$mStartDate;
-			$this->mEndDate=$mEndDate;
-			$this->mVenue=$mVenue;
-			$this->mCapacity=$mCapacity;
-			$this->mAuthors=$mAuthors;
-			$this->mEvents=$mEvents;
-			$this->mApplicants=$mApplicants;
-			$this->mOrganizers=$mOrganizers;
-			$this->mAccounts=$mAccounts;
-		
-		
+		//this is the ideal way of initializing the conference
+		$this->mId=$mId;
+		$this->mTitle=$mTitle;
+		$this->mDescription=$mDescription;
+		$this->mStartDate=$mStartDate;
+		$this->mEndDate=$mEndDate;
+		$this->mVenue=$mVenue;
+		$this->mCapacity=$mCapacity;
+		$this->mAuthors=$mAuthors;
+		$this->mEvents=$mEvents;
+		$this->mApplicants=$mApplicants;
+		$this->mOrganizers=$mOrganizers;
+		$this->mAccounts=$mAccounts;
+		$this->mPages=$pages;
+
+
 	}
+	/**
+	 * Enter description here ...
+	 * @param String $title title of the conference
+	 * @param String $venue venue for the conference
+	 * @param String $capacity total number of attendees allowed for this conference
+	 * @param String $startDate - starting date
+	 * @param String $endDate - ending date
+	 * @param String $description - short description for this conference
+	 * @return Conference
+	 */
 	public static function createFromScratch($title,$venue,$capacity,$startDate,$endDate,$description)
 	{
 		$titleObj=Title::newFromText($title);
 		$page=WikiPage::factory($titleObj);
-		$text=Xml::element('conference',array('title'=>$title,'venue'=>$venue,'capacity'=>$capacity,'startDate'=>$startDate,'endDate'=>$endDate,'description'=>$description));
+		$text=Xml::element('conference',array('title'=>$title,'venue'=>$venue,'capacity'=>$capacity
+		,'startDate'=>$startDate,'endDate'=>$endDate,'description'=>$description,'type'=>'conference'));
 		$status=$page->doEdit($text, 'new conference added',EDIT_NEW);
 		if($status['revision'])
 		$revision=$status['revision'];
 		$id=$revision->getPage();
+		$dbw=wfGetDB(DB_MASTER);
+		$dbw->insert('page_props',array('pp_page'=>$id,'pp_propname'=>'type','pp_value'=>'conference'));
 		return new self($id,$title,$description,$startDate,$endDate,$venue,$capacity);
 	}
+	/**
+	 * @param Int $conferenceId - page_id of the conference page
+	 * @return Conference
+	 */
 	public static function loadFromId($conferenceId)
 	{
 		$article=Article::newFromID($conferenceId);
 		$text=$article->fetchContent();
-		/**
-		 * parse the text , $title, $venue, $capacity, $startDate, $endDate, $description
-		 */
+		preg_match_all("/<conference title=\"(.*)\" venue=\"(.*)\" capacity=\"(.*)\" startDate=\"(.*)\"
+		endDate=\"(.*)\" description=\"(.*)\" type=\"(.*)\" \/>/",$text,$matches);
 		// now get the information on speakers
 		$dbr=wfGetDB(DB_SLAVE);
+		//collect all the pages pointing to $conferenceId as their parent conference
 		$res=$dbr->select('page_props',
+		array('pp_page','pp_propname'),
+		array('pp_value'=>$conferenceId),
+		__METHOD__,
+		array());
+		$accounts=array();
+		$pages=array();
+		$organizers=array();
+		$applicants=array();
+		$events=array();
+		$authors=array();
+		//now depending on the property name initialise
+		foreach($res as $row)
+		{
+			if($res->pp_propname=='account-conf')
+			{
+				$accounts[]=ConferenceAccount::loadFromId($res->pp_page);
+			}
+			else if($res->pp_propname=='page-conf')
+			{
+				$pages[]=ConferencePage::loadFromId($res->pp_page);
+			}
+			else if($res->pp_propname=='speaker-conf')
+			{
+				$authors[]=ConferenceAuthor::loadFromId($res->pp_page);
+			}
+			else if($res->pp_propname=='event-conf')
+			{
+				$events[]=ConferenceEvent::loadFromId($res->pp_page);
+			}
+			else if($res->pp_propname=='organizer-conf')
+			{
+				$organizers[]=ConferenceOrganizer::loadFromId($res->pp_page);
+			}
+			else 
+			{
+				$applicants[]=ConferenceApplicant::loadFromId($res->pp_page);
+			}
+			
+		}
+		/*$res=$dbr->select('page_props',
 		array('pp_page'),
 		array('pp_propname'=>'speaker-conf','pp_value'=>$conferenceId),
 		__METHOD__,
@@ -73,7 +133,7 @@ class Conference
 		{
 			$organizers[]=ConferenceOrganizer::loadFromId($row->pp_page);
 		}
-		//get all accounts 
+		//get all accounts
 		$accres=$dbr->select('page_props',
 		array('pp_page'),
 		array('pp_propname'=>'account-conf','pp_value'=>$conferenceId),
@@ -103,29 +163,10 @@ class Conference
 		foreach ($appres as $row)
 		{
 			$applicants[]=ConferenceApplicant::loadFromId($row->pp_page);
-		}
-		return new self($conferenceId,$mTitle,$mDescription,$mStartDate,$mEndDate,$mVenue,$mCapacity,$speakers,$events,$applicants,$organizers,$accounts);
-		
-	}
-	private function getAuthors($conferenceId)
-	{
-	
-	}
-	private function getApplicants($conferenceId)
-	{
-	
-	}
-	private function getEvents($conferenceId)
-	{
-	
-	}
-	private function getOrganizers($conferenceId)
-	{
-	
-	}
-	private function getAccounts($conferenceId)
-	{
-	
+		}*/
+		return new self($conferenceId,$matches[1][0],$matches[6][0],$matches[4][0],$matches[5][0]
+		,$matches[2][0],$matches[3][0],$speakers,$events,$applicants,$organizers,$accounts,$pages);
+
 	}
 	public  function getId()
 	{
@@ -222,5 +263,13 @@ class Conference
 	public function setVenue($venue)
 	{
 		$this->mVenue=$venue;
+	}
+	public function getPages()
+	{
+		return $this->mPages;
+	}
+	public function setPages($pages)
+	{
+		$this->mPages=$pages;
 	}
 }
