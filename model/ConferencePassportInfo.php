@@ -63,6 +63,11 @@ class ConferencePassportInfo
 		return new self($passportId,$matches[1][0],$matches[7][0], $matches[6][0], $matches[2][0], $matches[3][0], $matches[4][0], 
 		$matches[5][0]);
 	}
+	public static function render($input, array $args, Parser $parser, PPFrame $frame)
+	{
+		wfGetDB(DB_MASTER)->insert('page_props', array('pp_page'=>$parser->getTitle()->getArticleId(),'pp_propname'=>'passport-account','pp_value'=>$args['passport-account']));
+		return '';
+	}
 	public function getId()
 	{
 		return $this->mId;

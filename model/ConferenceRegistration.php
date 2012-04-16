@@ -124,6 +124,12 @@ class ConferenceRegistration
 		$matches[5][0],$mTransaction, $events);
 		
 	}
+	public static function render($input, array $args, Parser $parser, PPFrame $frame)
+	{
+		wfGetDB(DB_MASTER)->insert('page_props',array('pp_page'=>$parser->getTitle()->getArticleId()
+		,'pp_propname'=>'registration-account','pp_value'=>$args['registration-account']));
+		return '';
+	}
 	public function getId()
 	{
 		return $this->mId;

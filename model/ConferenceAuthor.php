@@ -104,6 +104,29 @@ class ConferenceAuthor
 		}
 		return new self($matches[4][0], $matches[5][0], $matches[1][0], $matches[2][0], $matches[3][0],$submissions);
 	}
+	public static function render($input, array $args, Parser $parser, PPFrame $frame)
+	{
+		$ids=array();
+		foreach($args as $attribute=>$value)
+		{
+			if($attribute=='speaker-conf')
+			{
+				$ids['speaker-conf']=$value;
+			}
+			if($attribute=='speaker-user')
+			{
+				$ids['speaker-user']=$value;
+			}
+		}
+		//$ids=array('speaker-conf'=>$conferenceId,'speaker-user'=>$userId);
+		$dbw=wfGetDB(DB_MASTER);
+		$speakerId=$parser->getTitle()->getArticleId();
+		foreach($ids as $name=>$value)
+		{
+				$dbw->insert('page_props',array('pp_page'=>$speakerId,'pp_propname'=>$name,'pp_value'=>$value));
+		}
+		return '';
+	}
 	public function getAuthorId()
 	{
 		return $this->mAuthorId;

@@ -58,6 +58,30 @@ class ConferenceOrganizer
 		return new self($organizerId,$matches[3][0], $matches[4][0], $matches[1][0], $matches[2][0]);
 		
 	}
+	public static function render($input, array $args, Parser $parser, PPFrame $frame)
+	{
+		$ids=array();
+		foreach ($args as $attribute=>$value)
+		{
+			if($attribute=='organizer-conf')
+			{
+				$ids[]=$value;
+			}
+			if($attribute=='organizer-user')
+			{
+				$ids[]=$value;
+			}
+			
+		}
+		$id=$parser->getTitle()->getArticleId();
+		$dbw=wfGetDB(DB_MASTER);
+		foreach ($ids as $name=>$value)
+		{
+			$dbw->insert('page_props',array('pp_page'=>$id,'pp_propname'=>$name,'pp_value'=>$value));
+		}
+		return '';
+	}	
+		
 	public function getOrganizerId()
 	{
 		return $this->mOrganizerId;

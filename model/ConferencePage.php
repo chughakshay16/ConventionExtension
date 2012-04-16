@@ -45,6 +45,21 @@ class ConferencePage
 		$type=$matches[2][0];
 		return new self($pageId,$conferenceId,$type);
 	}
+	public static function render($input, array $args, Parser $parser, PPFrame $frame)
+	{
+		$ids=array();
+		foreach ($args as $attribute=>$value)
+		{
+			$ids[]=$value;
+		}
+		$id=$parser->getTitle()->getArticleId();
+		$dbw=wfGetDB(DB_MASTER);
+		foreach ($ids as $name=>$value)
+		{
+			$dbw->insert('page_props',array('pp_page'=>$id,'pp_propname'=>$name,'pp_value'=>$value));
+		}
+		return '';
+	}
 	public function getId()
 	{
 		return $this->mId;

@@ -168,6 +168,14 @@ class Conference
 		,$matches[2][0],$matches[3][0],$speakers,$events,$applicants,$organizers,$accounts,$pages);
 
 	}
+	public static function render($input, array $args, Parser $parser, PPFrame $frame)
+	{
+		$conferenceType=$args['type'];
+		$conferenceId=$parser->getTitle()->getArticleId();
+		$dbw=wfGetDB(DB_MASTER);
+		$dbw->insert('page_props',array('pp_page'=>$conferenceId,'pp_propname'=>'type','pp_value'=>'conference'));
+		return '';
+	}
 	public  function getId()
 	{
 		return $this->mId;

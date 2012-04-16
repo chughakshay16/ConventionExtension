@@ -38,6 +38,12 @@ class EventLocation
 		preg_match_all("/<location roomNo=\"(.*)\" description=\"(.*)\" url=\"(.*)\" type=\"(.*)\" \/>/",$text,$matches);
 		return new self($matches[1][0], $matches[2][0], $matches[3][0], $locationId);
 	}
+	public static function render($input, array $args, Parser $parser, PPFrame $frame)
+	{
+		wfGetDB(DB_MASTER)->insert('page_props',array('pp_page'=>$parser->getTitle()->getArticleId()
+		,'pp_propname'=>'type','pp_value'=>'location'));
+		return '';
+	}
 	public function getLocationId()
 	{
 		return $this->mLocationId;

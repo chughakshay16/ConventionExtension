@@ -74,6 +74,28 @@ class ConferenceEvent
 		$location=EventLocation::loadFromId($matches[2][0]);
 		return new self($matches[1][0],$eventId,$location,$matches[3][0],$matches[4][0],$matches[5][0],$matches[6][0],$matches[7][0]);
 	}
+	public static function render($input, array $args, Parser $parser, PPFrame $frame)
+	{
+		$ids=array();
+		foreach ($args as $attribute=>$value)
+		{
+			if($attribute=='event-conf')
+			{
+				$ids['event-conf']=$value;
+			}
+			if($attribute=='location')
+			{
+				$ids['location']=$value;
+			}
+			$id=$parser->getTitle()->getArticleId();
+			$dbw=wfGetDB(DB_MASTER);
+			foreach ($ids as $name=>$value)
+			{
+				$dbw->insert('page_props',array('pp_page'=>$id,'ppp_propname'=>$name,'pp_value'=>$value));
+			}
+			return '';
+		}
+	}
 	public function getConferenceId()
 	{
 		return $this->mConferenceId;

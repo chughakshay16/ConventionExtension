@@ -137,6 +137,32 @@ class ConferenceAccount
 
 
 	}
+	public static function render($input, array $args, Parser $parser, PPFrame $frame)
+	{
+		//extract all the attribute values
+		$ids=array();
+		foreach($args as $attribute=>$value)
+		{
+			if($attribute=='account-conf')
+			{
+				$ids['account-conf']=$value;
+			}
+			if($attribute=='account-user')
+			{
+				$ids['account-user']=$value;
+			}
+		}
+		//now we have to re-set these values into page_props table
+		$dbw=wfGetDB(DB_MASTER);
+		$title=$parser->getTitle();
+		$accountId=$title->getArticleId();
+		//$page_props=array('account-conf'=>$conferenceId,'account-user'=>$userId);
+		foreach($ids as $name=>$value)
+		{
+				$dbw->insert('page_props',array('pp_page'=>$accountId,'pp_propname'=>$name,'pp_value'=>$value));
+		}
+		return '';
+	}
 	public function getConferenceId()
 	{
 		$this->mConferenceId;

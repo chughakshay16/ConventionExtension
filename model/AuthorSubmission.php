@@ -79,6 +79,14 @@ class AuthorSubmission
 		return new self($submissionId, $matches[8][], $matches[1][0], $matches[2][0], $matches[3][0], $matches[4][0], 
 		$matches[5][0], $matches[6][0], $slotReq[7][0]);
 	}
+	public static function render($input, array $args, Parser $parser, PPFrame $frame)
+	{
+		//extract all the relevant info and store it in the page_props
+		$dbw=wfGetDB(DB_MASTER);
+		$dbw->insert('page_props',array('pp_page'=>$parser->getTitle()->getArticleId(),'pp_propname'=>'submission-author'
+		,'pp_value'=>$args['submission-author']));
+		return '';
+	}
 	public function getId()
 	{
 		return $this->mSubmissionId;
