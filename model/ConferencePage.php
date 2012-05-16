@@ -21,8 +21,8 @@ class ConferencePage
 		 * add default text to the page
 		 */
 		$page->doEdit($text,'new page added',EDIT_NEW);
-		if($status['revision'])
-		$revision=$status['revision'];
+		if($status->value['revision'])
+		$revision=$status->value['revision'];
 		$id=$revision->getPage();
 		$properties=array('cvext-page-conf'=>$mConferenceId,'cvext-page-type'=>$type);
 		$dbw=wfGetDB(DB_MASTER);

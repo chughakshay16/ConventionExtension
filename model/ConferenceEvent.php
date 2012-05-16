@@ -32,9 +32,9 @@ class ConferenceEvent
 			$text=Xml::element('event',array('cvext-event-conf'=>$mConferenceId,'cvext-event-location'=>$mLocation->getLocationId(),
 			'startTime'=>$mStartTime,'endTime'=>$mEndTime,'day'=>$mDay,'topic'=>$mTopic,'group'=>$mGroup));
 			$status=$page->doEdit($text, 'new event added',EDIT_NEW);
-			if($status['revision'])
+			if($status->value['revision'])
 			{
-				$revision=$status['revision'];
+				$revision=$status->value['revision'];
 				$eventId=$revision->getPage();
 			}
 			$dbw=wfGetDB(DB_MASTER);

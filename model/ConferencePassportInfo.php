@@ -31,8 +31,8 @@ class ConferencePassportInfo
 		$text=Xml::element('passport',array('number'=>$pno,'validUntil'=>$vu,'place'=>$pl,'dob'=>$dob,'country'=>$ctry,'issuedBy'=>$iby,
 		'cvext-passport-account'=>$aid));
 		$status=$page->doEdit($text, 'new passport added',EDIT_NEW);	
-		if($status['revision'])
-		$revision=$status['revision'];
+		if($status->value['revision'])
+		$revision=$status->value['revision'];
 		$id=$revision->getPage();
 		$dbw=wfGetDB(DB_MASTER);
 		$properties=array('cvext-passport-account'=>$aid);

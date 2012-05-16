@@ -88,8 +88,8 @@ class ConferenceAccount
 		$parentText=Xml::element('account',array('gender'=>$mGender,'firstName'=>$mFirstName,'lastName'=>$mLastName,
 		'cvext-account-user'=>$mUserId));
 		$statusParent=$pageParentObj->doEdit($parentText, 'new parent account added',EDIT_NEW);
-		if($statusParent['revision'])
-		$revision=$statusParent['revision'];
+		if($statusParent->value['revision'])
+		$revision=$statusParent->value['revision'];
 		$id=$revision->getPage();
 		}
 		else
@@ -103,7 +103,7 @@ class ConferenceAccount
 		$pageChildObj=WikiPage::factory($titleChildObj);
 		$childText=Xml::element('account-sub',array('cvext-account-parent'=>$id,'cvext-account-conf'=>$mConferenceId));
 		$statusChild=$pageChildObj->doEdit($childText,'new sub account added',EDIT_NEW);
-		$childId=$statusChild['revision']->getPage();
+		$childId=$statusChild->value['revision']->getPage();
 		//passport-info will be linked to the parent account page
 		$mPassportInfo=ConferencePassportInfo::createFromScratch($mPassportInfo->getPassportNo(), $id,
 		$passportInfo->getIssuedBy(), $mPassportInfo->getValidUntil(), $mPassportInfo->getPlace(),

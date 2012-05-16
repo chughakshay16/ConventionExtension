@@ -44,8 +44,8 @@ class AuthorSubmission
 		$text=Xml::element('submission',array('title'=>$title,'submissionType'=>$type,'abstract'=>$abstract,
 		'track'=>$track,'length'=>$length,'slidesInfo'=>$slidesInfo,'slotReq'=>$slotReq,'cvext-submission-author'=>$aid));
 		$status=$page->doEdit($text, 'new submission added',EDIT_NEW);	
-		if($status['revision'])
-		$revision=$status['revision'];
+		if($status->value['revision'])
+		$revision=$status->value['revision'];
 		$submissionId=$revision->getPage();
 		$dbw=wfGetDB(DB_MASTER);
 		$properties=array('cvext-submission-author'=>$aid);

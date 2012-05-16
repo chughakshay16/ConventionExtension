@@ -47,6 +47,7 @@ class ConferenceAuthor
 	 */
 	public static function createFromScratch($cid, $uid, $country , $affiliation, $url,$submission=null)
 	{
+		
 		$titleObj=Title::newFromText($title);
 		$pageObj=WikiPage::factory($titleObj);
 		$titleChildObj=Title::newFromText($titleChild);
@@ -54,12 +55,12 @@ class ConferenceAuthor
 		$text=Xml::element('author',array('country'=>$country,'affiliation'=>$affiliation,'blogUrl'=>$url,
 		'cvext-author-user'=>$uid));
 		$status=$page->doEdit($text, 'new parent author added',EDIT_NEW);
-		if($status['revision'])
-		$revision=$status['revision'];
+		if($status->value['revision'])
+		$revision=$status->value['revision'];
 		$id=$revision->getPage();
 		$childText=Xml::element('author-sub',array('cvext-author-parent'=>$id,'cvext-author-conf'=>$cid));
 		$statusChild=$pageChildObj->doEdit($childText,'new sub author added',EDIT_NEW);
-		$revisionChild=$statusChild['revision'];
+		$revisionChild=$statusChild->value['revision'];
 		$idChild=$revisionChild->getPage();
 		$submission=AuthorSubmission::createFromScratch($idChild, $submission->getTitle(), $submission->getType(), 
 		$submission->getAbstract(), $submission->getTrack(), $submission->getLength(), $submission->getSlidesInfo(), 

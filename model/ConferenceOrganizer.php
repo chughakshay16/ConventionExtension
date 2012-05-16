@@ -24,8 +24,8 @@ class ConferenceOrganizer
 		$pageObj=WikiPage::factory($titleObj);
 		$text=Xml::element('organizer',array('category'=>$cat,'post'=>$post,'cvext-organizer-conf'=>$cid,'cvext-organizer-user'=>$uid));
 		$status=$page->doEdit($text, 'new organizer added',EDIT_NEW);	
-		if($status['revision'])
-		$revision=$status['revision'];
+		if($status->value['revision'])
+		$revision=$status->value['revision'];
 		$id=$revision->getPage();
 		$properties=array('cvext-organizer-conf'=>$cid,'cvext-organizer-user'=>$uid);
 		$dbw=wfGetDB(DB_MASTER);

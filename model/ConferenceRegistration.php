@@ -64,8 +64,8 @@ class ConferenceRegistration
 		$text=Xml::element('registration',array('regType'=>$mType,'dietaryRestr'=>$mdietaryRestr,'otherDietOpts'=>$mOtherDietOpts,
 		'otherOpts'=>$mOtherOpts,'badge'=>$mBadgeInfo,'cvext-registration-account'=>$mAccountId));
 		$status=$page->doEdit($text, 'new registration added',EDIT_NEW);	
-		if($status['revision'])
-		$revision=$status['revision'];
+		if($status->value['revision'])
+		$revision=$status->value['revision'];
 		$id=$revision->getPage();
 		$dbw=wfGetDB(DB_MASTER);
 		$properties=array('cvext-registration-account'=>$mAccountId);
@@ -79,8 +79,8 @@ class ConferenceRegistration
 			$pageObj=WikiPage::factory($titleObj);
 			$text=Xml::element('registration-event',array('cvext-registration-parent'=>$id,'cvext-registration-event'=>$event->getEventId()));
 			$status=$page->doEdit($text, 'new registration-event added',EDIT_NEW);	
-			if($status['revision'])
-			$revision=$status['revision'];
+			if($status->value['revision'])
+			$revision=$status->value['revision'];
 			$subId=$revision->getPage();
 			$properties=array('cvext-registration-parent'=>$id,'cvext-registration-event'=>$event->getEventId());
 			foreach($properties as $name=>$value)
