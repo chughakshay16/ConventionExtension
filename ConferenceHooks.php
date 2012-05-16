@@ -1,5 +1,5 @@
 <?php
-class CommonHooks
+class ConferenceHooks
 {
 	public static function onParserFirstCallInit(Parser &$parser)
 	{

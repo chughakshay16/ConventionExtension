@@ -29,5 +29,5 @@ $wgAutoloadClasses['EventLocation']=$wgCurrentDir.'model/EventLocation.php';
 $wgAutoloadClasses['ConferenceRegistration']=$wgCurrentDir.'model/ConferenceRegistration.php';
 $wgAutoloadClasses['ConferencePassportInfo']=$wgCurrentDir.'model/ConferencePassportInfo.php';
 $wgAutoloadClasses['AuthorSubmission']=$wgCurrentDir.'model/AuthorSubmission.php';
-$wgAutoloadClasses['CommonHooks']=$wgCurrentDir.'CommonHooks.php';
-$wgHooks['ParserFirstCallInit'][]='CommonHooks::onParserFirstCallInit';
+$wgAutoloadClasses['CommonHooks']=$wgCurrentDir.'ConferenceHooks.php';
+$wgHooks['ParserFirstCallInit'][]='ConferenceHooks::onParserFirstCallInit';
