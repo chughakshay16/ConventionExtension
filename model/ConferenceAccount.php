@@ -70,19 +70,40 @@ class ConferenceAccount
 	public static function createFromScratch($mConferenceId,$mUserId,$mGender, $mFirstName, $mLastName,$mPassportInfo,$mRegistration=null)
 	{
 		//this is revised approach for storing account objects
+		$newParent=ConferenceAccount::hasParentAccount($mUserId);
+		if($newParent)
+		{
+			//create a new title
+			$titleParent='';
+		}
+		else
+		{
+			//use an old one
+			$titleParent='';
+		}
 		$titleParentObj=Title::newFromText($titleParent);
-		$titleChildObj=Title::newFromText($titleChild);
 		$pageParentObj=WikiPage::factory($titleParentObj);
-		$pageChildObj=WikiPage::factory($titleChildObj);
+		if($newParent)
+		{
 		$parentText=Xml::element('account',array('gender'=>$mGender,'firstName'=>$mFirstName,'lastName'=>$mLastName,
 		'cvext-account-user'=>$mUserId));
-		$statusParent=$pageParentObj->doEdit($text, 'new parent account added',EDIT_NEW);
+		$statusParent=$pageParentObj->doEdit($parentText, 'new parent account added',EDIT_NEW);
 		if($statusParent['revision'])
 		$revision=$statusParent['revision'];
 		$id=$revision->getPage();
+		}
+		else
+		{
+			if($pageParentObj->exists())
+			{
+				$id=$pageParentObj->getId();
+			}
+		}
+		$titleChildObj=Title::newFromText($titleChild);
+		$pageChildObj=WikiPage::factory($titleChildObj);
 		$childText=Xml::element('account-sub',array('cvext-account-parent'=>$id,'cvext-account-conf'=>$mConferenceId));
 		$statusChild=$pageChildObj->doEdit($childText,'new sub account added',EDIT_NEW);
-		$childId=$statusChild->getPage();
+		$childId=$statusChild['revision']->getPage();
 		//passport-info will be linked to the parent account page
 		$mPassportInfo=ConferencePassportInfo::createFromScratch($mPassportInfo->getPassportNo(), $id,
 		$passportInfo->getIssuedBy(), $mPassportInfo->getValidUntil(), $mPassportInfo->getPlace(),
@@ -97,8 +118,11 @@ class ConferenceAccount
 			$registrations[]=$mRegistration;
 		}
 		$dbw=wfGetDB(DB_MASTER);
-		$properties=array(array('id'=>$id,'prop'=>'cvext-account-user','value'=>$mUserId),array('id'=>$childId,'prop'=>'cvext-account-conf','value'=>$mConferenceId),
-		array('id'=>$childId,'prop'=>'cvext-account-parent','value'=>$id));
+		$properties=array(array('id'=>$childId,'prop'=>'cvext-account-conf','value'=>$mConferenceId),array('id'=>$childId,'prop'=>'cvext-account-parent','value'=>$id));
+		if($newParent)
+		{
+			$properties[]=array('id'=>$id,'prop'=>'cvext-account-user','value'=>$mUserId);
+		}
 		foreach ($properties as $value)
 		{
 			$dbw->insert('page_props',array('pp_page'=>$value['id'],'pp_propname'=>$value['prop'],'pp_value'=>$value['value']));
