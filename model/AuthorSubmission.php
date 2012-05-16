@@ -42,13 +42,13 @@ class AuthorSubmission
 		$titleObj=Title::newFromText($title);
 		$pageObj=WikiPage::factory($titleObj);
 		$text=Xml::element('submission',array('title'=>$title,'submissionType'=>$type,'abstract'=>$abstract,
-		'track'=>$track,'length'=>$length,'slidesInfo'=>$slidesInfo,'slotReq'=>$slotReq,'submission-author'=>$aid));
+		'track'=>$track,'length'=>$length,'slidesInfo'=>$slidesInfo,'slotReq'=>$slotReq,'cvext-submission-author'=>$aid));
 		$status=$page->doEdit($text, 'new submission added',EDIT_NEW);	
 		if($status['revision'])
 		$revision=$status['revision'];
 		$submissionId=$revision->getPage();
 		$dbw=wfGetDB(DB_MASTER);
-		$properties=array('submission-author'=>$aid);
+		$properties=array('cvext-submission-author'=>$aid);
 		foreach($properties as $name=>$value)
 		{
 			$dbw->insert('page_props',array('pp_page'=>$submissionId,'pp_propname'=>$name,'pp_value'=>$value),__METHOD__,array());
@@ -66,7 +66,7 @@ class AuthorSubmission
 		$article=Article::newFromID($submissionId);
 		$text=$article->fetchContent();
 		preg_match_all("/<submission title=\"(.*)\" submissionType=\"(.*)\" abstract=\"(.*)\" track=\"(.*)\" 
-		length=\"(.*)\" slidesInfo=\"(.*)\" slotReq=\"(.*)\" submission-author=\"(.*)\" \/>/",$text,$matches);
+		length=\"(.*)\" slidesInfo=\"(.*)\" slotReq=\"(.*)\" cvext-submission-author=\"(.*)\" \/>/",$text,$matches);
 		/*wfProfileIn(__METHOD__.'-db');
 		$dbr=wfGetDB(DB_SLAVE);
 		$res = $dbr->selectRow( 'page_props',
@@ -83,8 +83,8 @@ class AuthorSubmission
 	{
 		//extract all the relevant info and store it in the page_props
 		$dbw=wfGetDB(DB_MASTER);
-		$dbw->insert('page_props',array('pp_page'=>$parser->getTitle()->getArticleId(),'pp_propname'=>'submission-author'
-		,'pp_value'=>$args['submission-author']));
+		$dbw->insert('page_props',array('pp_page'=>$parser->getTitle()->getArticleId(),'pp_propname'=>'cvext-submission-author'
+		,'pp_value'=>$args['cvext-submission-author']));
 		return '';
 	}
 	public function getId()

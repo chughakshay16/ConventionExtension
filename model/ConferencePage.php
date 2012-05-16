@@ -16,7 +16,7 @@ class ConferencePage
 	{
 		$titleObj=Title::newFromText($title);
 		$page=WikiPage::factory($titleObj);
-		$text = Xml::element('page',array('page-conf'=>$mConferenceId,'page-type'=>$type));
+		$text = Xml::element('page',array('cvext-page-conf'=>$mConferenceId,'cvext-page-type'=>$type));
 		/**
 		 * add default text to the page
 		 */
@@ -24,7 +24,7 @@ class ConferencePage
 		if($status['revision'])
 		$revision=$status['revision'];
 		$id=$revision->getPage();
-		$properties=array('page-conf'=>$mConferenceId,'page-type'=>$type);
+		$properties=array('cvext-page-conf'=>$mConferenceId,'cvext-page-type'=>$type);
 		$dbw=wfGetDB(DB_MASTER);
 		foreach ($properties as $name=>$value)
 		{
@@ -40,7 +40,7 @@ class ConferencePage
 	{
 		$article=Article::newFromID($pageId);
 		$text=$article->fetchContent();
-		preg_match_all("/<page page-conf=\"(.*)\" page-type=\"(.*)\" \/>/",$text,$matches);
+		preg_match_all("/<page cvext-page-conf=\"(.*)\" cvext-page-type=\"(.*)\" \/>/",$text,$matches);
 		$conferenceId=$matches[1][0];
 		$type=$matches[2][0];
 		return new self($pageId,$conferenceId,$type);

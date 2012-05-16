@@ -1,13 +1,13 @@
 <?php
 class ConferenceAuthor
 {
-	private $mAuthorId,$mConferenceId,$mUserId,$mCountry,$mAffiliation,$mBlogUrl,$mSubmissions;
+	private $mAuthorId,$mConferenceIds,$mUserId,$mCountry,$mAffiliation,$mBlogUrl,$mSubmissions;
 
-	public function __construct($aid=null, $cid, $uid, $country , $affiliation, $url,$submissions=null){
+	public function __construct($aid=null, $cids=array(), $uid, $country , $affiliation, $url,$submissions=null){
 		$this->mAffiliation=$affiliation;
 		$this->mAuthorId=$aid;
 		$this->mBlogUrl=$url;
-		$this->mConferenceId=$cid;
+		$this->mConferenceIds=$cids;
 		$this->mUserId=$uid;
 		$this->mSubmissions=$submissions;
 
@@ -49,20 +49,26 @@ class ConferenceAuthor
 	{
 		$titleObj=Title::newFromText($title);
 		$pageObj=WikiPage::factory($titleObj);
-		$text=Xml::element('speaker',array('country'=>$country,'affiliation'=>$affiliation,'blogUrl'=>$url,'speaker-conf'=>$cid,
-		'speaker-user'=>$uid));
-		$status=$page->doEdit($text, 'new submission added',EDIT_NEW);
+		$titleChildObj=Title::newFromText($titleChild);
+		$pageChildObj=WikiPage::factory($titleChildObj);
+		$text=Xml::element('author',array('country'=>$country,'affiliation'=>$affiliation,'blogUrl'=>$url,
+		'cvext-author-user'=>$uid));
+		$status=$page->doEdit($text, 'new parent author added',EDIT_NEW);
 		if($status['revision'])
 		$revision=$status['revision'];
 		$id=$revision->getPage();
-		$submission=AuthorSubmission::createFromScratch($id, $submission->getTitle(), $submission->getType(), 
+		$childText=Xml::element('author-sub',array('cvext-author-parent'=>$id,'cvext-author-conf'=>$cid));
+		$statusChild=$pageChildObj->doEdit($childText,'new sub author added',EDIT_NEW);
+		$revisionChild=$statusChild['revision'];
+		$idChild=$revisionChild->getPage();
+		$submission=AuthorSubmission::createFromScratch($idChild, $submission->getTitle(), $submission->getType(), 
 		$submission->getAbstract(), $submission->getTrack(), $submission->getLength(), $submission->getSlidesInfo(), 
-		$submission->getSlotReq);
-		$properties=array('speaker-conf'=>$cid,'speaker-user'=>$uid);
+		$submission->getSlotReq());
+		$properties=array(array('id'=>$id,'prop'=>'cvext-author-user','value'=>$uid),array('id'=>$childId,'prop'=>'cvext-author-parent','value'=>$id),array('id'=>$childId,'prop'=>'cvext-author-conf','value'=>$cid));
 		$dbw=wfGetDB(DB_MASTER);
-		foreach($properties as $name=>$value)
+		foreach($properties as $value)
 		{
-			$dbw->insert('page_props',array('pp_page'=>$id,'pp_propertyname'=>$name,'pp_value'=>$value));
+			$dbw->insert('page_props',array('pp_page'=>$value['id'],'pp_propertyname'=>$value['prop'],'pp_value'=>$value['value']));
 		}
 		$submissions=array();
 		$submissions[]=$submission;
@@ -72,14 +78,14 @@ class ConferenceAuthor
 	 * @param Int $speakerId page_id of the speaker page
 	 * @return ConferenceAuthor
 	 */
-	public static function loadFromId($speakerId)
+	public static function loadFromId($authorId)
 	{
-		$article=Article::newFromID($speakerId);
+		$article=Article::newFromID($authorId);
 		$text=$article->fetchContent();
-		preg_match_all("/<speaker country=\"(.*)\" affiliation=\"(.*)\" blogUrl=\"(.*)\" speaker-conf=\"(.*)\" speaker-user=\"(.*)\" \/>/"
+		preg_match_all("/<author country=\"(.*)\" affiliation=\"(.*)\" blogUrl=\"(.*)\" cvext-author-user=\"(.*)\" \/>/"
 		,$text,$matches);
-		/*$dbr=wfGetDB(DB_SLAVE);
-		$dbr->select('page_props',
+		$dbr=wfGetDB(DB_SLAVE);
+		/*$dbr->select('page_props',
 		array('pp_propertyname','pp_ value'),
 		array('pp_page'=>$speakerId),
 		__METHOD__,
@@ -92,9 +98,29 @@ class ConferenceAuthor
 			$uid=$row->pp_value;
 			else {}
 		}*/
-		$dbr->select('page_props',
+		//get all the sub authors
+		$resSub=$dbr->select('page_props',
+		'*',
+		array('pp_value'=>$authorId,'pp_propname'=>'cvext-author-parent'),
+		__METHOD__,
+		array());
+		$subIds=array();
+		foreach ($resSub as $row)
+		{
+			$subIds[]=$row->pp_page;
+		}
+		$resConf=$dbr->select('page_props',
+		'*',
+		array('pp_page IN ('.implode(',', $subIds).')','pp_propname'=>'cvext-author-conf'),
+		__METHOD__);
+		$conferenceIds=array();
+		foreach ($resConf as $row)
+		{
+			$conferenceIds[]=$row->pp_value;
+		}
+		$res=$dbr->select('page_props',
 		array('pp_page'),
-		array('pp_propertyname'=>'submission-author','pp_value'=>$speakerId),
+		array('pp_value IN ('.implode(',',$subIds).')','pp_propertyname'=>'cvext-submission-author'),
 		__METHOD__,
 		array());
 		$submissions=array();
@@ -102,28 +128,24 @@ class ConferenceAuthor
 		{
 			$submissions[]=AuthorSubmission::loadFromId($row->pp_page);	
 		}
-		return new self($matches[4][0], $matches[5][0], $matches[1][0], $matches[2][0], $matches[3][0],$submissions);
+		return new self($authorId,$conferenceIds, $matches[4][0], $matches[1][0], $matches[2][0], $matches[3][0],$submissions);
 	}
 	public static function render($input, array $args, Parser $parser, PPFrame $frame)
 	{
-		$ids=array();
-		foreach($args as $attribute=>$value)
-		{
-			if($attribute=='speaker-conf')
-			{
-				$ids['speaker-conf']=$value;
-			}
-			if($attribute=='speaker-user')
-			{
-				$ids['speaker-user']=$value;
-			}
-		}
-		//$ids=array('speaker-conf'=>$conferenceId,'speaker-user'=>$userId);
+
 		$dbw=wfGetDB(DB_MASTER);
-		$speakerId=$parser->getTitle()->getArticleId();
-		foreach($ids as $name=>$value)
+		$authorId=$parser->getTitle()->getArticleId();
+				$dbw->insert('page_props',array('pp_page'=>$authorId,'pp_propname'=>'cvext-author-user','pp_value'=>$args['cvext-author-user']));
+		return '';
+	}
+	public static function renderSub($input, array $args, Parser $parser, PPFrame $frame)
+	{
+		$dbw=wfGetDB(DB_MASTER);
+		$authorId=$parser->getTitle()->getArticleId();
+		$properties=array(array('id'=>$authorId,'prop'=>'cvext-author-conf','value'=>$args['cvext-author-conf']),array('id'=>$authorId,'prop'=>'cvext-author-parent','value'=>$args['cvext-author-parent']));
+		foreach ($properties as $property)
 		{
-				$dbw->insert('page_props',array('pp_page'=>$speakerId,'pp_propname'=>$name,'pp_value'=>$value));
+			$dbw->insert('page_props',array('pp_page'=>$property['id'],'pp_propname'=>$property['prop'],'pp_value'=>$property['value']));
 		}
 		return '';
 	}
@@ -135,13 +157,13 @@ class ConferenceAuthor
 	{
 		$this->mAuthorId=$id;
 	}
-	public function getConferenceId()
+	public function getConferenceIds()
 	{
-		return $this->mConferenceId;
+		return $this->mConferenceIds;
 	}
-	public function setconferenceId($id)
+	public function setconferenceIds($id)
 	{
-		$this->mConferenceId=$id;
+		$this->mConferenceIds=$id;
 	}
 	public function getUserId()
 	{

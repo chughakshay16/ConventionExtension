@@ -29,19 +29,21 @@ class ConferencePassportInfo
 		$titleObj=Title::newFromText($title);
 		$pageObj=WikiPage::factory($titleObj);
 		$text=Xml::element('passport',array('number'=>$pno,'validUntil'=>$vu,'place'=>$pl,'dob'=>$dob,'country'=>$ctry,'issuedBy'=>$iby,
-		'passport-account'=>$aid));
+		'cvext-passport-account'=>$aid));
 		$status=$page->doEdit($text, 'new passport added',EDIT_NEW);	
 		if($status['revision'])
 		$revision=$status['revision'];
 		$id=$revision->getPage();
 		$dbw=wfGetDB(DB_MASTER);
-		$properties=array('passport-account'=>$aid);
+		$properties=array('cvext-passport-account'=>$aid);
 		foreach($properties as $name=>$value)
 		{
 			$dbw->insert('page_props',array('pp_page'=>$id,'pp_propertyname'=>$name,'pp_value'=>$value));
 		}
 		if($dbw->affectedRows())
 		return new self($id,$pno, $aid, $iby, $vu, $pl, $dob, $ctry);
+		else 
+		return null;
 		
 	}
 	/**
@@ -53,7 +55,7 @@ class ConferencePassportInfo
 		$article=Article::newFromID($organizerId);
 		$text=$article->fetchContent();
 		preg_match_all("/<passport number=\"(.*)\" validUntil=\"(.*)\" place=\"(.*)\" dob=\"(.*)\" country=\"(.*)\" issuedBy=\"(.*)\" 
-		passport-account=\"(.*)\" \/>/",$text,$matches);
+		cvext-passport-account=\"(.*)\" \/>/",$text,$matches);
 		/*$dbr=wfGetDB(DB_SLAVE);
 		$row=$dbr->selectRow('page_props',
 		array('pp_value'),
@@ -65,7 +67,7 @@ class ConferencePassportInfo
 	}
 	public static function render($input, array $args, Parser $parser, PPFrame $frame)
 	{
-		wfGetDB(DB_MASTER)->insert('page_props', array('pp_page'=>$parser->getTitle()->getArticleId(),'pp_propname'=>'passport-account','pp_value'=>$args['passport-account']));
+		wfGetDB(DB_MASTER)->insert('page_props', array('pp_page'=>$parser->getTitle()->getArticleId(),'pp_propname'=>'cvext-passport-account','pp_value'=>$args['passport-account']));
 		return '';
 	}
 	public function getId()

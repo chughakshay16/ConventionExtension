@@ -29,7 +29,7 @@ class ConferenceEvent
 	{
 			$title=Title::newFromText();
 			$page=WikiPage::factory($title);
-			$text=Xml::element('event',array('event-conf'=>$mConferenceId,'location'=>$mLocation->getLocationId(),
+			$text=Xml::element('event',array('cvext-event-conf'=>$mConferenceId,'cvext-event-location'=>$mLocation->getLocationId(),
 			'startTime'=>$mStartTime,'endTime'=>$mEndTime,'day'=>$mDay,'topic'=>$mTopic,'group'=>$mGroup));
 			$status=$page->doEdit($text, 'new event added',EDIT_NEW);
 			if($status['revision'])
@@ -38,7 +38,7 @@ class ConferenceEvent
 				$eventId=$revision->getPage();
 			}
 			$dbw=wfGetDB(DB_MASTER);
-			$properties=array('event-conf'=>$mConferenceId,'location'=>$mLocation->getLocationId());
+			$properties=array('cvext-event-conf'=>$mConferenceId,'cvext-event-location'=>$mLocation->getLocationId());
 			foreach($properties as $name=>$value)
 			{
 				$dbw->insert('page_props',array('pp_page'=>$eventId,'pp_propertyname'=>$name,'pp_value'=>$value),__METHOD__,array());
@@ -53,7 +53,7 @@ class ConferenceEvent
 	{
 		$article=Article::newFromID($eventId);
 		$text=$article->fetchContent();
-		preg_match_all("/<event event-conf=\"(.*)\" location=\"(.*)\" startTime=\"(.*)\" endTime=\"(.*)\" 
+		preg_match_all("/<event cvext-event-conf=\"(.*)\" cvext-event-location=\"(.*)\" startTime=\"(.*)\" endTime=\"(.*)\" 
 		day=\"(.*)\" topic=\"(.*)\" group=\"(.*)\" \/>/",$text,$matches);
 		/*wfProfileIn(__METHOD__.'-db');
 		$dbr=wfGetDB(DB_SLAVE);
@@ -79,13 +79,13 @@ class ConferenceEvent
 		$ids=array();
 		foreach ($args as $attribute=>$value)
 		{
-			if($attribute=='event-conf')
+			if($attribute=='cvext-event-conf')
 			{
-				$ids['event-conf']=$value;
+				$ids['cvext-event-conf']=$value;
 			}
-			if($attribute=='location')
+			if($attribute=='cvext-event-location')
 			{
-				$ids['location']=$value;
+				$ids['cvext-event-location']=$value;
 			}
 			$id=$parser->getTitle()->getArticleId();
 			$dbw=wfGetDB(DB_MASTER);

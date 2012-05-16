@@ -18,13 +18,13 @@ class EventLocation
 	{
 		$titleObj=Title::newFromText($title);
 		$pageObj=WikiPage::factory($titleObj);
-		$text=Xml::element('location',array('roomNo'=>$roomNo,'description'=>$description,'url'=>$imageUrl,'type'=>'location'));
+		$text=Xml::element('location',array('roomNo'=>$roomNo,'description'=>$description,'url'=>$imageUrl,'cvext-type'=>'location'));
 		$status=$page->doEdit($text, 'new location added',EDIT_NEW);	
 		if($status['revision'])
 		$revision=$status['revision'];
 		$locationId=$revision->getPage();
 		$dbw=wfGetDB(DB_MASTER);
-		$dbw->insert('page_props',array('pp_page'=>$locationId,'pp_propname'=>'type','pp_value'=>'location'),__METHOD__,array());
+		$dbw->insert('page_props',array('pp_page'=>$locationId,'pp_propname'=>'cvext-type','pp_value'=>'location'),__METHOD__,array());
 		return new self($roomNo,$description,$url,$locationId);
 	}
 	/**
@@ -35,13 +35,13 @@ class EventLocation
 	{
 		$article=Article::newFromID($locationId);
 		$text=$article->fetchContent();
-		preg_match_all("/<location roomNo=\"(.*)\" description=\"(.*)\" url=\"(.*)\" type=\"(.*)\" \/>/",$text,$matches);
+		preg_match_all("/<location roomNo=\"(.*)\" description=\"(.*)\" url=\"(.*)\" cvext-type=\"(.*)\" \/>/",$text,$matches);
 		return new self($matches[1][0], $matches[2][0], $matches[3][0], $locationId);
 	}
 	public static function render($input, array $args, Parser $parser, PPFrame $frame)
 	{
 		wfGetDB(DB_MASTER)->insert('page_props',array('pp_page'=>$parser->getTitle()->getArticleId()
-		,'pp_propname'=>'type','pp_value'=>'location'));
+		,'pp_propname'=>'cvext-type','pp_value'=>'location'));
 		return '';
 	}
 	public function getLocationId()

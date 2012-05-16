@@ -22,12 +22,12 @@ class ConferenceOrganizer
 	{
 		$titleObj=Title::newFromText($title);
 		$pageObj=WikiPage::factory($titleObj);
-		$text=Xml::element('organizer',array('category'=>$cat,'post'=>$post,'organizer-conf'=>$cid,'organizer-user'=>$uid));
+		$text=Xml::element('organizer',array('category'=>$cat,'post'=>$post,'cvext-organizer-conf'=>$cid,'cvext-organizer-user'=>$uid));
 		$status=$page->doEdit($text, 'new organizer added',EDIT_NEW);	
 		if($status['revision'])
 		$revision=$status['revision'];
 		$id=$revision->getPage();
-		$properties=array('organizer-conf'=>$cid,'organizer-user'=>$uid);
+		$properties=array('cvext-organizer-conf'=>$cid,'cvext-organizer-user'=>$uid);
 		$dbw=wfGetDB(DB_MASTER);
 		foreach ($properties as $name=>$value)
 		{
@@ -39,7 +39,7 @@ class ConferenceOrganizer
 	{
 		$article=Article::newFromID($organizerId);
 		$text=$article->fetchContent();
-		preg_match_all("/<organizer category=\"(.*)\" post=\"(.*)\" organizer-conf=\"(.*)\" organizer-user=\"(.*)\" \/>/",$text,$matches);
+		preg_match_all("/<organizer category=\"(.*)\" post=\"(.*)\" cvext-organizer-conf=\"(.*)\" cvext-organizer-user=\"(.*)\" \/>/",$text,$matches);
 		/*$dbr=wfGetDB(DB_SLAVE);
 		$res=$dbr->select('page_props',
 		array('pp_propertyname','pp_value'),
@@ -63,11 +63,11 @@ class ConferenceOrganizer
 		$ids=array();
 		foreach ($args as $attribute=>$value)
 		{
-			if($attribute=='organizer-conf')
+			if($attribute=='cvext-organizer-conf')
 			{
 				$ids[]=$value;
 			}
-			if($attribute=='organizer-user')
+			if($attribute=='cvext-organizer-user')
 			{
 				$ids[]=$value;
 			}
