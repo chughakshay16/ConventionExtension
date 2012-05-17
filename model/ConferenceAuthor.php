@@ -47,33 +47,71 @@ class ConferenceAuthor
 	 */
 	public static function createFromScratch($cid, $uid, $country , $affiliation, $url,$submission=null)
 	{
-		
+		$newParent=ConferenceAuthorUtils::hasParentAuthor($uid);
+		if($newParent)
+		{
+			//create a new title
+			$titleParent='';
+		}
+		else
+		{
+			//use an old one
+			$titleParent='';
+		}
 		$titleObj=Title::newFromText($title);
 		$pageObj=WikiPage::factory($titleObj);
+		if($newParent)
+		{
+			
+			$text=Xml::element('author',array('country'=>$country,'affiliation'=>$affiliation,'blogUrl'=>$url,
+			'cvext-author-user'=>$uid));
+			$status=$pageObj->doEdit($text, 'new parent author added',EDIT_NEW);
+			if($status->value['revision'])
+			{
+			$revision=$status->value['revision'];
+			$id=$revision->getPage();
+			}
+			else 
+			{
+			//do something here
+			}
+		}
+		else
+		{
+			if($pageObj->exists())
+			{
+				$id=$pageObj->getId();
+			}
+		}
 		$titleChildObj=Title::newFromText($titleChild);
 		$pageChildObj=WikiPage::factory($titleChildObj);
-		$text=Xml::element('author',array('country'=>$country,'affiliation'=>$affiliation,'blogUrl'=>$url,
-		'cvext-author-user'=>$uid));
-		$status=$page->doEdit($text, 'new parent author added',EDIT_NEW);
-		if($status->value['revision'])
-		$revision=$status->value['revision'];
-		$id=$revision->getPage();
 		$childText=Xml::element('author-sub',array('cvext-author-parent'=>$id,'cvext-author-conf'=>$cid));
 		$statusChild=$pageChildObj->doEdit($childText,'new sub author added',EDIT_NEW);
-		$revisionChild=$statusChild->value['revision'];
-		$idChild=$revisionChild->getPage();
-		$submission=AuthorSubmission::createFromScratch($idChild, $submission->getTitle(), $submission->getType(), 
-		$submission->getAbstract(), $submission->getTrack(), $submission->getLength(), $submission->getSlidesInfo(), 
-		$submission->getSlotReq());
-		$properties=array(array('id'=>$id,'prop'=>'cvext-author-user','value'=>$uid),array('id'=>$childId,'prop'=>'cvext-author-parent','value'=>$id),array('id'=>$childId,'prop'=>'cvext-author-conf','value'=>$cid));
-		$dbw=wfGetDB(DB_MASTER);
-		foreach($properties as $value)
+		if($statusChild->value['revision'])
 		{
-			$dbw->insert('page_props',array('pp_page'=>$value['id'],'pp_propertyname'=>$value['prop'],'pp_value'=>$value['value']));
+			$revisionChild=$statusChild->value['revision'];
+			$idChild=$revisionChild->getPage();
+			$submission=AuthorSubmission::createFromScratch($idChild, $submission->getTitle(), $submission->getType(), 
+			$submission->getAbstract(), $submission->getTrack(), $submission->getLength(), $submission->getSlidesInfo(), 
+			$submission->getSlotReq());
+			$properties=array(array('id'=>$childId,'prop'=>'cvext-author-parent','value'=>$id),array('id'=>$childId,'prop'=>'cvext-author-conf','value'=>$cid));
+			if($newParent)
+			{
+				$properties[]=array('id'=>$id,'prop'=>'cvext-author-user','value'=>$uid);
+			}
+			$dbw=wfGetDB(DB_MASTER);
+			foreach($properties as $value)
+			{
+				$dbw->insert('page_props',array('pp_page'=>$value['id'],'pp_propertyname'=>$value['prop'],'pp_value'=>$value['value']));
+			}
+			$submissions=array();
+			$submissions[]=$submission;
+			return new self($id,$cid, $uid, $country, $affiliation, $url,$submissions);
 		}
-		$submissions=array();
-		$submissions[]=$submission;
-		return new self($id,$cid, $uid, $country, $affiliation, $url,$submissions);
+		else 
+		{
+			//do something here
+		}
 	}
 	/**
 	 * @param Int $speakerId page_id of the speaker page
