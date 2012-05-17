@@ -85,12 +85,18 @@ class ConferenceAccount
 		$pageParentObj=WikiPage::factory($titleParentObj);
 		if($newParent)
 		{
-		$parentText=Xml::element('account',array('gender'=>$mGender,'firstName'=>$mFirstName,'lastName'=>$mLastName,
-		'cvext-account-user'=>$mUserId));
-		$statusParent=$pageParentObj->doEdit($parentText, 'new parent account added',EDIT_NEW);
-		if($statusParent->value['revision'])
-		$revision=$statusParent->value['revision'];
-		$id=$revision->getPage();
+			$parentText=Xml::element('account',array('gender'=>$mGender,'firstName'=>$mFirstName,'lastName'=>$mLastName,
+			'cvext-account-user'=>$mUserId));
+			$statusParent=$pageParentObj->doEdit($parentText, 'new parent account added',EDIT_NEW);
+			if($statusParent->value['revision'])
+			{
+				$revision=$statusParent->value['revision'];
+				$id=$revision->getPage();
+			}
+			else
+			{
+			//decide on what to do
+			}
 		}
 		else
 		{
@@ -103,31 +109,38 @@ class ConferenceAccount
 		$pageChildObj=WikiPage::factory($titleChildObj);
 		$childText=Xml::element('account-sub',array('cvext-account-parent'=>$id,'cvext-account-conf'=>$mConferenceId));
 		$statusChild=$pageChildObj->doEdit($childText,'new sub account added',EDIT_NEW);
-		$childId=$statusChild->value['revision']->getPage();
-		//passport-info will be linked to the parent account page
-		$mPassportInfo=ConferencePassportInfo::createFromScratch($mPassportInfo->getPassportNo(), $id,
-		$passportInfo->getIssuedBy(), $mPassportInfo->getValidUntil(), $mPassportInfo->getPlace(),
-		$mPassportInfo->getDOB(), $mPassportInfo->getCountry());
-		$registrations=array();
-		if(!is_null($mRegistration))
+		if($statusChild->value['revision'])
 		{
-			//we maintain a relationship between registration and account-sub page
-			$mRegistration=ConferenceRegistration::createFromScratch($childId, $mRegistration->getType(),
-			$mRegistration->getDietaryRestr(), $mRegistration->getOtherDietOpts(), $mRegistration->getOtherOpts(),
-			$mRegistration->getBadgeInfo(), $mRegistration->getTransaction(), $mRegistration->getEvents());
-			$registrations[]=$mRegistration;
+			$childId=$statusChild->value['revision']->getPage();
+			//passport-info will be linked to the parent account page
+			$mPassportInfo=ConferencePassportInfo::createFromScratch($mPassportInfo->getPassportNo(), $id,
+			$passportInfo->getIssuedBy(), $mPassportInfo->getValidUntil(), $mPassportInfo->getPlace(),
+			$mPassportInfo->getDOB(), $mPassportInfo->getCountry());
+			$registrations=array();
+			if(!is_null($mRegistration))
+			{
+				//we maintain a relationship between registration and account-sub page
+				$mRegistration=ConferenceRegistration::createFromScratch($childId, $mRegistration->getType(),
+				$mRegistration->getDietaryRestr(), $mRegistration->getOtherDietOpts(), $mRegistration->getOtherOpts(),
+				$mRegistration->getBadgeInfo(), $mRegistration->getTransaction(), $mRegistration->getEvents());
+				$registrations[]=$mRegistration;
+			}
+			$dbw=wfGetDB(DB_MASTER);
+			$properties=array(array('id'=>$childId,'prop'=>'cvext-account-conf','value'=>$mConferenceId),array('id'=>$childId,'prop'=>					'cvext-account-parent','value'=>$id));
+			if($newParent)
+			{
+				$properties[]=array('id'=>$id,'prop'=>'cvext-account-user','value'=>$mUserId);
+			}
+			foreach ($properties as $value)
+			{
+				$dbw->insert('page_props',array('pp_page'=>$value['id'],'pp_propname'=>$value['prop'],'pp_value'=>$value['value']));
+			}
+			return new self($id,array($mConferenceId), $mUserId, $mGender, $mFirstName, $mLastName,$mPassportInfo,$registrations);
 		}
-		$dbw=wfGetDB(DB_MASTER);
-		$properties=array(array('id'=>$childId,'prop'=>'cvext-account-conf','value'=>$mConferenceId),array('id'=>$childId,'prop'=>'cvext-account-parent','value'=>$id));
-		if($newParent)
+		else
 		{
-			$properties[]=array('id'=>$id,'prop'=>'cvext-account-user','value'=>$mUserId);
+		//do something here
 		}
-		foreach ($properties as $value)
-		{
-			$dbw->insert('page_props',array('pp_page'=>$value['id'],'pp_propname'=>$value['prop'],'pp_value'=>$value['value']));
-		}
-		return new self($id,array($mConferenceId), $mUserId, $mGender, $mFirstName, $mLastName,$mPassportInfo,$registrations);
 	}
 	/**
 	 * @param Int $accountId

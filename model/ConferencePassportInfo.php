@@ -32,18 +32,24 @@ class ConferencePassportInfo
 		'cvext-passport-account'=>$aid));
 		$status=$page->doEdit($text, 'new passport added',EDIT_NEW);	
 		if($status->value['revision'])
-		$revision=$status->value['revision'];
-		$id=$revision->getPage();
-		$dbw=wfGetDB(DB_MASTER);
-		$properties=array('cvext-passport-account'=>$aid);
-		foreach($properties as $name=>$value)
 		{
-			$dbw->insert('page_props',array('pp_page'=>$id,'pp_propertyname'=>$name,'pp_value'=>$value));
+			$revision=$status->value['revision'];
+			$id=$revision->getPage();
+			$dbw=wfGetDB(DB_MASTER);
+			$properties=array('cvext-passport-account'=>$aid);
+			foreach($properties as $name=>$value)
+			{
+				$dbw->insert('page_props',array('pp_page'=>$id,'pp_propertyname'=>$name,'pp_value'=>$value));
+			}
+			if($dbw->affectedRows())
+				return new self($id,$pno, $aid, $iby, $vu, $pl, $dob, $ctry);
+			else 
+				return null;
 		}
-		if($dbw->affectedRows())
-		return new self($id,$pno, $aid, $iby, $vu, $pl, $dob, $ctry);
-		else 
-		return null;
+		else
+		{
+		//do something here
+		}
 		
 	}
 	/**

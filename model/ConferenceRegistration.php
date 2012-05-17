@@ -65,29 +65,43 @@ class ConferenceRegistration
 		'otherOpts'=>$mOtherOpts,'badge'=>$mBadgeInfo,'cvext-registration-account'=>$mAccountId));
 		$status=$page->doEdit($text, 'new registration added',EDIT_NEW);	
 		if($status->value['revision'])
-		$revision=$status->value['revision'];
-		$id=$revision->getPage();
-		$dbw=wfGetDB(DB_MASTER);
-		$properties=array('cvext-registration-account'=>$mAccountId);
-		foreach ($properties as $name=>$value)
 		{
-			$dbw->insert('page_props',array('pp_page'=>$id,'pp_propname'=>$name,'pp_value'=>$value));
-		}
-		foreach($mEvents as $event)
-		{
-			$titleObj=Title::newFromText($title);
-			$pageObj=WikiPage::factory($titleObj);
-			$text=Xml::element('registration-event',array('cvext-registration-parent'=>$id,'cvext-registration-event'=>$event->getEventId()));
-			$status=$page->doEdit($text, 'new registration-event added',EDIT_NEW);	
-			if($status->value['revision'])
 			$revision=$status->value['revision'];
-			$subId=$revision->getPage();
-			$properties=array('cvext-registration-parent'=>$id,'cvext-registration-event'=>$event->getEventId());
-			foreach($properties as $name=>$value)
+			$id=$revision->getPage();
+			$dbw=wfGetDB(DB_MASTER);
+			$properties=array('cvext-registration-account'=>$mAccountId);
+			foreach ($properties as $name=>$value)
 			{
-				$dbw->insert('page_props', array('pp_page'=>$subId,'pp_propname'=>$name,'pp_value'=>$value));
+				$dbw->insert('page_props',array('pp_page'=>$id,'pp_propname'=>$name,'pp_value'=>$value));
 			}
+			foreach($mEvents as $event)
+			{
+				$titleObj=Title::newFromText($title);
+				$pageObj=WikiPage::factory($titleObj);
+				$text=Xml::element('registration-event',array('cvext-registration-parent'=>$id,'cvext-registration-event'=>$event->getEventId()));
+				$status=$page->doEdit($text, 'new registration-event added',EDIT_NEW);	
+				if($status->value['revision'])
+				{
+					$revision=$status->value['revision'];
+					$subId=$revision->getPage();
+					$properties=array('cvext-registration-parent'=>$id,'cvext-registration-event'=>$event->getEventId());
+					foreach($properties as $name=>$value)
+					{
+						$dbw->insert('page_props', array('pp_page'=>$subId,'pp_propname'=>$name,'pp_value'=>$value));
+					}
+				}
+				else
+				{
+				//do something here
+				}
+			}
+			return new self($id,$mAccountId,$mdietaryRestr,$mOtherDietOpts,$mOtherOpts,$mBadgeInfo,$mTransaction,$mEvents);
 		}
+		else
+		{
+		//do something here
+		}
+		
 	}
 	/**
 	 * @param Int $registrationId

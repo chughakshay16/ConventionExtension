@@ -21,11 +21,17 @@ class EventLocation
 		$text=Xml::element('location',array('roomNo'=>$roomNo,'description'=>$description,'url'=>$imageUrl,'cvext-type'=>'location'));
 		$status=$page->doEdit($text, 'new location added',EDIT_NEW);	
 		if($status->value['revision'])
-		$revision=$status->value['revision'];
-		$locationId=$revision->getPage();
-		$dbw=wfGetDB(DB_MASTER);
-		$dbw->insert('page_props',array('pp_page'=>$locationId,'pp_propname'=>'cvext-type','pp_value'=>'location'),__METHOD__,array());
-		return new self($roomNo,$description,$url,$locationId);
+		{
+			$revision=$status->value['revision'];
+			$locationId=$revision->getPage();
+			$dbw=wfGetDB(DB_MASTER);
+			$dbw->insert('page_props',array('pp_page'=>$locationId,'pp_propname'=>'cvext-type','pp_value'=>'location'),__METHOD__,array());
+			return new self($roomNo,$description,$url,$locationId);
+		}
+		else
+		{
+			//do something here
+		}
 	}
 	/**
 	 * @param Int $locationId page_id of the location page

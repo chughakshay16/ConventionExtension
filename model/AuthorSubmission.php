@@ -45,16 +45,24 @@ class AuthorSubmission
 		'track'=>$track,'length'=>$length,'slidesInfo'=>$slidesInfo,'slotReq'=>$slotReq,'cvext-submission-author'=>$aid));
 		$status=$page->doEdit($text, 'new submission added',EDIT_NEW);	
 		if($status->value['revision'])
-		$revision=$status->value['revision'];
-		$submissionId=$revision->getPage();
-		$dbw=wfGetDB(DB_MASTER);
-		$properties=array('cvext-submission-author'=>$aid);
-		foreach($properties as $name=>$value)
 		{
-			$dbw->insert('page_props',array('pp_page'=>$submissionId,'pp_propname'=>$name,'pp_value'=>$value),__METHOD__,array());
-		}
+			$revision=$status->value['revision'];
+			$submissionId=$revision->getPage();
+			$dbw=wfGetDB(DB_MASTER);
+			$properties=array('cvext-submission-author'=>$aid);
+			foreach($properties as $name=>$value)
+			{
+				$dbw->insert('page_props',array('pp_page'=>$submissionId,'pp_propname'=>$name,'pp_value'=>$value),__METHOD__,array());
+			}
 		
-		return new self($submissionId, $aid, $title,$type,$abstract, $track, $length, $slidesInfo, $slotReq);
+			return new self($submissionId, $aid, $title,$type,$abstract, $track, $length, $slidesInfo, $slotReq);
+		}
+		else
+		{
+			//it means revision could not be created
+			//need to decide on what should be done
+			//return new self(null,$aid,$title,$type,$abstract,$track,$length,$slidesInfo,$slotReq);
+		}
 	}
 	
 	/**

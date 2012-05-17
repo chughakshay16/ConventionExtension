@@ -22,15 +22,21 @@ class ConferencePage
 		 */
 		$page->doEdit($text,'new page added',EDIT_NEW);
 		if($status->value['revision'])
-		$revision=$status->value['revision'];
-		$id=$revision->getPage();
-		$properties=array('cvext-page-conf'=>$mConferenceId,'cvext-page-type'=>$type);
-		$dbw=wfGetDB(DB_MASTER);
-		foreach ($properties as $name=>$value)
 		{
-			$dbw->insert('page_props',array('pp_page'=>$id,'pp_propname'=>$name,'pp_value'=>$value));
+			$revision=$status->value['revision'];
+			$id=$revision->getPage();
+			$properties=array('cvext-page-conf'=>$mConferenceId,'cvext-page-type'=>$type);
+			$dbw=wfGetDB(DB_MASTER);
+			foreach ($properties as $name=>$value)
+			{
+				$dbw->insert('page_props',array('pp_page'=>$id,'pp_propname'=>$name,'pp_value'=>$value));
+			}
+			return new self($id,$mConferenceId,$type);
 		}
-		return new self($id,$mConferenceId,$type);
+		else
+		{
+		//do something here
+		}
 	}
 	/**
 	 * @param Int $pageId page_id of the conference page

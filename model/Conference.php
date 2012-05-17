@@ -53,11 +53,17 @@ class Conference
 		,'startDate'=>$startDate,'endDate'=>$endDate,'description'=>$description,'cvext-type'=>'conference'));
 		$status=$page->doEdit($text, 'new conference added',EDIT_NEW);
 		if($status->value['revision'])
+		{
 		$revision=$status->value['revision'];
 		$id=$revision->getPage();
 		$dbw=wfGetDB(DB_MASTER);
 		$dbw->insert('page_props',array('pp_page'=>$id,'pp_propname'=>'cvext-type','pp_value'=>'conference'));
 		return new self($id,$title,$description,$startDate,$endDate,$venue,$capacity);
+		}
+		else
+		{
+			//what should be done
+		}
 	}
 	/**
 	 * @param Int $conferenceId - page_id of the conference page

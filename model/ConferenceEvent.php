@@ -36,14 +36,18 @@ class ConferenceEvent
 			{
 				$revision=$status->value['revision'];
 				$eventId=$revision->getPage();
+				$dbw=wfGetDB(DB_MASTER);
+				$properties=array('cvext-event-conf'=>$mConferenceId,'cvext-event-location'=>$mLocation->getLocationId());
+				foreach($properties as $name=>$value)
+				{
+					$dbw->insert('page_props',array('pp_page'=>$eventId,'pp_propertyname'=>$name,'pp_value'=>$value),__METHOD__,array());
+				}
+				return new self($mConferenceId,$eventId,$mLocation,$mStartTime,$mEndTime,$mDay,$mTopic,$mGroup);
 			}
-			$dbw=wfGetDB(DB_MASTER);
-			$properties=array('cvext-event-conf'=>$mConferenceId,'cvext-event-location'=>$mLocation->getLocationId());
-			foreach($properties as $name=>$value)
+			else
 			{
-				$dbw->insert('page_props',array('pp_page'=>$eventId,'pp_propertyname'=>$name,'pp_value'=>$value),__METHOD__,array());
+			//do something here
 			}
-			return new self($mConferenceId,$eventId,$mLocation,$mStartTime,$mEndTime,$mDay,$mTopic,$mGroup);
 	}
 	/**
 	 * @param Int $eventId page_id of the event page
