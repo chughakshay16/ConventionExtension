@@ -1,10 +1,69 @@
 <?php
 class ConferenceAccount
 {
-	private $mConferenceIds,$mAccountId,$mUserId,$mGender, $mFirstName, $mLastName,$mPassportInfo, $mRegistrations;
-
+	/**
+	 * 
+	 * Array containing the conference ids associated with this account object
+	 * @var Array
+	 */
+	private $mConferenceIds;
+	/**
+	 * 
+	 * page_id for this account object 
+	 * @var Int
+	 */
+	private $mAccountId;
+	/**
+	 * 
+	 * user_id of the user to which this account object belongs to
+	 * @var Int
+	 */
+	private $mUserId;
+	/**
+	 * 
+	 * Gender of the account holder
+	 * @var String
+	 */
+	private $mGender;
+	/**
+	 * 
+	 * First Name of the account holder
+	 * @var String
+	 */
+	private $mFirstName;
+	/**
+	 * 
+	 * Last Name of the account holder
+	 * @var String
+	 */
+	private $mLastName;
+	/**
+	 * 
+	 * ConferencePassportInfo object associated with this account 
+	 * @var Object
+	 */
+	private $mPassportInfo;
+	/**
+	 * 
+	 * It stores all the registrations made by the account holder(registrations from all the conferences)
+	 * @var Array
+	 */
+	private $mRegistrations;
+	/**
+	 * 
+	 * Constructor function
+	 * generally called from ConferenceAccount::createFromScratch() or ConferenceAccount::loadFromId()
+	 * @param Int $mAccountId
+	 * @param Array $mConferenceIds
+	 * @param Int $mUserId
+	 * @param String $mGender
+	 * @param String $mFirstName
+	 * @param String $mLastName
+	 * @param Object $mPassportInfo
+	 * @param Array $mRegistrations
+	 */
 	public function __construct($mAccountId=null,$mConferenceIds=array(),$mUserId,$mGender, $mFirstName, $mLastName,$mPassportInfo=null, 
-	$mRegistrations=null,$mChildren=null){
+	$mRegistrations=null){
 		$this->mConferenceIds=$mConferenceIds;
 		$this->mAccountId=$mAccountId;
 		$this->mUserId=$mUserId;
@@ -15,59 +74,218 @@ class ConferenceAccount
 		$this->mRegistrations=$mRegistrations;
 
 	}
-	public function getGender()
-	{
-		return $this->mGender;
-	}
-	public function setGender($gender)
-	{
-		$this->mGender=$gender;
-	}
-	public function getFirstName()
-	{
-		return $this->mFirstName;
-	}
-	public function setFirstName($name)
-	{
-		$this->mFirstName=$name;
-	}
-	public function getLastName()
-	{
-		return $this->mLastName;
-	}
-	public function setLastName($name)
-	{
-		$this->mLastName=$name;
-	}
-	public function getPassportInfo()
-	{
-		return $this->mPassportInfo;
-		
-	}
-	public function setPassportInfo($info)
-	{
-		$this->mPassportInfo=$info;
-	}
-	public function getRegistrations()
-	{
-		return $this->mRegistrations;
-	
-	}
-	public function setRegistrations($registrations)
-	{
-		$this->mRegistrations=$registrations;
-	}
 	/**
-	 * @param Int $mConferenceId
+	 * 
+	 * This function creates a ConferenceAccount object with an empty registrations array.
 	 * @param Int $mUserId
-	 * @param String$mGender
+	 * @param String $mGender
 	 * @param String $mFirstName
 	 * @param String $mLastName
-	 * @param Object(ConferencePassportInfo) $mPassportInfo
-	 * @param Object(ConferenceRegistration) $mRegistration
+	 * @param Object $mPassportInfo - this object contains all the passport details except the page_id for the 
+	 * passport page, which is created during this function and is set up with the passed passport info object
+	 */
+	public static function createFromScratch($mUserId,$mGender, $mFirstName, $mLastName,$mPassportInfo)
+	{
+		$username=UserUtils::getUsername($mUserId);
+		$accountTitle='accounts/'.$username;
+		$title=Title::newFromText($accountTitle);
+		$page=WikiPage::factory($title);
+		$passportTitle='passports/'.$username;
+		$passportTitleObj=Title::newFromText($passportTitle);
+		$passportPage=WikiPage::factory($passportTitleObj);
+		$accountText=Xml::element('account',array('gender'=>$mGender,'firstName'=>$mFirstName,'lastName'=>$mLastName,
+			'cvext-account-user'=>$mUserId));
+		$status=$page->doEdit($accountText,'creating new account for the user '.$username,EDIT_NEW);
+		if($status->value['revision'])
+		{
+			$accountId=$status->value['revision']->getPage();
+		} else {
+			//throw some error
+		}
+		//now create a passport object
+		$mPassportInfo=ConferencePassportInfo::createFromScratch($mPassportInfo->getPassportNo(), $accountId,
+		$passportInfo->getIssuedBy(), $mPassportInfo->getValidUntil(), $mPassportInfo->getPlace(),
+		$mPassportInfo->getDOB(), $mPassportInfo->getCountry());
+		$dbw=wfGetDB(DB_MASTER);
+		$dbw->insert('page_props',array('pp_page'=>$accountId,'pp_propname'=>'account-user','pp_value'=>$mUserId));
+		return new self($accountId,array(), $mUserId, $mGender, $mFirstName, $mLastName,$mPassportInfo);
+		
+		
+	}
+	/**
+	 * @param Int $accountId
 	 * @return ConferenceAccount
 	 */
-	public static function createFromScratch($mConferenceId,$mUserId,$mGender, $mFirstName, $mLastName,$mPassportInfo,$mRegistration=null)
+	public static function loadFromId($accountId)
+	{
+		$article=Article::newFromID($accountId);
+		$text=$article->fetchContent();
+		preg_match_all("/<account gender=\"(.*)\" firstName=\"(.*)\" lastName=\"(.*)\" cvext-account-user=\"(.*)\" \/>/",
+		$text,$matches);
+		$dbr=wfGetDB(DB_SLAVE);
+		$row=$dbr->selectRow('page_props',
+		array('pp_page'),
+		array('pp_propname'=>'cvext-passport-account','pp_value'=>$accountId),
+		__METHOD__,
+		array());
+		/*$ids=array();
+		 foreach($res as $row)
+		 {
+			$ids[]=$row->pp_page;
+			}
+			$passportRow=$dbr->selectRow('page_props',
+			array('pp_page'),
+			array('pp_page'=>$ids,'pp_value'=>'passport'));*/
+		$passportInfo=ConferencePassportInfo::loadFromId($row->pp_page);
+		$resultSub=$dbr->select('page_props',
+		'*',
+		array('pp_propname'=>'cvext-account-parent','pp_value'=>$accountId),
+		__METHOD__,
+		array());
+		$subAccountIds=array();
+		$conferenceIds=array();
+		$registrations=array();
+		foreach ($resultSub as $row)
+		{
+			$subAccountIds[]=$row->pp_page;
+		}
+		if(!is_empty($subAccountIds))
+		{
+			$conferenceResult=$dbr->select('page_props',
+			'*',
+			array('pp_page IN ('.implode(',',$subAccountIds).')','pp_propname'=>'cvext-account-conf'),
+			__METHOD__);
+			foreach ($conferenceResult as $row)
+			{
+				$conferenceIds[]=$row->pp_value;
+			}
+			$res=$dbr->select('page_props',
+			array('pp_page'),
+			array('pp_value IN ('.implode(',',$subAccountIds).')','pp_propname'=>'cvext-registration-account'),
+			__METHOD__,
+			array());
+			
+			foreach ($res as $row)
+			{
+				$registrations[]=ConferenceRegistration::loadFromId($row->pp_page);
+
+			}
+		}
+		
+		
+		
+		return new self($accountId,$conferenceIds,$matches[4][0],$matches[1][0], $matches[2][0], $matches[3][0],$passportInfo, $registrations);
+
+
+	}
+	/**
+	 * 
+	 * This function is used for adding registration to the ConferenceAccount object.
+	 * This function works on a pre-loaded ConferenceAccount object, so it should 
+	 * always be called on an object created from ConferenceAccount::createFromScratch() or 
+	 * ConferenceAccount::loadFromId()
+	 * @param Object $registration
+	 * @param Int $confId
+	 */
+	public function pushRegistration($registration=null,$confId)
+	{
+		if( is_null($registration) )
+		{
+			return '';
+		}
+		$conferenceTitle=ConferenceUtils::getTitle($confId);
+		$username=UserUtils::getUsername($this->getUserId());
+		$titleText=$conferenceTitle.'/accounts/'.$username;
+		$title=Title::newFromText($titleText);
+		$page=WikiPage::factory($title);
+		$properties=array();
+		$newChild=!(in_array($confId,$this->mConferenceIds));
+		if($newChild)
+		{
+			$text=Xml::element('account-sub',array('cvext-account-parent'=>$this->getAccountId(),'cvext-account-conf'=>$confId));
+			$status=$page->doEdit($text,'creating new sub account',EDIT_NEW);
+			if($status->value['revision'])
+			{
+				$id=$status->value['revision']->getPage();
+				$properties[]=array('id'=>$id,'prop'=>'cvext-account-parent','value'=>$this->getAccountId());
+				$properties[]=array('id'=>$id,'prop'=>'cvext-account-conf','value'=>$confId);
+				foreach ($properties as $value)
+				{
+					$dbw->insert('page_props',array('pp_page'=>$value['id'],'pp_propname'=>$value['prop'],'pp_value'=>$value['value']));
+				}
+			} else {
+				//do something here
+			}
+			
+		} else {
+			if($page->exists())
+			{
+				$id=$page->getId();
+			}
+		}
+			$registration=ConferenceRegistration::createFromScratch($id, $registration->getType(),
+			$registration->getDietaryRestr(), $registration->getOtherDietOpts(), $registration->getOtherOpts(),
+			$registration->getBadgeInfo(), $registration->getTransaction(), $registration->getEvents());
+			$this->addConferenceId($confId);
+			$this->addRegistration($registration);
+	}
+	/**
+	 * 
+	 * for adding conference id to the $mConferenceIds array
+	 * @param Int $confId
+	 */
+	public function addConferenceId($confId)
+	{
+		$this->mConferenceIds[]=$confId;
+	}
+	/**
+	 * 
+	 * for adding registration object to the $mRegistrations array
+	 * @param Object $registration
+	 */
+	public function addRegistration($registration)
+	{
+		$this->mRegistrations[]=$registration;
+	}
+	/**
+	 * 
+	 * parserFirstCallInit() hook function
+	 * It re-populates the page_props table with the properties of parent account wiki page
+	 * @param String $input
+	 * @param Array $args
+	 * @param Parser object $parser
+	 * @param PPFrame object $frame
+	 */
+	public static function render($input, array $args, Parser $parser, PPFrame $frame)
+	{
+		
+		//now we have to re-set these values into page_props table
+		$dbw=wfGetDB(DB_MASTER);
+		$title=$parser->getTitle();
+		$accountId=$title->getArticleId();
+		//$page_props=array('account-conf'=>$conferenceId,'account-user'=>$userId);
+		$dbw->insert('page_props',array('pp_page'=>$accountId,'pp_propname'=>'cvext-account-user','pp_value'=>$args['cvext-account-user']));
+		return '';
+	}
+	/**
+	 * 
+	 * Re-populates the page_props table with properties of child account wiki page
+	 * @param String $input
+	 * @param Array $args
+	 * @param Parser object $parser
+	 * @param PPFrame object $frame
+	 */
+	public static function renderSub($input, array $args, Parser $parser, PPFrame $frame)
+	{
+		$dbw=wfGetDB(DB_MASTER);
+		$title=$parser->getTitle();
+		$accountSubId=$title->getArticleId();
+		foreach($args as $attribute=>$value)
+		{
+			$dbw->insert('page_props',array('pp_page'=>$accountSubId,'pp_propname'=>$attribute,'pp_value'=>$value));
+		}
+	}
+	/*public static function createFromScratch($mConferenceId,$mUserId,$mGender, $mFirstName, $mLastName,$mPassportInfo,$mRegistration=null)
 	{
 		//this is revised approach for storing account objects
 		$newParent=ConferenceAccount::hasParentAccount($mUserId);
@@ -141,87 +359,48 @@ class ConferenceAccount
 		{
 		//do something here
 		}
-	}
-	/**
-	 * @param Int $accountId
-	 * @return ConferenceAccount
-	 */
-	public static function loadFromId($accountId)
+	}*/
+	public function getGender()
 	{
-		$article=Article::newFromID($accountId);
-		$text=$article->fetchContent();
-		preg_match_all("/<account gender=\"(.*)\" firstName=\"(.*)\" lastName=\"(.*)\" cvext-account-user=\"(.*)\" \/>/",
-		$text,$matches);
-		$dbr=wfGetDB(DB_SLAVE);
-		$row=$dbr->selectRow('page_props',
-		array('pp_page'),
-		array('pp_propname'=>'cvext-passport-account','pp_value'=>$accountId),
-		__METHOD__,
-		array());
-		/*$ids=array();
-		 foreach($res as $row)
-		 {
-			$ids[]=$row->pp_page;
-			}
-			$passportRow=$dbr->selectRow('page_props',
-			array('pp_page'),
-			array('pp_page'=>$ids,'pp_value'=>'passport'));*/
-		$passportInfo=ConferencePassportInfo::loadFromId($row->pp_page);
-		$resultSub=$dbr->select('page_props',
-		'*',
-		array('pp_propname'=>'cvext-account-parent','pp_value'=>$accountId),
-		__METHOD__,
-		array());
-		$subAccountIds=array();
-		$conferenceIds=array();
-		foreach ($resultSub as $row)
-		{
-			$subAccountIds[]=$row->pp_page;
-		}
-		$conferenceResult=$dbr->select('page_props',
-		'*',
-		array('pp_page IN ('.implode(',',$subAccountIds).')','pp_propname'=>'cvext-account-conf'),
-		__METHOD__);
-		foreach ($conferenceResult as $row)
-		{
-			$conferenceIds[]=$row->pp_value;
-		}
-		$res=$dbr->select('page_props',
-		array('pp_page'),
-		array('pp_value IN ('.implode(',',$subAccountIds).')','pp_propname'=>'cvext-registration-account'),
-		__METHOD__,
-		array());
-		$registrations=array();
-		foreach ($res as $row)
-		{
-			$registrations[]=ConferenceRegistration::loadFromId($row->pp_page);
-
-		}
+		return $this->mGender;
+	}
+	public function setGender($gender)
+	{
+		$this->mGender=$gender;
+	}
+	public function getFirstName()
+	{
+		return $this->mFirstName;
+	}
+	public function setFirstName($name)
+	{
+		$this->mFirstName=$name;
+	}
+	public function getLastName()
+	{
+		return $this->mLastName;
+	}
+	public function setLastName($name)
+	{
+		$this->mLastName=$name;
+	}
+	public function getPassportInfo()
+	{
+		return $this->mPassportInfo;
 		
-		return new self($accountId,$conferenceIds,$matches[4][0],$matches[1][0], $matches[2][0], $matches[3][0],$passportInfo, $registrations);
-
-
 	}
-	public static function render($input, array $args, Parser $parser, PPFrame $frame)
+	public function setPassportInfo($info)
 	{
-		
-		//now we have to re-set these values into page_props table
-		$dbw=wfGetDB(DB_MASTER);
-		$title=$parser->getTitle();
-		$accountId=$title->getArticleId();
-		//$page_props=array('account-conf'=>$conferenceId,'account-user'=>$userId);
-		$dbw->insert('page_props',array('pp_page'=>$accountId,'pp_propname'=>'cvext-account-user','pp_value'=>$args['cvext-account-user']));
-		return '';
+		$this->mPassportInfo=$info;
 	}
-	public static function renderSub($input, array $args, Parser $parser, PPFrame $frame)
+	public function getRegistrations()
 	{
-		$dbw=wfGetDB(DB_MASTER);
-		$title=$parser->getTitle();
-		$accountSubId=$title->getArticleId();
-		foreach($args as $attribute=>$value)
-		{
-			$dbw->insert('page_props',array('pp_page'=>$accountSubId,'pp_propname'=>$attribute,'pp_value'=>$value));
-		}
+		return $this->mRegistrations;
+	
+	}
+	public function setRegistrations($registrations)
+	{
+		$this->mRegistrations=$registrations;
 	}
 	
 	public function getConferenceId()
@@ -248,5 +427,5 @@ class ConferenceAccount
 	{
 		$this->mUserId=$id;
 	}
-
+	
 }

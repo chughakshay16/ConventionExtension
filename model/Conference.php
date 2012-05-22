@@ -47,6 +47,7 @@ class Conference
 	 */
 	public static function createFromScratch($title,$venue,$capacity,$startDate,$endDate,$description)
 	{
+		//in case of conference wiki page (page_title would be set as conference title only)
 		$titleObj=Title::newFromText($title);
 		$page=WikiPage::factory($titleObj);
 		$text=Xml::element('conference',array('title'=>$title,'venue'=>$venue,'capacity'=>$capacity

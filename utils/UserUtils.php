@@ -50,5 +50,15 @@ class UserUtils
 		array());
 		return $dbr->numRows($res)?true:false;
 	}
+	public static function getUsername($uid)
+	{
+		$dbr=wfGetDB(DB_SLAVE);
+		$resultRow=$dbr->select("user",
+		'user_name',
+		array('user_id'=>$uid),
+		__METHOD__,
+		array());
+		return $resultRow->user_name?$resultRow->user_name:null;
+	}
 	
 }

@@ -41,4 +41,5 @@ class ConferenceUtils
 		array());
 		return $row->page_title;
 	}	
+	
 }

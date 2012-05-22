@@ -1,11 +1,65 @@
 <?php
 class AuthorSubmission
 {
-	private $mSubmissionId,$mAuthorId,$mTitle,$mType,$mAbstract,$mTrack,$mLength,$mSlidesInfo,$mSlotRequest;
+	/**
+	 * 
+	 * page_id of the submission wiki page
+	 * @var Int
+	 */
+	private $mSubmissionId;
+	/**
+	 * 
+	 * page_id of the sub-author wiki page
+	 * @var Int
+	 */
+	private $mAuthorId;
+	/**
+	 * 
+	 * title of the submission
+	 * @var String
+	 */
+	private $mTitle;
+	/**
+	 * 
+	 * Type of submission
+	 * @var String
+	 */
+	private $mType;
+	/**
+	 * 
+	 * Abstract for the submission
+	 * @var String
+	 */
+	private $mAbstract;
+	/**
+	 * 
+	 * Track under which this submission can be categorized
+	 * @var String
+	 */
+	private $mTrack;
+	/**
+	 * 
+	 * Length of the presentation(it will be in minutes, storing it as a String)
+	 * @var String
+	 */
+	private $mLength;
+	/**
+	 * 
+	 * Some extra slides info for the submission
+	 * @var String
+	 */
+	private $mSlidesInfo;
+	/**
+	 * 
+	 * Slot which is requested by the author
+	 * @var unknown_type
+	 * @todo still need to decide how are slots created for the conference
+	 */
+	private $mSlotRequest;
 	/**
 	 * 
 	 * @param  Int $id
-	 * @param  Int  $aid
+	 * @param  Int  $aid - page_id of the sub-author wiki page
 	 * @param String $title
 	 * @param String $type
 	 * @param String $abstract
@@ -27,7 +81,7 @@ class AuthorSubmission
 		$this->mSlotRequest=$slotReq;
 	}
 		/**
-	 * @param $aid Int page_id of the account page
+	 * @param $aid Int page_id of the sub-author page
  	 * @param $title String title of the submission
  	 * @param $type String type of the submission(presentation, seminar...)
 	 * @param $abstract String
@@ -39,7 +93,10 @@ class AuthorSubmission
 	 */
 	public static function createFromScratch($aid, $title,$type,$abstract, $track, $length, $slidesInfo, $slotReq)
 	{
-		$titleObj=Title::newFromText($title);
+		$conferenceTitle=ConferenceAuthorUtils::getConferenceTitleFromSubAuthor($aid);
+		$username=ConferenceAuhorUtils::getUsernameFromSubAuthor($aid);
+		$titleSub=$conferenceTitle.'/authors/'.$username.'/submissions/'.$title;
+		$titleObj=Title::newFromText($titleSub);
 		$pageObj=WikiPage::factory($titleObj);
 		$text=Xml::element('submission',array('title'=>$title,'submissionType'=>$type,'abstract'=>$abstract,
 		'track'=>$track,'length'=>$length,'slidesInfo'=>$slidesInfo,'slotReq'=>$slotReq,'cvext-submission-author'=>$aid));
@@ -87,6 +144,14 @@ class AuthorSubmission
 		return new self($submissionId, $matches[8][], $matches[1][0], $matches[2][0], $matches[3][0], $matches[4][0], 
 		$matches[5][0], $matches[6][0], $slotReq[7][0]);
 	}
+	/**
+	 * 
+	 * Parser Hook function
+	 * @param unknown_type $input
+	 * @param unknown_type $args
+	 * @param unknown_type $parser
+	 * @param unknown_type $frame
+	 */
 	public static function render($input, array $args, Parser $parser, PPFrame $frame)
 	{
 		//extract all the relevant info and store it in the page_props
