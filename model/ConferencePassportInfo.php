@@ -1,8 +1,66 @@
 <?php
 class ConferencePassportInfo
 {
-	private $mId,$mPassportNo,$mAccountId,$mIssuedBy,$mValidUntil,$mPlace,$mDob,$mCountry;
-	
+	/**
+	 * 
+	 * page_id of the passport wiki page
+	 * @var Int
+	 */
+	private $mId;
+	/**
+	 * 
+	 * passport no.
+	 * @var String (it would actually be a number but we will store it as a string)
+	 */
+	private $mPassportNo;
+	/**
+	 * 
+	 * page_id of the parent account page
+	 * @var Int
+	 */
+	private $mAccountId;
+	/**
+	 * 
+	 * Date when this passport was issued
+	 * @var String (in date format ddMMYYYY)
+	 */
+	private $mIssuedBy;
+	/**
+	 * 
+	 * Uptil what date will it be valid
+	 * @var String (in date format ddMMYYYY)
+	 */
+	private $mValidUntil;
+	/**
+	 * 
+	 * Place where this was issued
+	 * @var String
+	 */
+	private $mPlace;
+	/**
+	 * 
+	 * Date of Birth
+	 * @var String (in date format ddMMYYYY)
+	 */
+	private $mDob;
+	/**
+	 * 
+	 * Country where this passport was issued
+	 * @var String(3 digit country code)
+	 */
+	private $mCountry;
+	/**
+	 * 
+	 * Constructor function
+	 * @param Int $id
+	 * @param String $pno
+	 * @param Int $aid
+	 * @param String(date format) $iby
+	 * @param String(date format) $vu
+	 * @param String $pl
+	 * @param String(date format) $dob
+	 * @param String $ctry
+	 */
 	public function __construct($id=null,$pno,$aid,$iby,$vu,$pl,$dob,$ctry)
 	{
 		$this->mPassportNo=$pno;
@@ -71,6 +129,14 @@ class ConferencePassportInfo
 		return new self($passportId,$matches[1][0],$matches[7][0], $matches[6][0], $matches[2][0], $matches[3][0], $matches[4][0], 
 		$matches[5][0]);
 	}
+	/**
+	 * 
+	 * Parser Hook function
+	 * @param String $input
+	 * @param Array $args
+	 * @param Parser $parser
+	 * @param PPFrame $frame
+	 */
 	public static function render($input, array $args, Parser $parser, PPFrame $frame)
 	{
 		wfGetDB(DB_MASTER)->insert('page_props', array('pp_page'=>$parser->getTitle()->getArticleId(),'pp_propname'=>'cvext-passport-account','pp_value'=>$args['passport-account']));

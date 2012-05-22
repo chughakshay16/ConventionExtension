@@ -1,7 +1,39 @@
 <?php
 class EventLocation
 {
-	private $mLocationId,$mRoomNo,$mDescription,$mImageUrl;
+	/**
+	 * 
+	 * page_id of the location page
+	 * @var Int
+	 */
+	private $mLocationId;
+	/**
+	 * 
+	 * Enter description here ...
+	 * @var unknown_type
+	 * @todo change the name of this property (make it more appropriate)
+	 */
+	private $mRoomNo;
+	/**
+	 * 
+	 * description of the location
+	 * @var String
+	 */
+	private $mDescription;
+	/**
+	 * 
+	 * url for the location's image
+	 * @var String
+	 */
+	private $mImageUrl;
+	/**
+	 * 
+	 * Constructor function
+	 * @param String(number) $rno
+	 * @param String $desc
+	 * @param string $url
+	 * @param Int $lid
+	 */
 	public function __construct($rno,$desc,$url,$lid=null){
 		$this->mRoomNo=$rno;
 		$this->mDescription=$desc;
@@ -44,6 +76,14 @@ class EventLocation
 		preg_match_all("/<location roomNo=\"(.*)\" description=\"(.*)\" url=\"(.*)\" cvext-type=\"(.*)\" \/>/",$text,$matches);
 		return new self($matches[1][0], $matches[2][0], $matches[3][0], $locationId);
 	}
+	/**
+	 * 
+	 * Parser Hook function
+	 * @param String $input
+	 * @param Array $args
+	 * @param Parser $parser
+	 * @param PPFrame $frame
+	 */
 	public static function render($input, array $args, Parser $parser, PPFrame $frame)
 	{
 		wfGetDB(DB_MASTER)->insert('page_props',array('pp_page'=>$parser->getTitle()->getArticleId()
