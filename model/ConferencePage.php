@@ -103,26 +103,53 @@ class ConferencePage
 		}
 		return '';
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getId()
 	{
 		return $this->mId;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param Int $id
+	 */
 	public function setId($id)
 	{
 		$this->mId=$id;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getConferenceId()
 	{
 		return $this->mConferenceId;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param Int $id
+	 */
 	public function setConferenceId($id)
 	{
 		$this->mConferenceId=$id;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function gettype()
 	{
 		return $this->mType;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $type
+	 */
 	public function setType($type)
 	{
 		$this->mType=$type;

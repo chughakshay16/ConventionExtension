@@ -257,57 +257,120 @@ class ConferenceRegistration
 		}
 		
 	}*/
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getDietaryRestr()
 	{
 		return $this->mdietaryRestr;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $restr
+	 */
 	public function setDietaryRestr($restr)
 	{
 		$this->mdietaryRestr=$restr;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getOtherDietOpts(){
 		return $this->mOtherDietOpts;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $opts
+	 */
 	public function setOtherDietOpts($opts)
 	{
 		$this->mOtherDietOpts=$opts;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getOtherOpts()
 	{
 		return $this->mOtherOpts;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $opts
+	 */
 	public function setOtherOpts($opts)
 	{
 		$this->mOtherOpts=$opts;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getBadgeInfo()
 	{
 		return $this->mBadgeInfo;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $info
+	 */
 	public function setBadgeInfo($info)
 	{
 		$this->mBadgeInfo=$info;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getId()
 	{
 		return $this->mId;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param Int $id
+	 */
 	public function setId($id)
 	{
 		$this->mId=$id;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getAccountId()
 	{
 		return $this->mAccountId;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param Int $id
+	 */
 	public function setAccountId($id)
 	{
 		$this->mAccountId=$id;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getType()
 	{
 		return $this->mType;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String$type
+	 */
 	public function setType($type)
 	{
 		$this->mType=$type;

@@ -1,8 +1,66 @@
 <?php
 class ConferenceEvent
 {
-	private $mConferenceId,$mEventId,$mLocation,$mStartTime,$mEndTime,$mDay,$mTopic,$mGroup;
-	
+	/**
+	 * 
+	 * page_id of the conference wiki page
+	 * @var Int
+	 */
+	private $mConferenceId;
+	/**
+	 * 
+	 * page_id of the event page(which this object represents)
+	 * @var Int
+	 */
+	private $mEventId;
+	/**
+	 * 
+	 * EventLocation object for this event
+	 * @var Object
+	 */
+	private $mLocation;
+	/**
+	 * 
+	 * Starting time(stored as XXXX for ex. 0070)
+	 * @var String
+	 */
+	private $mStartTime;
+	/**
+	 * 
+	 * Ending time(stored as XXXX for ex. 0070)
+	 * @var String
+	 */
+	private $mEndTime;
+	/**
+	 * 
+	 * Day of the event (stored as ddMMyyyy for ex. 23112007)
+	 * @var String
+	 */
+	private $mDay;
+	/**
+	 * 
+	 * Topic for the event
+	 * @var String
+	 */
+	private $mTopic;
+	/**
+	 * 
+	 * Group for which this event was organized
+	 * @var String
+	 */
+	private $mGroup;
+	/**
+	 * 
+	 * Constructor function
+	 * @param Int $mConferenceId
+	 * @param Int $mEventId
+	 * @param Object $mLocation
+	 * @param String $mStartTime
+	 * @param String $mEndTime
+	 * @param String $mDay
+	 * @param String $mTopic
+	 * @param String $mGroup
+	 */
 	public function __construct($mConferenceId,$mEventId=null,$mLocation=null,$mStartTime,$mEndTime,$mDay,$mTopic,$mGroup)
 	{
 		$this->mConferenceId=$mConferenceId;
@@ -27,7 +85,9 @@ class ConferenceEvent
 	 */
 	public static function createFromScratch($mConferenceId,$mLocation,$mStartTime,$mEndTime,$mDay,$mTopic,$mGroup)
 	{
-			$title=Title::newFromText();
+			$confTitle=ConferenceUtils::getTitle($mConferenceId);
+			$titleText=$confTitle.'/events/'.$mTopic.'-'.$mDay.'-'.$mStartTime.'-'.$mEndTime;
+			$title=Title::newFromText($titleText);
 			$page=WikiPage::factory($title);
 			$text=Xml::element('event',array('cvext-event-conf'=>$mConferenceId,'cvext-event-location'=>$mLocation->getLocationId(),
 			'startTime'=>$mStartTime,'endTime'=>$mEndTime,'day'=>$mDay,'topic'=>$mTopic,'group'=>$mGroup));
@@ -78,6 +138,14 @@ class ConferenceEvent
 		$location=EventLocation::loadFromId($matches[2][0]);
 		return new self($matches[1][0],$eventId,$location,$matches[3][0],$matches[4][0],$matches[5][0],$matches[6][0],$matches[7][0]);
 	}
+	/**
+	 * 
+	 * Enter description here ...
+	 * @param unknown_type $input
+	 * @param array $args
+	 * @param Parser $parser
+	 * @param PPFrame $frame
+	 */
 	public static function render($input, array $args, Parser $parser, PPFrame $frame)
 	{
 		$ids=array();
@@ -100,66 +168,138 @@ class ConferenceEvent
 			return '';
 		}
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getConferenceId()
 	{
 		return $this->mConferenceId;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param Int $id
+	 */
 	public function setConferenceId($id)
 	{
 		$this->mConferenceId=$id;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getEventId()
 	{
 		return $this->mEventId;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param Int $id
+	 */
 	public function setEventId($id)
 	{
 		$this->mEventId=$id;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getLocationId()
 	{
 		return $this->mLocationId;
 	}
-	public function setLocationId()
+	/**
+	 * 
+	 * setter function
+	 * @param Int $id
+	 */
+	public function setLocationId($id)
 	{
 		$this->mLocationId=$id;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getStartTime()
 	{
 		return $this->mStartTime;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $time
+	 */
 	public function setStartTime($time)
 	{
 		$this->mStartTime=$time;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getEndTime()
 	{
 		return $this->mEndTime;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $time
+	 */
 	public function setEndTime($time)
 	{
 		$this->mEndTime=$time;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getDay()
 	{
 		return $this->mDay;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $day
+	 */
 	public function setDay($day)
 	{
 		$this->mDay=$day;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getTopic()
 	{
 		return $this->mTopic;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $topic
+	 */
 	public function setTopic($topic)
 	{
 		$this->mTopic=$topic;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getGroup()
 	{
 		return $this->mGroup;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $group
+	 */
 	public function setGroup($group)
 	{
 		$this->mGroup=$group;

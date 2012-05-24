@@ -142,66 +142,138 @@ class ConferencePassportInfo
 		wfGetDB(DB_MASTER)->insert('page_props', array('pp_page'=>$parser->getTitle()->getArticleId(),'pp_propname'=>'cvext-passport-account','pp_value'=>$args['passport-account']));
 		return '';
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getId()
 	{
 		return $this->mId;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param Int $id
+	 */
 	public function setId($id)
 	{
 		$this->mId=$id;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getAccountId()
 	{
 		return $this->mAccountId;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param Int $id
+	 */
 	public function setAccountId($id)
 	{
 		$this->mAccountId=$id;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getPassportNo()
 	{
 		return $this->mPassportNo;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $no
+	 */
 	public function setPasssportNo($no)
 	{
 		$this->mPassportNo=$no;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getIssuedBy()
 	{
 		return $this->mIssuedBy;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $issued
+	 */
 	public function setIssuedBy($issued)
 	{
 		$this->mIssuedBy=$issued;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getValidUntil()
 	{
 		return $this->mValidUntil;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $valid
+	 */
 	public function setValidUntil($valid)
 	{
 		$this->mValidUntil=$valid;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getPlace()
 	{
 		return $this->mPlace;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $place
+	 */
 	public function setPlace($place)
 	{
 		$this->mPlace=$place;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getDOB()
 	{
 		return $this->mDob;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $dob
+	 */
 	public function setDOB($dob)
 	{
 		$this->mDob=$dob;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getCountry()
 	{
 		return $this->mCountry;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $country
+	 */
 	public function setCountry($country)
 	{
 		$this->mCountry=$country;

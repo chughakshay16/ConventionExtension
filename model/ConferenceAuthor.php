@@ -44,7 +44,7 @@ class ConferenceAuthor
 	private $mSubmissions;
 	/**
 	 * 
-	 * Enter description here ...
+	 * constructor function
 	 * @param Int $aid
 	 * @param Array $cids
 	 * @param Int $uid

@@ -1,20 +1,101 @@
 <?php
 class Conference
 {
+	/**
+	 * 
+	 * page_id of the conference wiki page that this object represents
+	 * @var Int
+	 */
 	private $mId;
+	/**
+	 * 
+	 * Title of the conference(in our case its also the title of conference wiki page that exists in page table)
+	 * @var String
+	 */
 	private $mTitle;
+	/**
+	 * 
+	 * Description for the conference
+	 * @var String
+	 */
 	private $mDescription;
+	/**
+	 * 
+	 * Starting date of the conference
+	 * @var String ( eg. 12062007)
+	 */
 	private $mStartDate;
+	/**
+	 * 
+	 * Ending date of the conference
+	 * @var String (eg. 12062007)
+	 */
 	private $mEndDate;
+	/**
+	 * 
+	 * Venue for the conference
+	 * @var String
+	 */
 	private $mVenue;
+	/**
+	 * 
+	 * Capacity of the conference
+	 * @var String(actually will be a number)
+	 */
 	private $mCapacity;
+	/**
+	 * 
+	 * Array of ConferenceAuthor objects for this conference
+	 * @var Array
+	 */
 	private $mAuthors;
+	/**
+	 * 
+	 * Array of ConferenceEvent objects for this conference
+	 * @var Array
+	 */
 	private $mEvents;
+	/**
+	 * 
+	 * Array of ConferenceApplicant objects for this conference
+	 * @var Array
+	 */
 	private $mApplicants;
+	/**
+	 * 
+	 * Array of ConferenceOrganizer objects for this conference
+	 * @var Array
+	 */
 	private $mOrganizers;
+	/**
+	 * 
+	 * Array of ConferenceAccount objects for this conference
+	 * @var Array
+	 */
 	private $mAccounts;
+	/**
+	 * 
+	 * Array of ConferencePage objects for this conference
+	 * @var Array
+	 */
 	private $mPages;
-
+	/**
+	 * 
+	 * constructor function (generally called from other functions)
+	 * @param Int $mId
+	 * @param String $mTitle
+	 * @param String $mDescription
+	 * @param String $mStartDate
+	 * @param String $mEndDate
+	 * @param String $mVenue
+	 * @param String $mCapacity
+	 * @param Array $mAuthors
+	 * @param Array $mEvents
+	 * @param Array $mApplicants
+	 * @param Array $mOrganizers
+	 * @param Array $mAccounts
+	 * @param Array $pages
+	 */
 	public function __construct($mId=null,$mTitle,$mDescription,$mStartDate,$mEndDate,$mVenue,$mCapacity,$mAuthors=null
 	,$mEvents=null,$mApplicants=null,$mOrganizers=null,$mAccounts=null,$pages=null)
 	{
@@ -36,7 +117,8 @@ class Conference
 
 	}
 	/**
-	 * Enter description here ...
+	 * Creates a Conference object and also pushes the data into the database
+	 * It just returns the object initialized with properties passed through this function and also the conferenceId
 	 * @param String $title title of the conference
 	 * @param String $venue venue for the conference
 	 * @param String $capacity total number of attendees allowed for this conference
@@ -67,6 +149,8 @@ class Conference
 		}
 	}
 	/**
+	 * loads the whole conference object from the database
+	 * it loads all the other relevant objects and sets them as properties of the Conference object
 	 * @param Int $conferenceId - page_id of the conference page
 	 * @return Conference
 	 */
@@ -175,6 +259,14 @@ class Conference
 		,$matches[2][0],$matches[3][0],$speakers,$events,$applicants,$organizers,$accounts,$pages);
 
 	}
+	/**
+	 * 
+	 * Parser Hook function
+	 * @param String $input
+	 * @param Array $args
+	 * @param Parser $parser
+	 * @param PPFrame $frame
+	 */
 	public static function render($input, array $args, Parser $parser, PPFrame $frame)
 	{
 		//$conferenceType=$args['type'];
@@ -183,106 +275,223 @@ class Conference
 		$dbw->insert('page_props',array('pp_page'=>$conferenceId,'pp_propname'=>'cvext-type','pp_value'=>'conference'));
 		return '';
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public  function getId()
 	{
 		return $this->mId;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param Int $id
+	 */
 	public function setId($id)
 	{
 		$this->mId=$id;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getAuthors()
 	{
 		return $this->mAuthors;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param Array $authors
+	 */
 	public function setAuthors($authors)
 	{
 		$this->mAuthors=$authors;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getOrganizers()
 	{
 		return $this->mOrganizers;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param Array $organizers
+	 */
 	public function setOrganizers($organizers)
 	{
 		$this->mOrganizers=$organizers;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getAccounts()
 	{
 		return $this->mAccounts;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param Array $accounts
+	 */
 	public function setAccounts($accounts)
 	{
 		$this->mAccounts=$accounts;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getApplicants()
 	{
 		return $this->mApplicants;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param Array $applicants
+	 */
 	public function setApplicants($applicants)
 	{
 		$this->mApplicants=$applicants;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getEvents()
 	{
 		return $this->mEvents;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param Array $events
+	 */
 	public function setEvents($events)
 	{
 		$this->mEvents=$events;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getTitle()
 	{
 		return $this->mTitle;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $title
+	 */
 	public function setTitle($title)
 	{
 		$this->mTitle=$title;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getCapacity()
 	{
 		return $this->mCapacity;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $capacity
+	 */
 	public function setCapacity($capacity)
 	{
 		$this->mCapacity=$capacity;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getDescription()
 	{
 		return $this->mDescription;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $description
+	 */
 	public function setDescription($description)
 	{
 		$this->mDescription=$description;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getStartDate()
 	{
 		return $this->mStartDate;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $startDate
+	 */
 	public function setStartDate($startDate)
 	{
 		$this->mStartDate=$startDate;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getEndDate()
 	{
 		return $this->mEndDate;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $endDate
+	 */
 	public function setEndDate($endDate)
 	{
 		$this->mEndDate=$endDate;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getVenue()
 	{
 		return $this->mEvents;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $venue
+	 */
 	public function setVenue($venue)
 	{
 		$this->mVenue=$venue;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getPages()
 	{
 		return $this->mPages;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param Array $pages
+	 */
 	public function setPages($pages)
 	{
 		$this->mPages=$pages;

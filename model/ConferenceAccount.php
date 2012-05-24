@@ -360,69 +360,140 @@ class ConferenceAccount
 		//do something here
 		}
 	}*/
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getGender()
 	{
 		return $this->mGender;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $gender
+	 */
 	public function setGender($gender)
 	{
 		$this->mGender=$gender;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getFirstName()
 	{
 		return $this->mFirstName;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $name
+	 */
 	public function setFirstName($name)
 	{
 		$this->mFirstName=$name;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getLastName()
 	{
 		return $this->mLastName;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $name
+	 */
 	public function setLastName($name)
 	{
 		$this->mLastName=$name;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getPassportInfo()
 	{
 		return $this->mPassportInfo;
 		
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param ConferencePassportInfo object $info
+	 */
 	public function setPassportInfo($info)
 	{
 		$this->mPassportInfo=$info;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getRegistrations()
 	{
 		return $this->mRegistrations;
 	
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param Array of ConferenceRegistration objects $registrations
+	 */
 	public function setRegistrations($registrations)
 	{
 		$this->mRegistrations=$registrations;
 	}
-	
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getConferenceId()
 	{
 		$this->mConferenceId;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param Int $id
+	 */
 	public function setConferenceId($id)
 	{
 		$this->mConferenceId=$id;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getAccountId()
 	{
 		$this->mAccountId;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param Int $id
+	 */
 	public function setAccountId($id)
 	{
 		$this->mAccountId=$id;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getUserId()
 	{
 		return $this->mUserId;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param Int $id
+	 */
 	public function setUserId($id)
 	{
 		$this->mUserId=$id;

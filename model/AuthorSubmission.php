@@ -160,51 +160,105 @@ class AuthorSubmission
 		,'pp_value'=>$args['cvext-submission-author']));
 		return '';
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getId()
 	{
 		return $this->mSubmissionId;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param Int $id
+	 */
 	public function setId($id)
 	{
 		$this->mSubmissionId=$id;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getTitle()
 	{
 		return $this->mTitle;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $title
+	 */
 	public function setTitle($title)
 	{
 		$this->mTitle=$title;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getType()
 	{
 		return $this->mType;
 		
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $type
+	 */
 	public function setType($type)
 	{
 		$this->mType=$type;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getAbstract()
 	{
 		return $this->mAbstract;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getTrack()
 	{
 		return $this->mTrack;
 	}
+	/**
+	 * 
+	 * getter function
+	 */
 	public function getLength()
 	{
 		return $this->mLength;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $abstract
+	 */
 	public function setAbstract($abstract)
 	{
 		$this->mAbstract=$abstract;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $track
+	 */
 	public function setTrack($track)
 	{
 		$this->mTrack=$track;
 	}
+	/**
+	 * 
+	 * setter function
+	 * @param String(actually it will be a number) $length
+	 */
 	public function setLength($length)
 	{
 		$this->mLength=$length;
