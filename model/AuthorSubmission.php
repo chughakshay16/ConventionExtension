@@ -121,7 +121,6 @@ class AuthorSubmission
 			//return new self(null,$aid,$title,$type,$abstract,$track,$length,$slidesInfo,$slotReq);
 		}
 	}
-	
 	/**
 	 * @param Int $submissionId - page_id of the submission page
 	 * @return AuthorSubmission

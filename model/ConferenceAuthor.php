@@ -158,6 +158,268 @@ class ConferenceAuthor
 		
 	}
 	/**
+	 * 
+	 * deletes all the information related with a user-id 
+	 * could also include a lot of other checks within the function
+	 * @param Int user_id for the author $uid
+	 * $result['done'] true/false depending on whether the delete was successful
+	 * $result['cause'] cause for the fail if any occured otherwise its just empty string
+	 */
+	public static function perfromAuthorDelete($uid)
+	{
+		//we need to delete the whole chain of author starting from parent author and ending with submission
+		//step 1. get all the sub-author ids
+		//step 2. get all the submissions for all the corresponding sub-author ids
+		//step 3. delete all the submissions
+		//step 4. delete all the sub-author ids
+		//step 5. delete the parent author
+		$result=array();
+		$authorId=ConferenceAuthorUtils::getAuthorId($uid);
+		if($authorId)
+		{
+			$dbr=wfGetDB(DB_SLAVE);
+			$result=$dbr->select("page_props",
+			"pp_page",
+			array("pp_propname"=>"cvext-account-parent","pp_value"=>$authorId),
+			__METHOD__,
+			array(),
+			array());
+			$subAuthorIds=array();
+			foreach ($result as $row)
+			{
+				$subAuthorIds[]=$row->pp_page;	
+			}
+			$resultSubs=$dbr->select("page_props",
+			"pp_page",
+			array("pp_value IN (".implode(",",$subAuthorIds).")","pp_propname"=>"cvext-submission-author"),
+			__METHOD__);
+			//now at this point we have the ids of all the pages that we would want to delete
+			//we are gonna first start from the bottom of the chain
+			foreach ($resultSubs as $row)
+			{
+				$page=WikiPage::newFromID($row->pp_page);
+				
+				//this even deletes the entries in page_props table
+				$status=$page->doDeleteArticle("deleting submission as the parent author was deleted",Revision::DELETED_TEXT);
+				if($status!==true)
+				{
+					$result['done']=false;
+					$result['cause']='submission delete fail';
+					return $result;
+				}
+			}
+			foreach ($subAuthorIds as $subAuthId)
+			{
+				$page=WikiPage::newFromID($subAuthId);
+				$status=$page->doDeleteArticle("deleting sub author as the parent author was deleted",Revision::DELETED_TEXT);
+				if($status!==true)
+				{
+					$result['done']=false;
+					$result['cause']="sub-author delete fail";
+					return $result;
+				}
+			}
+			$page=WikiPage::newFromID($authorId);
+			$status=$page->doDeleteArticle("parent author was deleted by the user",Revision::DELETED_TEXT);
+			if($status!==true)
+			{
+				$result['done']=false;
+				$result['cause']='parent author delete fail';
+				return $result;
+			}
+			$result['done']=true;
+			$result['cause']='';
+		} else {
+			$result['done']=false;
+			$result['cause']='no parent author found for the user';
+			return $result;
+		}
+		return $result;
+		
+		
+	}
+	/**
+	 * 
+	 * deletes the submission from the database
+	 * @param Int $uid
+	 * @param Int $cid
+	 * @param String title of the submission $title
+	 * @return $result
+	 * $result['done'] - true/false depending upon whether the process was successful or not
+	 * $result['msg'] - message for success or failure
+	 */
+	public static function performSubmissionDelete($uid,$cid,$title)
+	{
+		//step 1. just extract the sub-author id
+		//step 2. get all the submissions for that sub-author id
+		//step 3. delete all those submissions
+		$confTitle=ConferenceUtils::getTitle($cid);
+		$username=UserUtils::getUsername($uid);
+		$titleText=$confTitle.'/authors/'.$username.'/submissions/'.$title;
+		$title=Title::newFromText($titleText);
+		$page=WikiPage::factory($title);
+		$result=array();
+		if($page->exists())
+		{
+			$status=$page->doDeleteArticle("submission deleted by the author",Revision::DELETED_TEXT);
+			if($status===true)
+			{
+				$result['done']=true;
+				$result['msg']='Submission has been successfully deleted';
+			} else {
+				$result['done']=false;
+				$result['msg']="Submission couldnt be deleted";
+			}
+		} else {
+			$result['done']=false;
+			$result['msg']="Submission with the given title was not found in the database";
+		}
+		return $result;
+	}
+	/**
+	 * 
+	 * deletes the sub-author and its related submissions
+	 * @param Int $uid
+	 * @param Int $cid
+	 * @return $result associative array
+	 * 	$result['done'] true/false depending on whether the delete was successful
+	 * 	$result['cause'] cause for the fail if any occured otherwise its just empty string
+	 */
+	public static function performSubAuthorDelete($uid,$cid)
+	{
+		$confTitle=ConferenceUtils::getTitle($cid);
+		$username=UserUtils::getUsername($uid);
+		$titleText=$confTitle.'/authors/'.$username;
+		$title=Title::newFromText($titleText);
+		$page=WikiPage::factory($title);
+		$result=array();
+		if($page->exists())
+		{
+			$id=$page->getId();
+			//now extract all the submissions corresponding to this sub-author id
+			$dbr=wfGetDB(DB_SLAVE);
+			$result=$dbr->select("page_props",
+			"pp_page",
+			array("pp_propname"=>"cvext-submission-author","pp_value"=>$id),
+			__METHOD__);
+			if($dbr->numRows($result)>0)
+			{
+				foreach ($result as $row)
+				{
+					$submissionPage=WikiPage::newFromID($row->pp_page);
+					$status=$submissionPage->doDeleteArticle("submission deleted as the sub-author was deleted",Revision::DELETEED_TEXT);
+					if($status!==true)
+					{
+						$result['done']=false;
+						$result['cause']='submission delete fail';
+						return $result;
+					}
+					
+				}
+				
+			}
+			//now all submissions have been deleted
+			$page->doDeleteArticle("sub-author was deleted by the user",Revision::DELETED_TEXT);
+			if($status!==true)
+			{
+				$result['done']=false;
+				$result['cause']='sub-author delete fail';
+				return $result;
+			}
+		} else {
+			$result['done']=false;
+			$result['cause']="the user doesnt have any sub-author for this conference";
+			return $result;
+		}
+		$result['done']=true;
+		$result['cause']="The sub-author was successfully deleted";
+		return $result;
+	}
+	/**
+	 * 
+	 * edits the author details in the database
+	 * @param Int $uid
+	 * @param String $country
+	 * @param String $affiliation
+	 * @param String $url
+	 * @return $result 
+	 * $result['done'] - true/false depending upon whether the process was carried out successfully or not
+	 * $result['msg'] - message for success or failure
+	 */
+	public static function performAuthorEdit($uid,$country, $affiliation, $url)
+	{
+		$username=UserUtils::getUsername($uid);
+		$titleText='/authors/'.$username;
+		$title=Title::newFromText($titleText);
+		$page=WikiPage::factory($title);
+		$result=array();
+		if($page->exists())
+		{
+			$id=$page->getId();
+			$article=Article::newFromID($id);
+			$content=$article->fetchContent();
+			//modify the content
+			$status=$page->doEdit($content,"Author with $username has been modified",EDIT_UPDATE);
+			if($status->value['revision'])
+			{
+				$result['done']=true;
+				$result['msg']="Author info has been successfully edited";
+			} else {
+				$result['done']=false;
+				$result['msg']="The author details couldnt be edited";
+			}
+		} else {
+			$result['done']=false;
+			$result['msg']="The author with this username doesnt exist in the database";
+		}
+		return $result;
+	}
+	/**
+	 * 
+	 * edits the submission details in the database
+	 * @param Int $cid
+	 * @param Int $uid
+	 * @param String $title
+	 * @param String $type
+	 * @param String $abstract
+	 * @param String $track
+	 * @param String $length
+	 * @param String $slidesInfo
+	 * @param String $slotReq
+	 * @return $result 
+	 * $result['done']true/false depending on whether the operation was successful or not
+	 * $result['msg']- message for failure or success
+	 */
+	public static function performSubmissionEdit($cid,$uid,$title,$type,$abstract, $track, $length, $slidesInfo, $slotReq)
+	{
+		$confTitle=ConferenceUtils::getTitle($cid);
+		$username=UserUtils::getUsername($uid);
+		$titleText=$confTitle.'/authors/'.$username.'/submissions/'.$title;
+		$title=Title::newFromText($titleText);
+		$page=WikiPage::factory($title);
+		$result=array();
+		if($page->exists())
+		{
+			$id=$page->getId();
+			$article=Article::newFromID($id);
+			$content=$article->fetchContent();
+			//modify the content
+			$status=$page->doEdit($content,'Submission details has been successfully modified',EDIT_UPDATE);
+			if($status->value['revision'])
+			{
+				$result['done']=true;
+				$result['msg']="The submission details have been successfully edited";	
+			} else {
+				$result['done']=false;
+				$result['msg']="The submission details could not be modified";
+				
+			}	
+		} else {
+			$result['done']=false;
+			$result['msg']="The submission with this title name doesnt exist in the database";
+		}	
+	}
+	/**
 	 * @param Int $authorId (this is the page_id of the parent author)
 	 * @return ConferenceAuthor
 	 * This function loads the ConferenceAuthor object from the database

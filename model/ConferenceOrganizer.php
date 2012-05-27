@@ -49,6 +49,9 @@ class ConferenceOrganizer
 	{
 		// do add the logic for having csv value for category
 		$isOrganizerForConference=ConferenceOrganizerUtils::isOrganizerFromConference($uid, $cid);
+		$confTitle=ConferenceUtils::getTitle($cid);
+		$username=UserUtils::getUsername($uid);
+		$title=$confTitle.'/organizers/'.$username;
 		$titleObj=Title::newFromText($title);
 		$pageObj=WikiPage::factory($titleObj);
 		if($isOrganizerForConference===false)
@@ -115,6 +118,82 @@ class ConferenceOrganizer
 			{}
 		}*/
 		return new self($organizerId,$matches[3][0], $matches[4][0], $matches[1][0], $matches[2][0]);
+		
+	}
+	/**
+	 * 
+	 * Modifies the organizer wiki page in the database
+	 * @param Int $cid
+	 * @param String $username
+	 * @param Array $catpost
+	 * @return $result
+	 * $result['done'] - true/false (success or failure)
+	 * $result['msg'] - success or failure message
+	 * @todo come up with a parsing logic for extracting the category -post values
+	 */
+	public static function performEdit($cid,$username,$catpost)
+	{
+		$confTitle=ConferenceUtils::getTitle($cid);
+		//$username=UserUtils::getUsername($uid);
+		$title=$confTitle.'/organizers/'.$username;
+		$titleObj=Title::newFromText($title);
+		$page=WikiPage::factory($titleObj);
+		$result=array();
+		if($page->exists())
+		{
+			$id=$page->getId();
+			$article=Article::newFromID($id);
+			$content=$article->fetchContent();
+			//modify the category post values(probably with a regular expression or something)
+			$status=$page->doEdit($content, "organizer updated",EDIT_UPDATE);
+			if($status->value['revision'])
+			{
+				$result['done']=true;
+				$result['msg']="The organizer info has been successfully updated";
+			} else {
+				$result['done']=false;
+				$result['msg']="The organizer info could not be updated";
+			}
+		} else {
+			$result['done']=false;
+			$result['msg']="The organizer with the username ".$username." doesnt exist in the database";
+		}
+		return $result;
+		
+	}
+	/**
+	 * 
+	 * Deletes the organizer from the database
+	 * @param Int $cid
+	 * @param String $username
+	 * @return $result 
+	 * $result['done'] - true/false (success or failure)
+	 * $result['msg'] - success or failure message 
+	 */
+	public static function performDelete($cid,$username)
+	{
+		$confTitle=ConferenceUtils::getTitle($cid);
+		//$username=UserUtils::getUsername($uid);
+		$title=$confTitle.'/organizers/'.$username;
+		$titleObj=Title::newFromText($title);
+		$page=WikiPage::factory($titleObj);
+		$result=array();
+		if($page->exists())
+		{
+			$status=$page->doDeleteArticle("admin deletes the organizer",DELETED_TEXT);
+			if($status===true)
+			{
+				$result['done']=true;
+				$result['msg']="The organizer has been successfully deleted";
+			} else {
+				$result['done']=false;
+				$result['msg']="The organizer could not be deleted";
+			}
+		} else {
+			$result['done']=false;
+			$result['msg']="The organizer with this username ".$username." doesnt exist for the conference ".$confTitle;
+		}
+		return $result;
 		
 	}
 	/**

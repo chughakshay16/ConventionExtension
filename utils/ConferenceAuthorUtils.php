@@ -28,7 +28,7 @@ class ConferenceAuthorUtils
 		$dbr=wfGetDB(DB_SLAVE);
 		$resultRow=$dbr->select("page_props",
 		"*",
-		array('pp_page'=>$aid,'pp_propname'=>'author-conf','pp_value'=>$cid),
+		array('pp_page'=>$aid,'pp_propname'=>'cvext-author-conf','pp_value'=>$cid),
 		__METHOD,
 		array());
 		return $resultRow->pp_page?true:false;
@@ -44,7 +44,7 @@ class ConferenceAuthorUtils
 		$dbr=wfGetDB(DB_SLAVE);
 		$resultRow=$dbr->selectRow('page_props E',
 		'E.pp_value',
-		array('E.pp_page'=>$subAuthorId,'E.pp_propname'=>'author-user','F.pp_propname'=>'author-parent'),
+		array('E.pp_page'=>$subAuthorId,'E.pp_propname'=>'cvext-author-user','F.pp_propname'=>'cvext-author-parent'),
 		__METHOD__,
 		array(),
 		array('page_props F'=> array('INNER JOIN','F.pp_value=E.pp_page')));
@@ -60,10 +60,21 @@ class ConferenceAuthorUtils
 		$dbr=wfGetDB(DB_SLAVE);
 		$resultRow=$dbr->select('page_props',
 		'*',
-		array('pp_page'=>$subAuthorId,'pp_propname'=>'author-conf'),
+		array('pp_page'=>$subAuthorId,'pp_propname'=>'cvext-author-conf'),
 		__METHOD__,
 		array(),
 		array('page'=> array('INNER JOIN','pp_value=page_id')));
 		return $resultRow->page_title;
+	}
+	public static function getAuthorId($uid)
+	{
+		$dbr=wfGetDB(DB_SLAVE);
+		$resultRow=$dbr->selectRow("page_props",
+		"pp_page",
+		array("pp_propname"=>"cvext-author-user","pp_value"=>$uid),
+		__METHOD__,
+		array(),
+		array());
+		return $resultRow->pp_page?$resultRow->pp_page:null;
 	}
 }

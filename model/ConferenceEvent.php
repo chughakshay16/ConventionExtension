@@ -86,7 +86,7 @@ class ConferenceEvent
 	public static function createFromScratch($mConferenceId,$mLocation,$mStartTime,$mEndTime,$mDay,$mTopic,$mGroup)
 	{
 			$confTitle=ConferenceUtils::getTitle($mConferenceId);
-			$titleText=$confTitle.'/events/'.$mTopic.'-'.$mDay.'-'.$mStartTime.'-'.$mEndTime;
+			$titleText=$confTitle.'/events/'.$mTopic.'-'.$mDay.'-'.$mStartTime.'-'.$mEndTime.'-'.$mGroup;
 			$title=Title::newFromText($titleText);
 			$page=WikiPage::factory($title);
 			$text=Xml::element('event',array('cvext-event-conf'=>$mConferenceId,'cvext-event-location'=>$mLocation->getLocationId(),
@@ -140,8 +140,122 @@ class ConferenceEvent
 	}
 	/**
 	 * 
-	 * Enter description here ...
-	 * @param unknown_type $input
+	 * updates the event page in the database
+	 * @param Int $cid
+	 * @param EventLocation object $mLocation
+	 * @param String $mStartTime
+	 * @param String $mEndTime
+	 * @param String $mDay
+	 * @param String $mTopic
+	 * @param String $mGroup
+	 */
+	public static function performEdit($cid,$mLocation,$mStartTime,$mEndTime,$mDay,$mTopic,$mGroup)
+	{
+		$confTitle=ConferenceUtils::getTitle($cid);
+		$titleText=$confTitle.'/events/'.$mTopic.'-'.$mDay.'-'.$mStartTime.'-'.$mEndTime.'-'.$mGroup;
+		$title=Title::newFromText($titleText);
+		$page=WikiPage::factory($title);
+		if($page->exists())
+		{
+			$id=$page->getId();
+			$article=Article::newFromID($id);
+			$content=$article->fetchContent();
+			//modify the content
+			//even the location pointer can be modified
+			//while fetching values from the content , we will see if $mLocation->getLocationId() matches with the location id stored 
+			//in the content , so if its the same then page_properties table wont be modified otherwise page_props table would have
+			//to be modified as well
+			$status=$page->doEdit($content,"Event has been modified",EDIT_UPDATE);
+			if($status->value['revision'])
+			{
+				if($isPagePropChanged)
+				{
+					$dbw=wfGetDB(DB_MASTER);
+					$res=$dbw->update('page_props',
+					array('pp_location'=>$mLocation->getLocationId()),
+					array('pp_page'=>$id,'pp_propname'=>'cvext-event-location'),
+					__METHOD__);
+					if($res)
+					{
+						$result['done']=true;
+						$result['msg']='The event was successfully updated';	
+					} else {
+						$result['done']=false;
+						$result['msg']='The properties were not updated properly';
+					}
+						
+				} else
+				{
+					$result['done']=true;
+					$result['msg']='The event was successfully updated';
+				}
+			} else {
+				$result['done']=false;
+				$result['msg']='The event could not be successfully updated';
+			}
+			
+		} else {
+			$result['done']=false;
+			$result['msg']='The event with these details wasnt found in the database';
+		}
+		return $result;
+	}
+	/**
+	 * 
+	 * deletes an event and its linked properties
+	 * wont delete if any registration is pointing towards this event
+	 * @param Int $cid
+	 * @param String $mStartTime
+	 * @param String $mEndTime
+	 * @param String $mDay
+	 * @param String $mTopic
+	 * @param String $mGroup
+	 * @return $result
+	 * $result['done'] - true/false ~ success/failure
+	 * $result['msg'] - success or failure message
+	 */
+	public static function performDelete($cid,$mStartTime,$mEndTime,$mDay,$mTopic,$mGroup)
+	{
+		$confTitle=ConferenceUtils::getTitle($cid);
+		$titleText=$confTitle.'/events/'.$mTopic.'-'.$mDay.'-'.$mStartTime.'-'.$mEndTime.'-'.$mGroup;
+		$title=Title::newFromText($titleText);
+		$page=WikiPage::factory($title);
+		$result=array();
+		if($page->exists())
+		{
+			//do a check to see if none of the registrations are associated with this event
+			$id=$page->getId();
+			$dbr=wfGetDB(DB_SLAVE);
+			$res=$dbr->select('page_props',
+			'pp_page',
+			array('pp_propname'=>'cvext-registration-event','pp_value'=>$id),
+			__METHOD__);
+			if($dbr->numRows($res)>0)
+			{
+				$result['done']=false;
+				$result['msg']="event cant be deleted as it is associated with a registration";
+			} else {
+				$status=$page->doDeleteArticle("event is deleted by the admin",Revision::DELETED_TEXT);
+				if($status===true)
+				{
+					$result['done']=true;
+					$result['msg']="Event was successfully deleted";
+				} else {
+					$result['done']=false;
+					$result['msg']="The event couldnt be deleted";
+				}	
+			}
+			
+		} else {
+			$result['done']=false;
+			$result['msg']="no event was found with such details in this conference";
+		}
+		return $result;
+	}
+	/**
+	 * 
+	 * Parser Hook function
+	 * @param String $input
 	 * @param array $args
 	 * @param Parser $parser
 	 * @param PPFrame $frame

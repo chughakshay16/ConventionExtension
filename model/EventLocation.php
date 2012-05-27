@@ -76,6 +76,92 @@ class EventLocation
 		}
 	}
 	/**
+	 * 
+	 * deletes a location page for this conference with this roomNo
+	 * @param Int $cid
+	 * @param String $roomNo
+	 * @return $result
+	 * $result['done'] - signifies success or failure (true/false)
+	 * $result['msg'] - success or failure message
+	 * This function only deletes those locations which are not associated with any event
+	 */
+	public static function performDelete($cid,$roomNo)
+	{
+		$confTitle=ConferenceUtils::getTitle($cid);
+		$titleText=$confTitle.'/locations/'.$roomNo;
+		$title=Title::newFromText($titleText);
+		$page=WikiPage::factory($title);
+		$result=array();
+		if($page->exists())
+		{
+			$id=$page->getId();
+			$hasEvent=ConferenceEventUtils::isPartOfAnyEvent($id);
+			if($hasEvent)
+			{
+				$result['hasEvent']=true;
+				$result['hasEvent']['msg']='This location cant be deleted as its part of an already existing event';
+			}
+			else {
+				$result['hasEvent']=false;
+				//do note that doArticleDelete() doesnt delete the rows in page_props so we will have to manually delete them
+				$status=$page->doArticleDelete("location deleted by admin",DELETED_TEXT);
+				if($status===true)
+				{
+					$result['hasEvent']['msg']="The location has been successfully deleted";
+				} else {
+					$result['hasEvent']['msg']="The location couldnt be delelted";
+				}
+			}
+		}
+		else
+		{
+			$result['hasEvent']=false;
+			$result['hasEvent']['msg']="The location with this roomNo doesnt exist for this conference";
+		}
+		return $result;
+		
+	}
+	/**
+	 * 
+	 * performs an edit operation on a location page
+	 * @param Int $cid
+	 * @param String $roomNo
+	 * @param String $description
+	 * @param String $url
+	 * @return $result
+	 * $result['done'] - true/failure signifies if the process was a success or a failure
+	 * $result['msg'] - success/failure message
+	 * @todo modification of content needs to be done
+	 */
+	public static function performEdit($cid,$roomNo,$description,$url)
+	{
+		$confTitle=ConferenceUtils::getTitle($cid);
+		$titleText=$confTitle.'/locations/'.$roomNo;
+		$title=Title::newFromText($titleText);
+		$page=WikiPage::factory($title);
+		$result=array();
+		if($page->exists())
+		{
+			$id=$page->getId();
+			$article=Article::newFromID($id);
+			$content=$article->fetchContent();
+			//modify the content
+			$status=$page->doEdit($content,"location is modified by the admin",EDIT_UPDATE);
+			if($status->value['revision'])
+			{
+				$result['done']=true;
+				$result['msg']="The location has been successfully edited";
+			} else {
+				$result['done']=false;
+				$result['msg']="The location could not be edited";
+			}
+		} else {
+			$result['done']=false;
+			$result['msg']="The location with this roomNo for this conference doesnt exist in the database";
+		}
+		return $result;
+	}
+	/**
 	 * @param Int $locationId page_id of the location page
 	 * @return EventLocation
 	 */

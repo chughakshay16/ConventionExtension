@@ -261,6 +261,47 @@ class Conference
 	}
 	/**
 	 * 
+	 * edits the conference details
+	 * called via ApiConferenceEdit class
+	 * @param Int $cid
+	 * @param String $title
+	 * @param String  $venue
+	 * @param String $description
+	 * @param String $capacity
+	 * @param String $startDate
+	 * @param String $endDate
+	 * @param String $mDescription
+	 */
+	public static function performEdit($cid,$title,$venue,$description,$capacity,$startDate,$endDate,$mDescription)
+	{
+		$confTitle=ConferenceUtils::getTitle($cid);
+		$titleText='conferences/'.$confTitle;
+		$title=Title::newFromText($titleText);
+		$page=WikiPage::factor($title);
+		$result=array();
+		if($page->exists())
+		{
+			$id=$page->getId();
+			$article=Article::newFromID($id);
+			$content=$article->fetchContent();
+			//modify the content
+			$status=$page->doEdit($content,"conference details modified by the admin",EDIT_UPDATE);	
+			if($status->value['revision'])
+			{
+				$result['done']=true;
+				$result['msg']="conference details are successfully saved";	
+			} else {
+				$result['done']=false;
+				$result['msg']="conference details couldnt be saved";
+			}
+		} else {
+			$result['done']=false;
+			$result['msg']="No conference exists with this title in the database";
+		}
+		return $result;
+	}
+	/**
+	 * 
 	 * Parser Hook function
 	 * @param String $input
 	 * @param Array $args

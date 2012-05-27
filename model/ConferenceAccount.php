@@ -231,6 +231,170 @@ class ConferenceAccount
 	}
 	/**
 	 * 
+	 * updates the account info
+	 * @param Int $uid
+	 * @param String $firstName
+	 * @param String $lastName
+	 * @param String $gender
+	 */
+	public static function performAccountEdit($uid,$firstName,$lastName,$gender)
+	{
+		$username=UserUtils::getUsername($uid);
+		$titleText='accounts/'.$username;
+		$title=Title::newFromText($titleText);
+		$page=WikiPage::factory($title);
+		$result=array();
+		if($page->exists())
+		{
+			$id=$page->getId();
+			$article=Article::newFromID($id);
+			$content=$article->fetchContent();
+			//modify the content
+			$status=$page->doEdit($content,'The account info has been modified',EDIT_UPDATE);
+			if($status->value['revision'])
+			{
+				$result['done']=true;
+				$result['msg']="The account has been successfully modified";	
+			} else {
+				$result['done']=false;
+				$result['msg']="The account could not be modified";
+			}
+		} else {
+			$result['done']=false;
+			$result['msg']="The account with the following details was not found in the database";
+		}
+		return $result;
+	}
+	/**
+	 * deletes all the info associated with a parent account
+	 * this action can be carried out by the admin only
+	 * @param Int $uid
+	 */
+	public static function performAccountDelete($uid)
+	{
+		//step 1. find the parent account
+		//step 2. find all the sub-accounts
+		//step 3. find all the corresponding registrations and passport info
+		//step 4. delete all registrations
+		//step 5. delete sub-accounts
+		//step 6. delete passport info
+		//step 7. delete parent account
+		$username=UserUtils::getUsername($uid);
+		$titleText='/accounts/'.$username;
+		$title=Title::newFromText($titleText);
+		$page=WikiPage::factory($title);
+		$subAccountIds=array();
+		$result=array();
+		if($page->exists())
+		{
+			$id=$page->getId();
+			//now get all the sub-accounts
+			$dbr=wfGetDB(DB_SLAVE);
+			$result=$dbr->select('page_props',
+			'pp_page',
+			array('pp_propname'=>'cvext-account-parent','pp_value'=>$id),
+			__METHOD__);
+			if($dbr->numRows($result))
+			{
+				foreach ($result as $row)
+				{
+						$subAccountIds[]=$row->pp_page;
+				}
+				//now get all the registrations
+				$resultReg=$dbr->select('page_props',
+				'pp_page',
+				array('pp_value IN ('.implode(',',$subAccountIds).')','pp_propname'=>'cvext-registration-account'),
+				__METHOD__);
+				//first delete all the registrations
+				foreach ($resultReg as $row)
+				{
+					$tempPage=WikiPage::newFromID($row->pp_page);
+					$tempStatus=$tempPage->doDeleteArticle('registration is deleted as the sub-account was deleted',Revision::DELETED_TEXT);
+					if($tempStatus!==true)
+					{
+						$result['done']=false;
+						$result['cause']="registration delete fail";
+						return $result;
+					} 
+				}
+				// now its time to delete all the sub-accounts
+				foreach ($subAccountIds as $subId)
+				{
+					$tempAccPage=WikiPage::newFromID($subId);
+					$tempAccStatus=$tempAccPage->doDeleteArticle("sub-account is deleted as the parent account was deleted",Revision::DELETED_TEXT);
+					if($tempAccStatus!==true)
+					{
+						$result['done']=false;
+						$result['cause']="sub-account delete fail";
+						return $result;
+					}
+				}
+			}
+			$pagePassport=WikiPage::factory(Title::newFromText("passports/".$username));
+			$statusPass=$pagePassport->doDeleteArticle("passport info is deleted as parent account was deleted");
+			if($statusPass!==true)
+			{
+				$result['done']=false;
+				$result['cause']="passport info delete fail";
+				return $result;
+			}
+			$statusAccount=$page->doDeleteArticle("parent account is deleted by the admin",Revsion::DELETED_TEXT);
+			if($statusAccount!==true)
+			{
+				$result['done']=false;
+				$result['cause']='parent account delete fail';
+				return $result;
+			}
+				
+		} else {
+			$result['done']=false;
+			$result['cause']='parent account not found in the database';
+			return $result;
+		}
+		$result['done']=true;
+		$result['cause']='';
+		return $result;
+	
+	}
+	/**
+	 * 
+	 * updates the passport info of a user
+	 * @param Int $uid
+	 * @param ConferencePassortInfo(this object may not be having the id value set) $passport
+	 */
+	public static function performPassportUpdate($uid,$passport)
+	{
+		$username=UserUtils::getUsername($uid);
+		$titleText='passports/'.$username;
+		$title=Title::newFromText($titleText);
+		$page=WikiPage::factory($title);
+		$result=array();
+		if($page->exists())
+		{
+			$id=$page->getId();
+			$article=Article::newFromID($id);
+			$content=$article->fetchContent();
+			//modify the content
+			//here we wont be modifying any of the passport page_props (as there is no need to)
+			$status=$page->doEdit($content,'modifying passport info of the user with username '.$username,EDIT_UPDATE);
+			if($status->value['revision'])
+			{
+				$result['done']=true;
+				$result['msg']="The passport info has been successfully updated";
+			} else {
+				$result['done']=false;
+				$result['msg']="The passport info could not be updated";
+			
+			}
+		} else {
+			$result['done']=false;
+			$result['msg']="The passport with the given username doesnt exist in the database";
+		}
+		return $result;
+		
+	}
+	/**
+	 * 
 	 * for adding conference id to the $mConferenceIds array
 	 * @param Int $confId
 	 */
