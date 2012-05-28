@@ -10,12 +10,12 @@ class ConferenceAuthorUtils
 	public static function hasParentAuthor($userId)
 	{
 		$dbr=wfGetDB(DB_SLAVE);
-		$resultRow=$dbr->select("page_props",
+		$resultRow=$dbr->selectRow("page_props",
 		"*",
 		array('pp_propname'=>'cvext-author-user','pp_value'=>$userId),
 		__METHOD__,
 		array());
-		return $resultRow->pp_page?true:false;
+		return $resultRow?$resultRow->pp_page:false;
 	}
 	/**
 	 * 
@@ -26,12 +26,12 @@ class ConferenceAuthorUtils
 	public static function hasChildAuthor($aid,$cid)
 	{
 		$dbr=wfGetDB(DB_SLAVE);
-		$resultRow=$dbr->select("page_props",
+		$resultRow=$dbr->selectRow("page_props",
 		"*",
 		array('pp_page'=>$aid,'pp_propname'=>'cvext-author-conf','pp_value'=>$cid),
-		__METHOD,
+		__METHOD__,
 		array());
-		return $resultRow->pp_page?true:false;
+		return $resultRow?$resultRow->pp_page:false;
 	}
 	/**
 	 * 
@@ -42,13 +42,31 @@ class ConferenceAuthorUtils
 	public static function getUsernameFromSubAuthor($subAuthorId)
 	{
 		$dbr=wfGetDB(DB_SLAVE);
-		$resultRow=$dbr->selectRow('page_props E',
-		'E.pp_value',
+		/*$resultRow=$dbr->selectRow(array('E'=>'page_props','F'=>'page_props'),
+		array('value'=>'E.pp_value','E.pp_page','E.pp_propname','F.pp_page','F.pp_propname','F.pp_value'),
 		array('E.pp_page'=>$subAuthorId,'E.pp_propname'=>'cvext-author-user','F.pp_propname'=>'cvext-author-parent'),
 		__METHOD__,
 		array(),
-		array('page_props F'=> array('INNER JOIN','F.pp_value=E.pp_page')));
-		return $resultRow->E.pp_value;
+		array('F'=> array('INNER JOIN','F.pp_value=E.pp_page')));
+		var_dump($resultRow);
+		return $resultRow->value;*/
+		$resultRow=$dbr->selectRow('page_props',
+		'*',
+		array('pp_propname'=>'cvext-author-parent','pp_page'=>$subAuthorId),
+		__METHOD__);
+		if($resultRow)
+		{
+			$parentRow=$dbr->selectRow('page_props',
+			'*',
+			array('pp_propname'=>'cvext-account-user','pp_page'=>$resultRow->pp_value),
+			__METHOD__);
+			if($parentRow)
+			{
+				$userId=$parentRow->pp_value;
+				return UserUtils::getUsername($userId);
+			}
+		}
+		return null;
 	}
 	/**
 	 * 
@@ -58,13 +76,13 @@ class ConferenceAuthorUtils
 	public static function getConferenceTitleFromSubAuthor($subAuthorId)
 	{
 		$dbr=wfGetDB(DB_SLAVE);
-		$resultRow=$dbr->select('page_props',
+		$resultRow=$dbr->selectRow(array('page_props','page'),
 		'*',
 		array('pp_page'=>$subAuthorId,'pp_propname'=>'cvext-author-conf'),
 		__METHOD__,
 		array(),
 		array('page'=> array('INNER JOIN','pp_value=page_id')));
-		return $resultRow->page_title;
+		return $resultRow?$resultRow->page_title:null;
 	}
 	public static function getAuthorId($uid)
 	{

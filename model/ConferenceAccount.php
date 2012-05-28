@@ -90,9 +90,6 @@ class ConferenceAccount
 		$accountTitle='accounts/'.$username;
 		$title=Title::newFromText($accountTitle);
 		$page=WikiPage::factory($title);
-		$passportTitle='passports/'.$username;
-		$passportTitleObj=Title::newFromText($passportTitle);
-		$passportPage=WikiPage::factory($passportTitleObj);
 		$accountText=Xml::element('account',array('gender'=>$mGender,'firstName'=>$mFirstName,'lastName'=>$mLastName,
 			'cvext-account-user'=>$mUserId));
 		$status=$page->doEdit($accountText,'creating new account for the user '.$username,EDIT_NEW);
@@ -102,12 +99,11 @@ class ConferenceAccount
 		} else {
 			//throw some error
 		}
-		//now create a passport object
-		$mPassportInfo=ConferencePassportInfo::createFromScratch($mPassportInfo->getPassportNo(), $accountId,
-		$passportInfo->getIssuedBy(), $mPassportInfo->getValidUntil(), $mPassportInfo->getPlace(),
-		$mPassportInfo->getDOB(), $mPassportInfo->getCountry());
 		$dbw=wfGetDB(DB_MASTER);
-		$dbw->insert('page_props',array('pp_page'=>$accountId,'pp_propname'=>'account-user','pp_value'=>$mUserId));
+		$dbw->insert('page_props',array('pp_page'=>$accountId,'pp_propname'=>'cvext-account-user','pp_value'=>$mUserId));
+		$mPassportInfo=ConferencePassportInfo::createFromScratch($mPassportInfo->getPassportNo(), $accountId,
+		$mPassportInfo->getIssuedBy(), $mPassportInfo->getValidUntil(), $mPassportInfo->getPlace(),
+		$mPassportInfo->getDOB(), $mPassportInfo->getCountry());
 		return new self($accountId,array(), $mUserId, $mGender, $mFirstName, $mLastName,$mPassportInfo);
 		
 		
@@ -120,8 +116,7 @@ class ConferenceAccount
 	{
 		$article=Article::newFromID($accountId);
 		$text=$article->fetchContent();
-		preg_match_all("/<account gender=\"(.*)\" firstName=\"(.*)\" lastName=\"(.*)\" cvext-account-user=\"(.*)\" \/>/",
-		$text,$matches);
+		preg_match_all("/<account gender=\"(.*)\" firstName=\"(.*)\" lastName=\"(.*)\" cvext-account-user=\"(.*)\" \/>/",$text,$matches);
 		$dbr=wfGetDB(DB_SLAVE);
 		$row=$dbr->selectRow('page_props',
 		array('pp_page'),
@@ -149,7 +144,7 @@ class ConferenceAccount
 		{
 			$subAccountIds[]=$row->pp_page;
 		}
-		if(!is_empty($subAccountIds))
+		if(!empty($subAccountIds))
 		{
 			$conferenceResult=$dbr->select('page_props',
 			'*',
@@ -626,7 +621,7 @@ class ConferenceAccount
 	 */
 	public function getConferenceId()
 	{
-		$this->mConferenceId;
+		return $this->mConferenceId;
 	}
 	/**
 	 * 
@@ -643,7 +638,7 @@ class ConferenceAccount
 	 */
 	public function getAccountId()
 	{
-		$this->mAccountId;
+		return $this->mAccountId;
 	}
 	/**
 	 * 

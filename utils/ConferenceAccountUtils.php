@@ -54,5 +54,28 @@ class ConferenceAccountUtils
 		return $resultRow->page_title;
 		
 	}
+	/**
+	 * 
+	 * gets the username for the account
+	 * @param Int $aid
+	 */
+	public static function getUsernameFromAccount($aid)
+	{
+		$dbr=wfGetDB(DB_SLAVE);
+		$resultRow=$dbr->selectRow('page_props',
+		'pp_value',
+		array('pp_propname'=>'cvext-account-user','pp_page'=>$aid),
+		__METHOD__);
+		if($resultRow->pp_value)
+		{
+			$userRow=$dbr->selectRow('user',
+			'user_name',
+			array('user_id'=>$resultRow->pp_value),
+			__METHOD__);
+			return $userRow->user_name?$userRow->user_name:null;
+			
+		}
+		return null;
+	}
 	
 }

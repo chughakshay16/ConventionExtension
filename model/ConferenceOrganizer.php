@@ -32,7 +32,7 @@ class ConferenceOrganizer
 		$this->mConferenceId=$cid;
 		$this->mUserId=$uid;
 		$this->mCategoryPostCombination=$catpost;
-		$this->mOrganizerId=$mid;
+		$this->mOrganizerId=$oid;
 			
 	}
 	/**
@@ -57,7 +57,7 @@ class ConferenceOrganizer
 		if($isOrganizerForConference===false)
 		{
 			$text=Xml::element('organizer',array('category'=>$catpost[0]['cat'],'post'=>$catpost[0]['post'],'cvext-organizer-conf'=>$cid,'cvext-organizer-user'=>$uid));
-			$status=$page->doEdit($text, 'new organizer added',EDIT_NEW);	
+			$status=$pageObj->doEdit($text, 'new organizer added',EDIT_NEW);	
 			if($status->value['revision'])
 			{
 				$revision=$status->value['revision'];
@@ -66,7 +66,7 @@ class ConferenceOrganizer
 				$dbw=wfGetDB(DB_MASTER);
 				foreach ($properties as $name=>$value)
 				{
-					$dbw->insert('page_props', array('pp_page'=>$id,'pp_propertyname'=>$name,'pp_value'=>$value));
+					$dbw->insert('page_props', array('pp_page'=>$id,'pp_propname'=>$name,'pp_value'=>$value));
 				}
 				
 			}
@@ -117,7 +117,8 @@ class ConferenceOrganizer
 			else
 			{}
 		}*/
-		return new self($organizerId,$matches[3][0], $matches[4][0], $matches[1][0], $matches[2][0]);
+		$catpost=array(array('cat'=>$matches[1][0],'post'=>$matches[2][0]));
+		return new self($organizerId,$matches[3][0], $matches[4][0], $catpost);
 		
 	}
 	/**
@@ -286,34 +287,17 @@ class ConferenceOrganizer
 	 * 
 	 * getter function
 	 */
-	public function getCategory()
+	public function getCategoryPostCombination()
 	{
-		$this->mCategory;
+		return $this->mCategoryPostCombination;
 	}
 	/**
 	 * 
 	 * setter function
-	 * @param String $cat
+	 * @param Array $catpost
 	 */
-	public function setCategory($cat)
+	public function setCategoryPostCombination($catpost)
 	{
-		$this->mCategory=$cat;
-	}
-	/**
-	 * 
-	 * getter function
-	 */
-	public function getPost()
-	{
-		return $this->mPost;
-	}
-	/**
-	 * 
-	 * setter function
-	 * @param String $post
-	 */
-	public function setPost($post)
-	{
-		$this->mPost=$post;
+		$this->mCategoryPostCombination=$catpost;
 	}
 }

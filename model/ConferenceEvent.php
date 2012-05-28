@@ -83,7 +83,7 @@ class ConferenceEvent
 	 * @param String $mGroup
 	 * @return ConferenceEvent
 	 */
-	public static function createFromScratch($mConferenceId,$mLocation,$mStartTime,$mEndTime,$mDay,$mTopic,$mGroup)
+public static function createFromScratch($mConferenceId,$mLocation,$mStartTime,$mEndTime,$mDay,$mTopic,$mGroup)
 	{
 			$confTitle=ConferenceUtils::getTitle($mConferenceId);
 			$titleText=$confTitle.'/events/'.$mTopic.'-'.$mDay.'-'.$mStartTime.'-'.$mEndTime.'-'.$mGroup;
@@ -100,7 +100,7 @@ class ConferenceEvent
 				$properties=array('cvext-event-conf'=>$mConferenceId,'cvext-event-location'=>$mLocation->getLocationId());
 				foreach($properties as $name=>$value)
 				{
-					$dbw->insert('page_props',array('pp_page'=>$eventId,'pp_propertyname'=>$name,'pp_value'=>$value),__METHOD__,array());
+					$dbw->insert('page_props',array('pp_page'=>$eventId,'pp_propname'=>$name,'pp_value'=>$value),__METHOD__,array());
 				}
 				return new self($mConferenceId,$eventId,$mLocation,$mStartTime,$mEndTime,$mDay,$mTopic,$mGroup);
 			}
@@ -117,8 +117,7 @@ class ConferenceEvent
 	{
 		$article=Article::newFromID($eventId);
 		$text=$article->fetchContent();
-		preg_match_all("/<event cvext-event-conf=\"(.*)\" cvext-event-location=\"(.*)\" startTime=\"(.*)\" endTime=\"(.*)\" 
-		day=\"(.*)\" topic=\"(.*)\" group=\"(.*)\" \/>/",$text,$matches);
+		preg_match_all('/<event cvext-event-conf="(.*)" cvext-event-location="(.*)" startTime="(.*)" endTime="(.*)" day="(.*)" topic="(.*)" group="(.*)" \/>/',$text,$matches);
 		/*wfProfileIn(__METHOD__.'-db');
 		$dbr=wfGetDB(DB_SLAVE);
 		$res = $dbr->select( 'page_props',

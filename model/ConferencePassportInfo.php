@@ -84,21 +84,19 @@ class ConferencePassportInfo
 	 */
 	public static function createFromScratch($pno,$aid,$iby,$vu,$pl,$dob,$ctry)
 	{
-		$titleObj=Title::newFromText($title);
-		$pageObj=WikiPage::factory($titleObj);
+		$username=ConferenceAccountUtils::getUsernameFromAccount($aid);
+		$passportTitle='passports/'.$username;
+		$passportTitleObj=Title::newFromText($passportTitle);
+		$passportPage=WikiPage::factory($passportTitleObj);
 		$text=Xml::element('passport',array('number'=>$pno,'validUntil'=>$vu,'place'=>$pl,'dob'=>$dob,'country'=>$ctry,'issuedBy'=>$iby,
 		'cvext-passport-account'=>$aid));
-		$status=$page->doEdit($text, 'new passport added',EDIT_NEW);	
+		$status=$passportPage->doEdit($text, 'new passport added',EDIT_NEW);	
 		if($status->value['revision'])
 		{
 			$revision=$status->value['revision'];
 			$id=$revision->getPage();
 			$dbw=wfGetDB(DB_MASTER);
-			$properties=array('cvext-passport-account'=>$aid);
-			foreach($properties as $name=>$value)
-			{
-				$dbw->insert('page_props',array('pp_page'=>$id,'pp_propertyname'=>$name,'pp_value'=>$value));
-			}
+			$dbw->insert('page_props',array('pp_page'=>$id,'pp_propname'=>'cvext-passport-account','pp_value'=>$aid));
 			if($dbw->affectedRows())
 				return new self($id,$pno, $aid, $iby, $vu, $pl, $dob, $ctry);
 			else 
@@ -116,18 +114,16 @@ class ConferencePassportInfo
 	 */
 	public static function loadFromId($passportId)
 	{
-		$article=Article::newFromID($organizerId);
+		$article=Article::newFromID($passportId);
 		$text=$article->fetchContent();
-		preg_match_all("/<passport number=\"(.*)\" validUntil=\"(.*)\" place=\"(.*)\" dob=\"(.*)\" country=\"(.*)\" issuedBy=\"(.*)\" 
-		cvext-passport-account=\"(.*)\" \/>/",$text,$matches);
+		preg_match_all("/<passport number=\"(.*)\" validUntil=\"(.*)\" place=\"(.*)\" dob=\"(.*)\" country=\"(.*)\" issuedBy=\"(.*)\" cvext-passport-account=\"(.*)\" \/>/",$text,$matches);
 		/*$dbr=wfGetDB(DB_SLAVE);
 		$row=$dbr->selectRow('page_props',
 		array('pp_value'),
 		array('pp_page'=>$passportId,'pp_propertyname'=>'parent'),
 		__METHOD__,
 		array());*/
-		return new self($passportId,$matches[1][0],$matches[7][0], $matches[6][0], $matches[2][0], $matches[3][0], $matches[4][0], 
-		$matches[5][0]);
+		return new self($passportId,$matches[1][0],$matches[7][0], $matches[6][0], $matches[2][0], $matches[3][0], $matches[4][0], $matches[5][0]);
 	}
 	/**
 	 * 

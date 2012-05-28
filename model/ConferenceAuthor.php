@@ -60,6 +60,7 @@ class ConferenceAuthor
 		$this->mConferenceIds=$cids;
 		$this->mUserId=$uid;
 		$this->mSubmissions=$submissions;
+		$this->mCountry=$country;
 
 	}
 		/**
@@ -85,15 +86,14 @@ class ConferenceAuthor
 		$newParent=!(ConferenceAuthorUtils::hasParentAuthor($uid));
 		$confTitle=ConferenceUtils::getTitle($cid);
 		$userName=UserUtils::getUsername($uid);
-		$titleParent='/authors/'.$userName;
+		$titleParent='authors/'.$userName;
 		$properties=array();
-		$titleObj=Title::newFromText($title);
+		$titleObj=Title::newFromText($titleParent);
 		$pageObj=WikiPage::factory($titleObj);
 		if($newParent)
 		{
 			
-			$text=Xml::element('author',array('country'=>$country,'affiliation'=>$affiliation,'blogUrl'=>$url,
-			'cvext-author-user'=>$uid));
+			$text=Xml::element('author',array('country'=>$country,'affiliation'=>$affiliation,'blogUrl'=>$url,'cvext-author-user'=>$uid));
 			$status=$pageObj->doEdit($text, 'new parent author added',EDIT_NEW);
 			if($status->value['revision'])
 			{
@@ -110,6 +110,7 @@ class ConferenceAuthor
 			}
 		}
 		$newChild=!(ConferenceAuthorUtils::hasChildAuthor($id, $cid));
+		$username=UserUtils::getUsername($uid);
 		$titleChild=$confTitle.'/authors/'.$username;
 		$titleChildObj=Title::newFromText($titleChild);
 		$pageChildObj=WikiPage::factory($titleChildObj);
@@ -129,20 +130,17 @@ class ConferenceAuthor
 		} else {
 				if($pageChildObj->exists())
 				{
-					$id=$pageChildObj->getId();
+					$idChild=$pageChildObj->getId();
 				}
 			
 			}
-			$submission=AuthorSubmission::createFromScratch($idChild, $submission->getTitle(), $submission->getType(), 
-			$submission->getAbstract(), $submission->getTrack(), $submission->getLength(), $submission->getSlidesInfo(), 
-			$submission->getSlotReq());
 			if($newParent)
 			{
 				$properties[]=array('id'=>$id,'prop'=>'cvext-author-user','value'=>$uid);
 				if($newChild)
 				{
-					$properties[]=array('id'=>$childId,'prop'=>'cvext-author-parent','value'=>$id);
-					$properties[]=array('id'=>$childId,'prop'=>'cvext-author-conf','value'=>$cid);
+					$properties[]=array('id'=>$idChild,'prop'=>'cvext-author-parent','value'=>$id);
+					$properties[]=array('id'=>$idChild,'prop'=>'cvext-author-conf','value'=>$cid);
 				}
 				
 			}
@@ -151,7 +149,9 @@ class ConferenceAuthor
 			{
 				$dbw->insert('page_props',array('pp_page'=>$value['id'],'pp_propname'=>$value['prop'],'pp_value'=>$value['value']));
 			}
-			
+			$submission=AuthorSubmission::createFromScratch($idChild, $submission->getTitle(), $submission->getType(), 
+			$submission->getAbstract(), $submission->getTrack(), $submission->getLength(), $submission->getSlidesInfo(), 
+			$submission->getSlotReq());
 			$submissions=array();
 			$submissions[]=$submission;
 			return new self($id,$cid, $uid, $country, $affiliation, $url,$submissions);
@@ -428,8 +428,7 @@ class ConferenceAuthor
 	{
 		$article=Article::newFromID($authorId);
 		$text=$article->fetchContent();
-		preg_match_all("/<author country=\"(.*)\" affiliation=\"(.*)\" blogUrl=\"(.*)\" cvext-author-user=\"(.*)\" \/>/"
-		,$text,$matches);
+		preg_match_all("/<author country=\"(.*)\" affiliation=\"(.*)\" blogUrl=\"(.*)\" cvext-author-user=\"(.*)\" \/>/",$text,$matches);
 		$dbr=wfGetDB(DB_SLAVE);
 		/*$dbr->select('page_props',
 		array('pp_propertyname','pp_ value'),
@@ -466,7 +465,7 @@ class ConferenceAuthor
 		}
 		$res=$dbr->select('page_props',
 		array('pp_page'),
-		array('pp_value IN ('.implode(',',$subIds).')','pp_propertyname'=>'cvext-submission-author'),
+		array('pp_value IN ('.implode(',',$subIds).')','pp_propname'=>'cvext-submission-author'),
 		__METHOD__,
 		array());
 		$submissions=array();

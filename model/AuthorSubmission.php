@@ -94,13 +94,13 @@ class AuthorSubmission
 	public static function createFromScratch($aid, $title,$type,$abstract, $track, $length, $slidesInfo, $slotReq)
 	{
 		$conferenceTitle=ConferenceAuthorUtils::getConferenceTitleFromSubAuthor($aid);
-		$username=ConferenceAuhorUtils::getUsernameFromSubAuthor($aid);
+		$username=ConferenceAuthorUtils::getUsernameFromSubAuthor($aid);
 		$titleSub=$conferenceTitle.'/authors/'.$username.'/submissions/'.$title;
 		$titleObj=Title::newFromText($titleSub);
 		$pageObj=WikiPage::factory($titleObj);
 		$text=Xml::element('submission',array('title'=>$title,'submissionType'=>$type,'abstract'=>$abstract,
 		'track'=>$track,'length'=>$length,'slidesInfo'=>$slidesInfo,'slotReq'=>$slotReq,'cvext-submission-author'=>$aid));
-		$status=$page->doEdit($text, 'new submission added',EDIT_NEW);	
+		$status=$pageObj->doEdit($text, 'new submission added',EDIT_NEW);	
 		if($status->value['revision'])
 		{
 			$revision=$status->value['revision'];
@@ -129,8 +129,7 @@ class AuthorSubmission
 	{
 		$article=Article::newFromID($submissionId);
 		$text=$article->fetchContent();
-		preg_match_all("/<submission title=\"(.*)\" submissionType=\"(.*)\" abstract=\"(.*)\" track=\"(.*)\" 
-		length=\"(.*)\" slidesInfo=\"(.*)\" slotReq=\"(.*)\" cvext-submission-author=\"(.*)\" \/>/",$text,$matches);
+		preg_match_all("/<submission title=\"(.*)\" submissionType=\"(.*)\" abstract=\"(.*)\" track=\"(.*)\" length=\"(.*)\" slidesInfo=\"(.*)\" slotReq=\"(.*)\" cvext-submission-author=\"(.*)\" \/>/",$text,$matches);
 		/*wfProfileIn(__METHOD__.'-db');
 		$dbr=wfGetDB(DB_SLAVE);
 		$res = $dbr->selectRow( 'page_props',
@@ -140,8 +139,7 @@ class AuthorSubmission
 		array()
 		);
 		wfProfileOut(__METHOD__.'-db');*/
-		return new self($submissionId, $matches[8][], $matches[1][0], $matches[2][0], $matches[3][0], $matches[4][0], 
-		$matches[5][0], $matches[6][0], $slotReq[7][0]);
+		return new self($submissionId, $matches[8][0], $matches[1][0], $matches[2][0], $matches[3][0], $matches[4][0], $matches[5][0], $matches[6][0], $matches[7][0]);
 	}
 	/**
 	 * 
@@ -265,5 +263,39 @@ class AuthorSubmission
 	public function setLength($length)
 	{
 		$this->mLength=$length;
+	}
+	/**
+	 * 
+	 * getter function
+	 */
+	public function getSlidesInfo()
+	{
+		return $this->mSlidesInfo;
+	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $info
+	 */
+	public function setSlidesInfo($info)
+	{
+		$this->mSlidesInfo=$info;
+	}
+	/**
+	 * 
+	 * getter function
+	 */
+	public function getSlotReq()
+	{
+		return $this->mSlotRequest;
+	}
+	/**
+	 * 
+	 * setter function
+	 * @param String $req
+	 */
+	public function setSlotReq($req)
+	{
+		$this->mSlotRequest=$req;
 	}
 }

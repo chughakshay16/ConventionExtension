@@ -51,7 +51,7 @@ class ConferencePage
 		 * just check if the type belongs to the already defined types, if not then dont add any content other
 		 * than <page> tag 
 		 */
-		$page->doEdit($text,'new page added',EDIT_NEW);
+		$status=$page->doEdit($text,'new page added',EDIT_NEW);
 		if($status->value['revision'])
 		{
 			$revision=$status->value['revision'];
@@ -176,7 +176,7 @@ class ConferencePage
 	 * 
 	 * getter function
 	 */
-	public function gettype()
+	public function getType()
 	{
 		return $this->mType;
 	}
