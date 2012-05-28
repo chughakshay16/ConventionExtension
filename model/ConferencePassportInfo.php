@@ -139,7 +139,11 @@ class ConferencePassportInfo
 	 */
 	public static function render($input, array $args, Parser $parser, PPFrame $frame)
 	{
-		wfGetDB(DB_MASTER)->insert('page_props', array('pp_page'=>$parser->getTitle()->getArticleId(),'pp_propname'=>'cvext-passport-account','pp_value'=>$args['passport-account']));
+		$id=$parser->getTitle()->getArticleId();
+		if($id!=0)
+		{
+			wfGetDB(DB_MASTER)->insert('page_props', array('pp_page'=>$id,'pp_propname'=>'cvext-passport-account','pp_value'=>$args['cvext-passport-account']));
+		}
 		return '';
 	}
 	/**

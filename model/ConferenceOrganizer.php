@@ -220,11 +220,15 @@ class ConferenceOrganizer
 			
 		}
 		$id=$parser->getTitle()->getArticleId();
-		$dbw=wfGetDB(DB_MASTER);
-		foreach ($ids as $name=>$value)
+		if($id!=0)
 		{
-			$dbw->insert('page_props',array('pp_page'=>$id,'pp_propname'=>$name,'pp_value'=>$value));
+			$dbw=wfGetDB(DB_MASTER);
+			foreach ($ids as $name=>$value)
+			{
+				$dbw->insert('page_props',array('pp_page'=>$id,'pp_propname'=>$name,'pp_value'=>$value));
+			}
 		}
+		
 		return '';
 	}	
 	/**

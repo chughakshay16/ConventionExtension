@@ -154,9 +154,13 @@ class AuthorSubmission
 	public static function render($input, array $args, Parser $parser, PPFrame $frame)
 	{
 		//extract all the relevant info and store it in the page_props
-		$dbw=wfGetDB(DB_MASTER);
-		$dbw->insert('page_props',array('pp_page'=>$parser->getTitle()->getArticleId(),'pp_propname'=>'cvext-submission-author'
-		,'pp_value'=>$args['cvext-submission-author']));
+		$submissionId=$parser->getTitle()->getArticleId();
+		if($submissionId!=0)
+		{
+			$dbw=wfGetDB(DB_MASTER);
+			$dbw->insert('page_props',array('pp_page'=>$submissionId,'pp_propname'=>'cvext-submission-author'
+			,'pp_value'=>$args['cvext-submission-author']));
+		}
 		return '';
 	}
 	/**

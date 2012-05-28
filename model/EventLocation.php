@@ -182,8 +182,12 @@ class EventLocation
 	 */
 	public static function render($input, array $args, Parser $parser, PPFrame $frame)
 	{
-		wfGetDB(DB_MASTER)->insert('page_props',array('pp_page'=>$parser->getTitle()->getArticleId()
-		,'pp_propname'=>'cvext-type','pp_value'=>'location'));
+		$id=$parser->getTitle()->getArticleId();
+		if($id!=0)
+		{
+			wfGetDB(DB_MASTER)->insert('page_props',array('pp_page'=>$id
+			,'pp_propname'=>'cvext-type','pp_value'=>'location'));
+		}
 		return '';
 	}
 	/**

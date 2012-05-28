@@ -427,8 +427,12 @@ class ConferenceAccount
 		$dbw=wfGetDB(DB_MASTER);
 		$title=$parser->getTitle();
 		$accountId=$title->getArticleId();
+		if($accountId!=0)
+		{
+			$dbw->insert('page_props',array('pp_page'=>$accountId,'pp_propname'=>'cvext-account-user','pp_value'=>$args['cvext-account-user']));
+		}
 		//$page_props=array('account-conf'=>$conferenceId,'account-user'=>$userId);
-		$dbw->insert('page_props',array('pp_page'=>$accountId,'pp_propname'=>'cvext-account-user','pp_value'=>$args['cvext-account-user']));
+		
 		return '';
 	}
 	/**
@@ -444,10 +448,15 @@ class ConferenceAccount
 		$dbw=wfGetDB(DB_MASTER);
 		$title=$parser->getTitle();
 		$accountSubId=$title->getArticleId();
-		foreach($args as $attribute=>$value)
+		if($accountSubId!=0)
 		{
-			$dbw->insert('page_props',array('pp_page'=>$accountSubId,'pp_propname'=>$attribute,'pp_value'=>$value));
+			foreach($args as $attribute=>$value)
+			{
+				$dbw->insert('page_props',array('pp_page'=>$accountSubId,'pp_propname'=>$attribute,'pp_value'=>$value));
+			}
 		}
+		return '';
+		
 	}
 	/*public static function createFromScratch($mConferenceId,$mUserId,$mGender, $mFirstName, $mLastName,$mPassportInfo,$mRegistration=null)
 	{

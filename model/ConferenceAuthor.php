@@ -476,7 +476,7 @@ class ConferenceAuthor
 		}
 		return new self($authorId,$conferenceIds, $matches[4][0], $matches[1][0], $matches[2][0], $matches[3][0],$submissions);
 	}
-/**
+	/**
 	 * 
 	 * 
 	 * @param String $input - text contained within the tag
@@ -489,7 +489,10 @@ class ConferenceAuthor
 
 		$dbw=wfGetDB(DB_MASTER);
 		$authorId=$parser->getTitle()->getArticleId();
-				$dbw->insert('page_props',array('pp_page'=>$authorId,'pp_propname'=>'cvext-author-user','pp_value'=>$args['cvext-author-user']));
+		if($authorId!=0)
+		{
+			$dbw->insert('page_props',array('pp_page'=>$authorId,'pp_propname'=>'cvext-author-user','pp_value'=>$args['cvext-author-user']));
+		}	
 		return '';
 	}
 	/**
@@ -503,11 +506,15 @@ class ConferenceAuthor
 	{
 		$dbw=wfGetDB(DB_MASTER);
 		$authorId=$parser->getTitle()->getArticleId();
-		$properties=array(array('id'=>$authorId,'prop'=>'cvext-author-conf','value'=>$args['cvext-author-conf']),array('id'=>$authorId,'prop'=>'cvext-author-parent','value'=>$args['cvext-author-parent']));
-		foreach ($properties as $property)
+		if($authorId!=0)
 		{
-			$dbw->insert('page_props',array('pp_page'=>$property['id'],'pp_propname'=>$property['prop'],'pp_value'=>$property['value']));
+			$properties=array(array('id'=>$authorId,'prop'=>'cvext-author-conf','value'=>$args['cvext-author-conf']),array('id'=>$authorId,'prop'=>'cvext-author-parent','value'=>$args['cvext-author-parent']));
+			foreach ($properties as $property)
+			{
+				$dbw->insert('page_props',array('pp_page'=>$property['id'],'pp_propname'=>$property['prop'],'pp_value'=>$property['value']));
+			}
 		}
+		
 		return '';
 	}
 	/**

@@ -273,14 +273,17 @@ class ConferenceEvent
 			{
 				$ids['cvext-event-location']=$value;
 			}
-			$id=$parser->getTitle()->getArticleId();
+		}
+		$id=$parser->getTitle()->getArticleId();
+		if($id!=0)
+		{
 			$dbw=wfGetDB(DB_MASTER);
 			foreach ($ids as $name=>$value)
 			{
 				$dbw->insert('page_props',array('pp_page'=>$id,'ppp_propname'=>$name,'pp_value'=>$value));
 			}
-			return '';
 		}
+		return '';
 	}
 	/**
 	 * 
