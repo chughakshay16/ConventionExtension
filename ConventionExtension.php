@@ -19,6 +19,12 @@ $wgExtensionCredits[ 'other' ][] = array(
 	'version'  => 1.0,
 );
 $wgCurrentDir = dirname( __FILE__ ) . DIRECTORY_SEPARATOR;
+$wgAutoloadClasses['ConferenceUtils']=$wgCurrentDir.'utils/ConferenceUtils.php';
+$wgAutoloadClasses['ConferenceAuthorUtils']=$wgCurrentDir.'/utils/ConferenceAuthorUtils.php';
+$wgAutoloadClasses['ConferenceAccountUtils']=$wgCurrentDir.'/utils/ConferenceAccountUtils.php';
+$wgAutoloadClasses['UserUtils']=$wgCurrentDir.'utils/UserUtils.php';
+$wgAutoloadClasses['ConferenceOrganizerUtils']=$wgCurrentDir.'utils/ConferenceOrganizerUtils.php';
+$wgAutoloadClassesp['ConferenceEventUtils']=$wgCurrentDir.'utils/ConferenceEventUtils.php';
 $wgAutoloadClasses['Conference']=$wgCurrentDir.'model/Conference.php';
 $wgAutoloadClasses['ConferenceAuthor']=$wgCurrentDir.'model/ConferenceAuthor.php';
 $wgAutoloadClasses['ConferenceEvent']=$wgCurrentDir.'model/ConferenceEvent.php';
@@ -31,3 +37,9 @@ $wgAutoloadClasses['ConferencePassportInfo']=$wgCurrentDir.'model/ConferencePass
 $wgAutoloadClasses['AuthorSubmission']=$wgCurrentDir.'model/AuthorSubmission.php';
 $wgAutoloadClasses['ConferenceHooks']=$wgCurrentDir.'ConferenceHooks.php';
 $wgHooks['ParserFirstCallInit'][]='ConferenceHooks::onParserFirstCallInit';
+$wgHooks['UnitTestsList'][] = 'registerUnitTests';
+function registerUnitTests( &$files ) {
+        global $wgCurrentDir;
+        $files[] = $wgCurrentDir . 'tests/ConferenceTest.php';
+        return true;
+}
