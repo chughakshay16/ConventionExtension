@@ -79,6 +79,12 @@ class Conference
 	 * @var Array
 	 */
 	private $mPages;
+	
+	const SUCCESS_CODE = 1;
+	const ERROR_EDIT = 2;
+	const ERROR_MISSING = 3;
+	const ERROR_DELETE =4;
+	const ERROR_PARENT_PRESENT = 5;
 	/**
 	 * 
 	 * constructor function (generally called from other functions)
@@ -137,11 +143,11 @@ class Conference
 		$status=$page->doEdit($text, 'new conference added',EDIT_NEW);
 		if($status->value['revision'])
 		{
-		$revision=$status->value['revision'];
-		$id=$revision->getPage();
-		$dbw=wfGetDB(DB_MASTER);
-		$dbw->insert('page_props',array('pp_page'=>$id,'pp_propname'=>'cvext-type','pp_value'=>'conference'));
-		return new self($id,$title,$description,$startDate,$endDate,$venue,$capacity);
+			$revision=$status->value['revision'];
+			$id=$revision->getPage();
+			$dbw=wfGetDB(DB_MASTER);
+			$dbw->insert('page_props',array('pp_page'=>$id,'pp_propname'=>'cvext-type','pp_value'=>'conference'));
+			return new self($id,$title,$description,$startDate,$endDate,$venue,$capacity);
 		}
 		else
 		{
@@ -158,8 +164,8 @@ class Conference
 	{
 		$article=Article::newFromID($conferenceId);
 		$text=$article->fetchContent();
-		preg_match_all("/<conference title=\"(.*)\" venue=\"(.*)\" capacity=\"(.*)\" startDate=\"(.*)\"
-		endDate=\"(.*)\" description=\"(.*)\" cvext-type=\"(.*)\" \/>/",$text,$matches);
+		preg_match_all('/<conference title="(.*)" venue="(.*)" capacity="(.*)" startDate="(.*)"
+		endDate="(.*)" description="(.*)" cvext-type="(.*)" \/>/',$text,$matches);
 		// now get the information on speakers
 		$dbr=wfGetDB(DB_SLAVE);
 		//collect all the pages pointing to $conferenceId as their parent conference
@@ -255,8 +261,7 @@ class Conference
 		{
 			$applicants[]=ConferenceApplicant::loadFromId($row->pp_page);
 		}*/
-		return new self($conferenceId,$matches[1][0],$matches[6][0],$matches[4][0],$matches[5][0]
-		,$matches[2][0],$matches[3][0],$speakers,$events,$applicants,$organizers,$accounts,$pages);
+		return new self($conferenceId,$matches[1][0],$matches[6][0],$matches[4][0],$matches[5][0],$matches[2][0],$matches[3][0],$speakers,$events,$applicants,$organizers,$accounts,$pages);
 
 	}
 	/**
@@ -290,13 +295,16 @@ class Conference
 			{
 				$result['done']=true;
 				$result['msg']="conference details are successfully saved";	
+				$result['flag']=self::SUCCESS_CODE;
 			} else {
 				$result['done']=false;
 				$result['msg']="conference details couldnt be saved";
+				$result['flag']=self::ERROR_EDIT;
 			}
 		} else {
 			$result['done']=false;
 			$result['msg']="No conference exists with this title in the database";
+			$result['flag']=self::ERROR_MISSING;
 		}
 		return $result;
 	}
@@ -312,8 +320,11 @@ class Conference
 	{
 		//$conferenceType=$args['type'];
 		$conferenceId=$parser->getTitle()->getArticleId();
-		$dbw=wfGetDB(DB_MASTER);
-		$dbw->insert('page_props',array('pp_page'=>$conferenceId,'pp_propname'=>'cvext-type','pp_value'=>'conference'));
+		if($conferenceId!=0)
+		{
+			$dbw=wfGetDB(DB_MASTER);
+			$dbw->insert('page_props',array('pp_page'=>$conferenceId,'pp_propname'=>'cvext-type','pp_value'=>'conference'));
+		}
 		return '';
 	}
 	/**

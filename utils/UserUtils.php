@@ -53,7 +53,7 @@ class UserUtils
 	public static function getUsername($uid)
 	{
 		$dbr=wfGetDB(DB_SLAVE);
-		$resultRow=$dbr->select("user",
+		$resultRow=$dbr->selectRow("user",
 		'user_name',
 		array('user_id'=>$uid),
 		__METHOD__,

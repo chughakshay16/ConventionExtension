@@ -249,14 +249,17 @@ class ConferenceAccount
 			if($status->value['revision'])
 			{
 				$result['done']=true;
-				$result['msg']="The account has been successfully modified";	
+				$result['msg']="The account has been successfully modified";
+				$result['flag']=Conference::SUCCESS_CODE;	
 			} else {
 				$result['done']=false;
 				$result['msg']="The account could not be modified";
+				$result['flag']=Conference::ERROR_EDIT;
 			}
 		} else {
 			$result['done']=false;
 			$result['msg']="The account with the following details was not found in the database";
+			$result['flag']=Conference::ERROR_MISSING;
 		}
 		return $result;
 	}
@@ -309,6 +312,7 @@ class ConferenceAccount
 					{
 						$result['done']=false;
 						$result['cause']="registration delete fail";
+						$result['flag']=Conference::ERROR_DELETE;
 						return $result;
 					} 
 				}
@@ -321,6 +325,7 @@ class ConferenceAccount
 					{
 						$result['done']=false;
 						$result['cause']="sub-account delete fail";
+						$result['flag']=Conference::ERROR_DELETE;
 						return $result;
 					}
 				}
@@ -331,6 +336,7 @@ class ConferenceAccount
 			{
 				$result['done']=false;
 				$result['cause']="passport info delete fail";
+				$result['flag']=Conference::ERROR_DELETE;
 				return $result;
 			}
 			$statusAccount=$page->doDeleteArticle("parent account is deleted by the admin",Revsion::DELETED_TEXT);
@@ -338,16 +344,19 @@ class ConferenceAccount
 			{
 				$result['done']=false;
 				$result['cause']='parent account delete fail';
+				$result['flag']=Conference::ERROR_DELETE;
 				return $result;
 			}
 				
 		} else {
 			$result['done']=false;
 			$result['cause']='parent account not found in the database';
+			$result['flag']=Conference::ERROR_MISSING;
 			return $result;
 		}
 		$result['done']=true;
 		$result['cause']='';
+		$result['flag']=Conference::SUCCESS_CODE;
 		return $result;
 	
 	}
@@ -376,14 +385,17 @@ class ConferenceAccount
 			{
 				$result['done']=true;
 				$result['msg']="The passport info has been successfully updated";
+				$result['flag']=Conference::SUCCESS_CODE;
 			} else {
 				$result['done']=false;
 				$result['msg']="The passport info could not be updated";
+				$result['flag']=Conference::ERROR_EDIT;
 			
 			}
 		} else {
 			$result['done']=false;
 			$result['msg']="The passport with the given username doesnt exist in the database";
+			$result['flag']=Conference::ERROR_MISSING;
 		}
 		return $result;
 		

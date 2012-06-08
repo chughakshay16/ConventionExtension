@@ -185,12 +185,8 @@ class ConferenceRegistration
 	 */
 	public static function render($input, array $args, Parser $parser, PPFrame $frame)
 	{
-		$id=$parser->getTitle()->getArticleId();
-		if($id!=0)
-		{
-			wfGetDB(DB_MASTER)->insert('page_props',array('pp_page'=>$id
-			,'pp_propname'=>'cvext-registration-account','pp_value'=>$args['cvext-registration-account']));
-		}
+		wfGetDB(DB_MASTER)->insert('page_props',array('pp_page'=>$parser->getTitle()->getArticleId()
+		,'pp_propname'=>'cvext-registration-account','pp_value'=>$args['cvext-registration-account']));
 		return '';
 	}
 	/**
@@ -204,17 +200,13 @@ class ConferenceRegistration
 	{
 		$dbw=wfGetDB(DB_MASTER);
 		$id=$parser->getTitle()->getArticleId();
-		if($id!=0)
-		{
 		$properties=array(array('id'=>$id,'prop'=>'cvext-registration-parent','value'=>$args['cvext-registration-parent'])
-		,array('id'=>$id,'prop'=>'cvext-registration-event','value'=>$args['cvext-registration-event']));
+		,array('id'=>$id,'prop'=>'cvext-registration-event','value'=>$args['cvex-registration-event']));
 		foreach ($properties as $property)
 		{
 			$dbw->insert('page_props',array('pp_page'=>$property['id']
 		,'pp_propname'=>$property['prop'],'pp_value'=>$property['value']));
 		}
-		}
-		
 		return '';
 	}
 	/*public static function createFromScratch($mAccountId,$mType,$mdietaryRestr,$mOtherDietOpts,$mOtherOpts,$mBadgeInfo,

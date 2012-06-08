@@ -151,13 +151,16 @@ class ConferenceOrganizer
 			{
 				$result['done']=true;
 				$result['msg']="The organizer info has been successfully updated";
+				$result['flag']=Conference::SUCCESS_CODE;
 			} else {
 				$result['done']=false;
 				$result['msg']="The organizer info could not be updated";
+				$result['flag']=Conference::ERROR_EDIT;
 			}
 		} else {
 			$result['done']=false;
 			$result['msg']="The organizer with the username ".$username." doesnt exist in the database";
+			$result['flag']=Conference::ERROR_MISSING;
 		}
 		return $result;
 		
@@ -186,13 +189,16 @@ class ConferenceOrganizer
 			{
 				$result['done']=true;
 				$result['msg']="The organizer has been successfully deleted";
+				$result['flag']=Conference::SUCCESS_CODE;
 			} else {
 				$result['done']=false;
 				$result['msg']="The organizer could not be deleted";
+				$result['flag']=Conference::ERROR_EDIT;
 			}
 		} else {
 			$result['done']=false;
 			$result['msg']="The organizer with this username ".$username." doesnt exist for the conference ".$confTitle;
+			$result['flag']=Conference::ERROR_MISSING;
 		}
 		return $result;
 		

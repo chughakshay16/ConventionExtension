@@ -13,13 +13,23 @@ class ConferenceUtils
 	}
 	public static function getConferenceId($title)
 	{
+		//first we will check for session data
+		global $wgRequest;
+		if($wgRequest->getSessionData('conference'))
+		{
+			$sessionArray= $wgRequest->getSessionData('conference');
+			if($sessionArray['title']===$title)
+			{
+				return $sessionArray['id'];
+			}
+		}
 		$dbr=wfGetDB(DB_SLAVE);
 		$row=$dbr->selectRow('page',
 		array('page_id'),
 		array('page_title'=>$title),
 		__METHOD__,
 		array());
-		return $row->page_id;
+		return $row->page_id?$row->page_id:false;
 	}
 	public static function getNamespace($conferenceId)
 	{
@@ -33,6 +43,15 @@ class ConferenceUtils
 	}
 	public static function getTitle($conferenceId)
 	{
+		global $wgRequest;
+		if($wgRequest->getSessionData('conference'))
+		{
+			$sessionArray= $wgRequest->getSessionData('conference');
+			if($sessionArray['id']===$id)
+			{
+				return $sessionArray['title'];
+			}
+		}
 		$dbr=wfGetDB(DB_SLAVE);
 		$row=$dbr->selectRow('page',
 		array('page_title'),

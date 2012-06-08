@@ -83,7 +83,7 @@ class ConferenceEvent
 	 * @param String $mGroup
 	 * @return ConferenceEvent
 	 */
-public static function createFromScratch($mConferenceId,$mLocation,$mStartTime,$mEndTime,$mDay,$mTopic,$mGroup)
+	public static function createFromScratch($mConferenceId,$mLocation,$mStartTime,$mEndTime,$mDay,$mTopic,$mGroup)
 	{
 			$confTitle=ConferenceUtils::getTitle($mConferenceId);
 			$titleText=$confTitle.'/events/'.$mTopic.'-'.$mDay.'-'.$mStartTime.'-'.$mEndTime.'-'.$mGroup;
@@ -178,24 +178,29 @@ public static function createFromScratch($mConferenceId,$mLocation,$mStartTime,$
 					{
 						$result['done']=true;
 						$result['msg']='The event was successfully updated';	
+						$result['flag']=Conference::SUCCESS_CODE;
 					} else {
 						$result['done']=false;
 						$result['msg']='The properties were not updated properly';
+						$result['flag']=Conference::ERROR_EDIT;
 					}
 						
 				} else
 				{
 					$result['done']=true;
 					$result['msg']='The event was successfully updated';
+					$result['flag']=Conference::SUCCESS_CODE;
 				}
 			} else {
 				$result['done']=false;
 				$result['msg']='The event could not be successfully updated';
+				$result['flag']=Conference::ERROR_EDIT;
 			}
 			
 		} else {
 			$result['done']=false;
 			$result['msg']='The event with these details wasnt found in the database';
+			$result['flag']=Conference::ERROR_MISSING;
 		}
 		return $result;
 	}
@@ -239,15 +244,18 @@ public static function createFromScratch($mConferenceId,$mLocation,$mStartTime,$
 				{
 					$result['done']=true;
 					$result['msg']="Event was successfully deleted";
+					$result['flag']=Conference::SUCCESS_CODE;
 				} else {
 					$result['done']=false;
 					$result['msg']="The event couldnt be deleted";
+					$result['flag']=Conference::ERROR_DELETE;
 				}	
 			}
 			
 		} else {
 			$result['done']=false;
 			$result['msg']="no event was found with such details in this conference";
+			$result['flag']=Conference::ERROR_MISSING;
 		}
 		return $result;
 	}

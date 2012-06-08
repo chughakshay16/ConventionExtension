@@ -90,6 +90,7 @@ class AuthorSubmission
 	 * @param $slidesInfo String extra slides info
 	 * @param $slotReq String request for specific slot
 	 * @return New AuthorSubmission object
+	 * 
 	 */
 	public static function createFromScratch($aid, $title,$type,$abstract, $track, $length, $slidesInfo, $slotReq)
 	{

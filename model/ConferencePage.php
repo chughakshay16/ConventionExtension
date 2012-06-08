@@ -39,7 +39,7 @@ class ConferencePage
 	 * @return ConferencePage
 	 * For already defined types default content will be added to the page at the time of creation
 	 */
-	public static function createFromScratch($mConferenceId, $type ,$default=true)
+	public static function createFromScratch($mConferenceId, $type ,$default=true )
 	{
 		$confTitle=ConferenceUtils::getTitle($mConferenceId);
 		$title=$confTitle.'/pages/'.$type;
@@ -47,9 +47,8 @@ class ConferencePage
 		$page=WikiPage::factory($titleObj);
 		$text = Xml::element('page',array('cvext-page-conf'=>$mConferenceId,'cvext-page-type'=>$type));
 		/**
-		 * add default text to the page only if $defauult is true
-		 * just check if the type belongs to the already defined types, if not then dont add any content other
-		 * than <page> tag 
+		 * add default text to the page only if $default is true
+		 * then <page> tag 
 		 */
 		$status=$page->doEdit($text,'new page added',EDIT_NEW);
 		if($status->value['revision'])
@@ -105,16 +104,61 @@ class ConferencePage
 			{
 				$result['done']=true;
 				$result['msg']="Page has been successfully deleted";
+				$result['flag']=Conference::SUCCESS_CODE;
 			} else {
 				$result['done']=false;
 				$result['msg']="The page couldnt be deleted";
+				$result['flag']=Conference::ERROR_DELETE;
 			}
 		} else {
 			$result['done']=false;
 			$result['msg']="The page with this title doesnt exist in the database";
+			$result['flag']=Conference::ERROR_MISSING;
 		}
 		
 		return $result;
+	}
+	public static function performEdit($conferenceId, $type)
+	{
+		$confTitle = ConferenceUtils::getTitle($conferenceId);
+		$titleText = $confTitle.'/pages/'.$type;
+		$title = Title::newFromText($titleText);
+		if(!$title)
+		{
+			//throw error and return null
+		} 
+		$page =WikiPage::factory($title);
+		$result = array();
+		if($title->exists())
+		{
+			$id = $page->getId();
+			$article = Article::newFromID($id);
+			$content = $article->fetchContent();
+			//modify the type value if its changed
+			$oldType;
+			$status = $page->doEdit($content, 'modifying page type',EDIT_UPDATE);
+			if($status->value['revision'])
+			{
+				$dbw = wfGetDB(DB_MASTER);
+				$dbw->update('page_props',
+				array('pp_page'=>$id,'pp_propname'=>'cvext-page-type','pp_value'=>$type),
+				array('pp_page'=>$id,'pp_propname'=>'cvext-page-type','pp_value'=>$oldType),
+				__METHOD__);
+				//do check to see if row was updated properly
+				$result['done']=true;
+				$result['msg']="The page details were successfully updated";
+				$result['flag']=Conference::SUCCESS_CODE;
+			} else {
+				$result['done']=false;
+				$result['msg']="Page details could not be updated";
+				$result['flag']=Conference::ERROR_EDIT;
+			}
+		} else {
+			$reselt['done']=false;
+			$result['msg']='The page with these details was not found in the database';
+			$result['flag']=Conference::ERROR_MISSING;
+			
+		}
 	}
 	/**
 	 * 

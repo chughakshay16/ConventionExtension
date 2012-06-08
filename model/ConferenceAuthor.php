@@ -165,7 +165,7 @@ class ConferenceAuthor
 	 * $result['done'] true/false depending on whether the delete was successful
 	 * $result['cause'] cause for the fail if any occured otherwise its just empty string
 	 */
-	public static function perfromAuthorDelete($uid)
+	public static function performAuthorDelete($uid)
 	{
 		//we need to delete the whole chain of author starting from parent author and ending with submission
 		//step 1. get all the sub-author ids
@@ -205,6 +205,7 @@ class ConferenceAuthor
 				{
 					$result['done']=false;
 					$result['cause']='submission delete fail';
+					$result['flag']=Conference::ERROR_DELETE;
 					return $result;
 				}
 			}
@@ -216,6 +217,7 @@ class ConferenceAuthor
 				{
 					$result['done']=false;
 					$result['cause']="sub-author delete fail";
+					$result['flag']=Conference::ERROR_DELETE;
 					return $result;
 				}
 			}
@@ -225,13 +227,16 @@ class ConferenceAuthor
 			{
 				$result['done']=false;
 				$result['cause']='parent author delete fail';
+				$result['flag']=Conference::ERROR_DELETE;
 				return $result;
 			}
 			$result['done']=true;
 			$result['cause']='';
+			$result['flag']=Conference::SUCCESS_CODE;
 		} else {
 			$result['done']=false;
 			$result['cause']='no parent author found for the user';
+			$result['flag']=Conference::ERROR_MISSING;
 			return $result;
 		}
 		return $result;
@@ -266,13 +271,16 @@ class ConferenceAuthor
 			{
 				$result['done']=true;
 				$result['msg']='Submission has been successfully deleted';
+				$result['flag']=Conference::SUCCESS_CODE;
 			} else {
 				$result['done']=false;
 				$result['msg']="Submission couldnt be deleted";
+				$result['flag']=Conference::ERROR_DELETE;
 			}
 		} else {
 			$result['done']=false;
 			$result['msg']="Submission with the given title was not found in the database";
+			$result['flag']=Conference::ERROR_MISSING;
 		}
 		return $result;
 	}
@@ -312,6 +320,7 @@ class ConferenceAuthor
 					{
 						$result['done']=false;
 						$result['cause']='submission delete fail';
+						$result['flag']=Conference::ERROR_DELETE;
 						return $result;
 					}
 					
@@ -324,15 +333,18 @@ class ConferenceAuthor
 			{
 				$result['done']=false;
 				$result['cause']='sub-author delete fail';
+				$result['flag']=Conference::ERROR_DELETE;
 				return $result;
 			}
 		} else {
 			$result['done']=false;
 			$result['cause']="the user doesnt have any sub-author for this conference";
+			$result['flag']=Conference::ERROR_MISSING;
 			return $result;
 		}
 		$result['done']=true;
 		$result['cause']="The sub-author was successfully deleted";
+		$result['flag']=Conference::SUCCESS_CODE;
 		return $result;
 	}
 	/**
@@ -364,13 +376,16 @@ class ConferenceAuthor
 			{
 				$result['done']=true;
 				$result['msg']="Author info has been successfully edited";
+				$result['flag']=Conference::SUCCESS_CODE;
 			} else {
 				$result['done']=false;
 				$result['msg']="The author details couldnt be edited";
+				$result['flag']=Conference::ERROR_EDIT;
 			}
 		} else {
 			$result['done']=false;
 			$result['msg']="The author with this username doesnt exist in the database";
+			$result['flag']=Conference::ERROR_MISSING;
 		}
 		return $result;
 	}
@@ -409,14 +424,17 @@ class ConferenceAuthor
 			{
 				$result['done']=true;
 				$result['msg']="The submission details have been successfully edited";	
+				$result['flag']=Conference::SUCCESS_CODE;
 			} else {
 				$result['done']=false;
 				$result['msg']="The submission details could not be modified";
+				$result['flag']=Conference::ERROR_EDIT;
 				
 			}	
 		} else {
 			$result['done']=false;
 			$result['msg']="The submission with this title name doesnt exist in the database";
+			$result['flag']=Conference::ERROR_MISSING;
 		}	
 	}
 	/**

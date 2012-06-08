@@ -98,25 +98,31 @@ class EventLocation
 			$hasEvent=ConferenceEventUtils::isPartOfAnyEvent($id);
 			if($hasEvent)
 			{
-				$result['hasEvent']=true;
-				$result['hasEvent']['msg']='This location cant be deleted as its part of an already existing event';
+				//$result['hasEvent']=true;
+				$result['done']=false;
+				$result['msg']='This location cant be deleted as its part of an already existing event';
+				$result['flag']=Conference::ERROR_PARENT_PRESENT;
 			}
 			else {
-				$result['hasEvent']=false;
 				//do note that doArticleDelete() doesnt delete the rows in page_props so we will have to manually delete them
 				$status=$page->doArticleDelete("location deleted by admin",DELETED_TEXT);
 				if($status===true)
 				{
-					$result['hasEvent']['msg']="The location has been successfully deleted";
+					$result['done']=true;
+					$result['msg']="The location has been successfully deleted";
+					$result['flag']=Conference::SUCCESS_CODE;
 				} else {
-					$result['hasEvent']['msg']="The location couldnt be delelted";
+					$result['done']=false;
+					$result['msg']="The location couldnt be delelted";
+					$result['flag']=Conference::ERROR_DELETE;
 				}
 			}
 		}
 		else
 		{
-			$result['hasEvent']=false;
-			$result['hasEvent']['msg']="The location with this roomNo doesnt exist for this conference";
+			$result['done']=false;
+			$result['msg']="The location with this roomNo doesnt exist for this conference";
+			$result['flag']=Conference::ERROR_MISSING;
 		}
 		return $result;
 		
@@ -151,13 +157,16 @@ class EventLocation
 			{
 				$result['done']=true;
 				$result['msg']="The location has been successfully edited";
+				$result['flag']=Conference::SUCCESS_CODE;
 			} else {
 				$result['done']=false;
 				$result['msg']="The location could not be edited";
+				$result['flag']=Conference::ERROR_EDIT;
 			}
 		} else {
 			$result['done']=false;
 			$result['msg']="The location with this roomNo for this conference doesnt exist in the database";
+			$result['flag']=Conference::ERROR_MISSING;
 		}
 		return $result;
 	}
