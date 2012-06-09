@@ -164,6 +164,49 @@ class ConferenceEvent
 			//while fetching values from the content , we will see if $mLocation->getLocationId() matches with the location id stored 
 			//in the content , so if its the same then page_properties table wont be modified otherwise page_props table would have
 			//to be modified as well
+			preg_match_all('/<event cvext-event-conf="(.*)" cvext-event-location="(.*)" startTime="(.*)" endTime="(.*)" day="(.*)" topic="(.*)" group="(.*)" \/>/',$content,$matches);
+			if(!$mLocation)
+			{
+				$mLocationId = $matches[2][0];
+			} elseif ($mLocation->getLocationId()){
+				if($matches[2][0]==$mLocation->getLocationId())
+				{
+					$mLocationId = $matches[2][0];
+					$isPagePropChanged = false;
+				} else {
+					$mLocationId = $mLocation->getLocationId();
+					$isPagePropChanged = true;
+				}
+			} else {
+				$mLocationId = $matches[2][0];
+				$isPagePropertyChanged = false;
+			}
+			if(!$mStartTime)
+			{
+				$mStartTime = $matches[3][0];
+			}
+			if(!$mEndTime)
+			{
+				$mEndTime = $matches[4][0];
+			}
+			if(!$mDay)
+			{
+				$mDay = $matches[5][0];
+			}
+			if(!$mTopic)
+			{
+				$mTopic = $matches[6][0];
+			}
+			if(!$mGroup)
+			{
+				$mGroup = $matches[7][0];
+			}
+			
+			$newTag = Xml::element('event',array('cvext-event-conf'=>$matches[1][0],'cvext-event-location'=>$mLocationId,
+			'startTime'=>$mStartTime,'endTime'=>$mEndTime,'day'=>$mDay,'topic'=>$mTopic,'group'=>$mGroup));
+			
+			$content = preg_replace('/<event cvext-event-conf=".*" cvext-event-location=".*" startTime=".*" endTime=".*" day=".*" topic=".*" group=".*" \/>/', $newTag, $content);
+			
 			$status=$page->doEdit($content,"Event has been modified",EDIT_UPDATE);
 			if($status->value['revision'])
 			{

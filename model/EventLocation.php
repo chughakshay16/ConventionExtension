@@ -141,6 +141,15 @@ class EventLocation
 	 */
 	public static function performEdit($cid,$roomNo,$description,$url)
 	{
+		if(!$roomNo && !$description && !$url)
+		{
+				
+			$result['done']=false;
+			$result['msg']='All values are passed as null';
+			$result['flag']=Conference::INVALID_CONTENT;
+			return $result;
+				
+		}
 		$confTitle=ConferenceUtils::getTitle($cid);
 		$titleText=$confTitle.'/locations/'.$roomNo;
 		$title=Title::newFromText($titleText);
@@ -151,7 +160,29 @@ class EventLocation
 			$id=$page->getId();
 			$article=Article::newFromID($id);
 			$content=$article->fetchContent();
-			//modify the content
+			preg_match_all("/<location roomNo=\"(.*)\" description=\"(.*)\" url=\"(.*)\" cvext-type=\"(.*)\" cvext-location-conf=\"(.*)\" \/>/",$content,$matches);
+			 
+			if(!$roomNo)
+			{
+				$roomNo = $matches[1][0];
+			}
+			if(!$description)
+			{
+				$description=$matches[2][0];
+			}
+			if(!$url)
+			{
+				$url= $matches[3][0];
+			}
+			if($roomNo===$matches[1][0] && $description===$matches[2][0] && $url===$matches[3][0])
+			{
+				$result['done']=true;
+				$result['msg']='Passed content is similar to previous content';
+				$result['flag']=Conference::NO_EDIT_NEEDED;
+				return $result;
+			}
+			$newTag=Xml::element('location',array('roomNo'=>$roomNo,'description'=>$description,'url'=>$url,'cvext-type'=>'location','cvext-location-conf'=>$matches[5][0]));
+			$content = preg_replace("/<location roomNo=\"(.*)\" description=\"(.*)\" url=\"(.*)\" cvext-type=\"(.*)\" cvext-location-conf=\"(.*)\" \/>/", $newTag, $content);
 			$status=$page->doEdit($content,"location is modified by the admin",EDIT_UPDATE);
 			if($status->value['revision'])
 			{

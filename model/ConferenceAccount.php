@@ -244,7 +244,27 @@ class ConferenceAccount
 			$id=$page->getId();
 			$article=Article::newFromID($id);
 			$content=$article->fetchContent();
-			//modify the content
+			preg_match_all("/<account gender=\"(.*)\" firstName=\"(.*)\" lastName=\"(.*)\" cvext-account-user=\"(.*)\" \/>/",$content,$matches);
+			//we will never be changing the cvext-account-user property
+			if(!$gender)
+			{
+				$gender = $matches[1][0];
+			}
+			if(!$firstName)
+			{
+				$firstName = $matches[2][0];
+			}
+			if(!$lastName)
+			{
+				$lastName = $matches[3][0];
+			}
+			
+			$newTag = Xml::element('account',array('gender'=>$gender,'firstName'=>$firstName,'lastName'=>$lastName,
+			'cvext-account-user'=>$matches[4][0]));
+			
+			$content = preg_replace("/<account gender=\".*\" firstName=\".*\" lastName=\".*\" cvext-account-user=\".*\" \/>/", $newTag, 
+			$content);
+			
 			$status=$page->doEdit($content,'The account info has been modified',EDIT_UPDATE);
 			if($status->value['revision'])
 			{

@@ -370,7 +370,24 @@ class ConferenceAuthor
 			$id=$page->getId();
 			$article=Article::newFromID($id);
 			$content=$article->fetchContent();
-			//modify the content
+			preg_match_all("/<author country=\"(.*)\" affiliation=\"(.*)\" blogUrl=\"(.*)\" cvext-author-user=\"(.*)\" \/>/",$content,$matches);
+			//we will never be modifying the cvext-author-user property
+			if (!$country)
+			{
+				$country = $matches[1][0];
+			}
+			if (!$affiliation)
+			{
+				$affiliation = $matches[2][0];
+			}
+			if(!$url)
+			{
+				$url = $matches[3][0];
+			}
+			
+			$newTag = Xml::element('author',array('country'=>$country,'affiliation'=>$affiliation,'blogUrl'=>$url,'cvext-author-user'=>$matches[4][0]));
+			
+			$content = preg_replace("/<author country=\".*\" affiliation=\".*\" blogUrl=\".*\" cvext-author-user=\".*\" \/>/",$newTag, $content);
 			$status=$page->doEdit($content,"Author with $username has been modified",EDIT_UPDATE);
 			if($status->value['revision'])
 			{
@@ -418,7 +435,41 @@ class ConferenceAuthor
 			$id=$page->getId();
 			$article=Article::newFromID($id);
 			$content=$article->fetchContent();
-			//modify the content
+			preg_match_all("/<submission title=\"(.*)\" submissionType=\"(.*)\" abstract=\"(.*)\" track=\"(.*)\" length=\"(.*)\" slidesInfo=\"(.*)\" slotReq=\"(.*)\" cvext-submission-author=\"(.*)\" \/>/",$content,$matches);
+			if(!$title)
+			{
+				$title = $matches[1][0];
+			}
+			if(!$type)
+			{
+				$type = $matches[2][0];
+			}
+			if(!$abstract)
+			{
+				$abstract = $matches[3][0];
+			}
+			if(!$track)
+			{
+				$track = $matches[4][0];
+			}
+			if(!$length)
+			{
+				$length = $matches[5][0];
+			}
+			if(!$slidesInfo)
+			{
+				$slidesInfo = $matches[6][0];
+			}
+			if(!$slotReq)
+			{
+				$slotReq = $matches[7][0];
+			}
+			
+			$newTag = Xml::element('submission',array('title'=>$title,'submissionType'=>$type,'abstract'=>$abstract,
+			'track'=>$track,'length'=>$length,'slidesInfo'=>$slidesInfo,'slotReq'=>$slotReq,'cvext-submission-author'=>$matches[8][0]));
+			
+			$content = preg_replace("/<submission title=\".*\" submissionType=\".*\" abstract=\".*\" track=\".*\" length=\".*\" slidesInfo=\".*\" slotReq=\".*\" cvext-submission-author=\".*\" \/>/", $newTag, $content);
+			
 			$status=$page->doEdit($content,'Submission details has been successfully modified',EDIT_UPDATE);
 			if($status->value['revision'])
 			{

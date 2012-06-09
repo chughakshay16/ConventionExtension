@@ -43,11 +43,11 @@ class ConferenceOrganizer
 	 * @return ConferenceOrganizer
 	 * If the user is already an organizer for this conference this function just edits the content, whereas if its an organizer for a different Conference 
 	 * it just adds a new organizer page
-	 * @todo editing logic
+	 * Although there is already a performEdit() function for adding cat,post values
 	 */
 	public static function createFromScratch($cid,$uid,$catpost)
 	{
-		// do add the logic for having csv value for category
+
 		$isOrganizerForConference=ConferenceOrganizerUtils::isOrganizerFromConference($uid, $cid);
 		$confTitle=ConferenceUtils::getTitle($cid);
 		$username=UserUtils::getUsername($uid);
@@ -56,7 +56,7 @@ class ConferenceOrganizer
 		$pageObj=WikiPage::factory($titleObj);
 		if($isOrganizerForConference===false)
 		{
-			$text=Xml::element('organizer',array('category'=>$catpost[0]['cat'],'post'=>$catpost[0]['post'],'cvext-organizer-conf'=>$cid,'cvext-organizer-user'=>$uid));
+			$text=Xml::element('organizer',array('category'=>$catpost[0]['category'],'post'=>$catpost[0]['post'],'cvext-organizer-conf'=>$cid,'cvext-organizer-user'=>$uid));
 			$status=$pageObj->doEdit($text, 'new organizer added',EDIT_NEW);	
 			if($status->value['revision'])
 			{
@@ -72,21 +72,23 @@ class ConferenceOrganizer
 			}
 			else
 			{
-			//do something here
+				return new self($cid, $uid, $catpost);
 			}
 		}
 		else 
 		{
-			//just add one more category to the cat attribute 
-			//and fetch all the other categories and modfiy the variable $catpost
-			// take care of adding changes to other tables such as RecentChanges, Logs.. just like how doEdit() method does
 			if($pageObj->exists())
 			{
-				$id=$pageObj->getId();
-				$article=Article::newFromID($id);
-				$content=$article->fetchContent();
-				//now modify the content and extract all the catpost values
-				$pageObj->doEdit($content,'added a pair of category and post',EDIT_UPDATE);
+				$id = $pageObj->getId();
+				$result = self::performEdit($cid, $username, $catpost);
+				if($result['done'])
+				{
+					
+					return new self($id,$cid, $uid, $result['catpost']);
+					
+				} else {
+					return new self(null,$cid, $uid, null);
+				}
 			}
 		}
 		return new self($id,$cid, $uid, $catpost);
@@ -130,7 +132,7 @@ class ConferenceOrganizer
 	 * @return $result
 	 * $result['done'] - true/false (success or failure)
 	 * $result['msg'] - success or failure message
-	 * @todo come up with a parsing logic for extracting the category -post values
+	 * 
 	 */
 	public static function performEdit($cid,$username,$catpost)
 	{
@@ -139,19 +141,57 @@ class ConferenceOrganizer
 		$title=$confTitle.'/organizers/'.$username;
 		$titleObj=Title::newFromText($title);
 		$page=WikiPage::factory($titleObj);
+		if(!count($catpost) || !$catpost[0] || !$catpost[0]['category'] || !$catpost[0]['post'])
+		{
+			$result['done']=false;
+			$result['msg']='Both category and post must be present';
+			$result['flag']=Conference::ERROR_EDIT;
+			return $result;
+		}
 		$result=array();
 		if($page->exists())
 		{
 			$id=$page->getId();
 			$article=Article::newFromID($id);
 			$content=$article->fetchContent();
-			//modify the category post values(probably with a regular expression or something)
+			//check if the passed array is already present or not if not throw error
+			preg_match_all("/<organizer category=\"(.*)\" post=\"(.*)\" cvext-organizer-conf=\"(.*)\" cvext-organizer-user=\"(.*)\" \/>/",$content,$matches);
+			$categoryString = $matches[1][0];
+			$postString = $matches[2][0];
+			$categoryArray = explode(',', $categoryString);
+			$postArray = explode(',', $postString);
+			//The thumb of rule is (category,post) combination should not be the same
+			foreach ($categoryArray as $index=>$category)
+			{
+				if($category==$catpost[0]['category'])
+				{
+					if ($catpost[0]['post']==$postArray[$index])
+					{
+						$result['done']=false;
+						$result['msg']='The same (category,post) combination already available';
+						$result['flag']=Conference::ERROR_EDIT;
+						return $result;
+					}
+				}
+			}
+			$categoryArray[]=$catpost[0]['category'];
+			$postArray[]=$catpost[0]['post'];
+			$newCategoryPost = array();
+			for ($i=0;$i<count($categoryArray);$i++)
+			{
+				$newCategoryPost[]= array('category'=>$categoryArray[$i],'post'=>$postArray[$i]);
+			}
+			$categoryString = implode(',', $categoryArray);
+			$postString = implode(',', $postArray);
+			$newTag = Xml::element('organizer',array('category'=>$categoryString,'post'=>$postString,'cvext-organizer-conf'=>$matches[3][0],'cvext-organizer-user'=>$matches[4][0]));
+			$content = preg_replace("/<organizer category=\".*\" post=\".*\" cvext-organizer-conf=\".*\" cvext-organizer-user=\".*\" \/>/", $newTag, $content);
 			$status=$page->doEdit($content, "organizer updated",EDIT_UPDATE);
 			if($status->value['revision'])
 			{
 				$result['done']=true;
 				$result['msg']="The organizer info has been successfully updated";
 				$result['flag']=Conference::SUCCESS_CODE;
+				$result['catpost']=$newCategoryPost;
 			} else {
 				$result['done']=false;
 				$result['msg']="The organizer info could not be updated";

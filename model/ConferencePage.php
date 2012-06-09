@@ -120,41 +120,80 @@ class ConferencePage
 	}
 	public static function performEdit($conferenceId, $type)
 	{
+		
 		$confTitle = ConferenceUtils::getTitle($conferenceId);
 		$titleText = $confTitle.'/pages/'.$type;
 		$title = Title::newFromText($titleText);
 		if(!$title)
 		{
-			//throw error and return null
+			
+			$result['done']=false;
+			$result['msg']='Invalid value of type';
+			$result['flag']=Conference::ERROR_EDIT;
+			return $result;
+			
 		} 
+		
+		
 		$page =WikiPage::factory($title);
 		$result = array();
 		if($title->exists())
 		{
+			
 			$id = $page->getId();
 			$article = Article::newFromID($id);
 			$content = $article->fetchContent();
-			//modify the type value if its changed
-			$oldType;
+			preg_match_all("/<page cvext-page-conf=\"(.*)\" cvext-page-type=\"(.*)\" \/>/",$content,$matches);
+			if(!$type)
+			{
+				
+				$result['done']=false;
+				$result['msg']='The type value was passed as null';
+				$result['flag']=Conference::INVALID_CONTENT;
+				return $result;
+				
+			} elseif ($type==$matches[2][0]){
+				
+				$result['done']=true;
+				$result['msg']='Passed content is same as previous content';
+				$result['flag']=Conference::NO_EDIT_NEEDED;
+				return $result;
+				
+			} else {
+				
+				$oldType = $matches[2][0];
+				
+			}
+			
+			
+			$newTag = Xml::element('page',array('cvext-page-conf'=>$matches[1][0],'cvext-page-type'=>$type));
+			$content = preg_replace("/<page cvext-page-conf=\".*\" cvext-page-type=\".*\" \/>/", $newTag, $content);
 			$status = $page->doEdit($content, 'modifying page type',EDIT_UPDATE);
 			if($status->value['revision'])
 			{
+				
 				$dbw = wfGetDB(DB_MASTER);
+				
 				$dbw->update('page_props',
 				array('pp_page'=>$id,'pp_propname'=>'cvext-page-type','pp_value'=>$type),
 				array('pp_page'=>$id,'pp_propname'=>'cvext-page-type','pp_value'=>$oldType),
 				__METHOD__);
 				//do check to see if row was updated properly
+				
 				$result['done']=true;
 				$result['msg']="The page details were successfully updated";
 				$result['flag']=Conference::SUCCESS_CODE;
+				
 			} else {
+				
 				$result['done']=false;
 				$result['msg']="Page details could not be updated";
 				$result['flag']=Conference::ERROR_EDIT;
+				
 			}
 		} else {
-			$reselt['done']=false;
+			
+			$result['done']=false;
 			$result['msg']='The page with these details was not found in the database';
 			$result['flag']=Conference::ERROR_MISSING;
 			

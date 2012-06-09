@@ -85,6 +85,8 @@ class Conference
 	const ERROR_MISSING = 3;
 	const ERROR_DELETE =4;
 	const ERROR_PARENT_PRESENT = 5;
+	const INVALID_CONTENT=6;
+	const NO_EDIT_NEEDED=7;
 	/**
 	 * 
 	 * constructor function (generally called from other functions)
@@ -277,7 +279,7 @@ class Conference
 	 * @param String $endDate
 	 * @param String $mDescription
 	 */
-	public static function performEdit($cid,$title,$venue,$description,$capacity,$startDate,$endDate,$mDescription)
+	public static function performEdit($cid,$title,$venue,$description,$capacity,$startDate,$endDate,$description)
 	{
 		$confTitle=ConferenceUtils::getTitle($cid);
 		$titleText='conferences/'.$confTitle;
@@ -289,7 +291,39 @@ class Conference
 			$id=$page->getId();
 			$article=Article::newFromID($id);
 			$content=$article->fetchContent();
-			//modify the content
+			preg_match_all('/<conference title="(.*)" venue="(.*)" capacity="(.*)" startDate="(.*)"
+			endDate="(.*)" description="(.*)" cvext-type="(.*)" \/>/', $content, $matches);
+			if(!$title)
+			{
+				$title = $matches[1][0];
+			} 
+			if(!$venue)
+			{
+				$venue = $matches[2][0];
+			}
+			if (!$capacity)
+			{
+				$capacity = $matches[3][0];
+			}
+			if(!$startDate)
+			{
+				$startDate = $matches[4][0];
+			}
+			if(!$endDate)
+			{
+				$endDate = $matches[5][0];
+			}
+			if(!$description)
+			{
+				$description = $matches[6][0];
+			}
+			
+			$newTag = Xml::element('conference',array('title'=>$title,'venue'=>$venue,'capacity'=>$capacity
+			,'startDate'=>$startDate,'endDate'=>$endDate,'description'=>$description,'cvext-type'=>'conference'));
+			
+			$content = preg_replace('/<conference title=".*" venue=".*" capacity=".*" startDate=".*"
+			endDate=".*" description=".*" cvext-type=".*" \/>/',$newTag, $content);
+			
 			$status=$page->doEdit($content,"conference details modified by the admin",EDIT_UPDATE);	
 			if($status->value['revision'])
 			{
