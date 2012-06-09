@@ -166,7 +166,22 @@ class ApiConferenceEventAdd extends ApiBase
 	}
 	public function getPossibleErrors()
 	{	
-	
+		$user = $this->getUser();
+		return array_merge(parent::getPossibleErrors(), array(
+		array('mustbeloggedin','conference'),
+		array('invaliduser', $user->getName()),
+		array('badaccess-groups'),
+		array('missingparam','roomno'),
+		array('missingparam','starttime'),
+		array('missingparam','endtime'),
+		array('missingparam','day'),
+		array('missingparam','topic'),
+		array('missingparam','group'),
+		array('invalidtitle','roomno'),
+		array('invalidtitle','Title created with passed parameters'),
+		array('createonly-exists'),
+		array('nocreate-missing')
+		));
 	}
 	public function getExamples()
 	{
@@ -269,7 +284,7 @@ class ApiConferenceEventEdit extends ApiBase
 			$resultApi->addValue(null, $this->getModuleName(), $result);
 			
 		} else {
-			$this->dieUsageMsg(array('missingparam'),'All');
+			$this->dieUsage('Atleast one of the params should be passed in the request','atleastparam');
 		}
 	}
 	private function mustValidateInputs($startTime, $endTime, $day, $topic, $group)
@@ -322,7 +337,17 @@ class ApiConferenceEventEdit extends ApiBase
 	}
 	public function getPossibleErrors()
 	{	
-	
+		$user = $this->getUser();
+		return array_merge(parent::getPossibleErrors(), array(
+		array('mustbeloggedin', 'conference'),
+		array('badaccess-groups'),
+		array('invaliduser',$user->getName()),
+		array('invalidtitle','Old title created with params passed'),
+		array('invalidtitle','New title created with params passed'),
+		array('createonly-exists'),
+		array('nocreate-missing'),
+		array('code'=>'atleastparam','info'=>'Atleast one of the params should be passed in the request')
+		));
 	}
 	public function getExamples()
 	{
@@ -468,7 +493,19 @@ class ApiConferenceEventDelete extends ApiBase
 	}
 	public function getPossibleErrors()
 	{	
-	
+		$user = $this->getUser();
+		return array_merge(parent::getPossibleErrors(), array(
+		array('mustbeloggedin', 'conference'),
+		array('badaccess-groups'),
+		array('invaliduser', $user->getName()),
+		array('invalidtitle', 'Title created with passed params'),
+		array('cannotdelete','this event'),
+		array('missingparam','starttime'),
+		array('missingparam','endtime'),
+		array('missingparam','topic'),
+		array('missingparam','group'),
+		array('missingparam','day'),
+		));
 	}
 	public function getExamples()
 	{

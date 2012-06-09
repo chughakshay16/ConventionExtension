@@ -23,7 +23,7 @@ class ApiConferenceAuthorEdit extends ApiBase
 		if(!isset($params['country']) && !isset($params['affiliation']) && !isset($params['url']))
 		{
 			
-			$this->dieUsageMsg(array('missingparam'), 'Atleast country, affiliation or url');
+			$this->dieUsage('Atleast one of the params must be passed in the request', 'atleastparam');
 			
 		} else {
 			
@@ -37,6 +37,7 @@ class ApiConferenceAuthorEdit extends ApiBase
 		{
 			//depending on the error
 						//$this->dieUsageMsg(array('spamdetected',put the parameter due to which error occurred))
+						//change getPossibleErrors()
 		} else {
 			$user=$this->getUser();
 			$user = User::newFromName($user->getName());
@@ -107,7 +108,13 @@ class ApiConferenceAuthorEdit extends ApiBase
 	}
 	public function getPossibleErrors()
 	{	
-	
+		$user = $this->getUser();
+		return array_merge(parent::getPossibleErrors(), array(
+		array('mustbeloggedin','conference'),
+		array('nosuchuser',$user->getName()),
+		array('invaliduser',$user->getName()),
+		array('badaccess-groups'),
+		array('code'=>'atleastparam','info'=>'Atleast one of the params should be passed in the request')));
 	}
 	public function getExamples()
 	{
@@ -184,7 +191,12 @@ class ApiConferenceAuthorDelete extends ApiBase
 	}
 	public function getPossibleErrors()
 	{	
-	
+		$user = $this->getUser();
+		return array_merge(parent::getPossibleErrors(), array(
+		array('mustbeloggedin','conference'),
+		array('invaliduser',$user->getName()),
+		array('badaccess-groups')
+		));
 	}
 	public function getExamples()
 	{
@@ -304,7 +316,17 @@ class ApiAuthorSubmissionDelete extends ApiBase
 	}
 	public function getPossibleErrors()
 	{	
-	
+		$user = $this->getUser();
+		return array_merge(parent::getPossibleErrors(), array(
+		array('mustbeloggedin','conference'),
+		array('missingparam','title'),
+		array('missingparam','conference'),
+		array('invaliduser',$user->getName()),
+		array('invalidtitle','title'),
+		array('invalidtitle','conference'),
+		array('cannotdelete','this submission'),
+		array('badaccess-groups')
+		));
 	}
 	public function getExamples()
 	{
@@ -334,7 +356,7 @@ class ApiAuthorSubmissionEdit extends ApiBase
 		
 		if(session_id()=='')
 		{
-			$this->dieUsageMsg(array('mustbeloggedin'));
+			$this->dieUsageMsg(array('mustbeloggedin','conference'));
 		}	
 		/**
 		 * these are all the checks that we need to go through before we make an actual edit
@@ -381,7 +403,7 @@ class ApiAuthorSubmissionEdit extends ApiBase
 		&& !isset($params['track']) && !isset($params['length']) && !isset($params['slidesinfo']))
 		{
 			
-			$this->dieUsageMsg(array('missingparam','Atleast titleto, abstract, type, track, length or slidesinfo'));
+			$this->dieUsage('Atleast one of the params should be passed in the request','atleastparam');
 			
 		} else {
 			
@@ -437,7 +459,7 @@ class ApiAuthorSubmissionEdit extends ApiBase
 					
 				} elseif ($newTitle->exists()){
 					
-					$this->dieUsageMsg(array('createonly-exists',$titleTo));
+					$this->dieUsageMsg(array('createonly-exists'));
 					
 				}
 				
@@ -461,6 +483,7 @@ class ApiAuthorSubmissionEdit extends ApiBase
 				if ( $retval !== true ) {
 					
 					$this->dieUsageMsg( reset( $retval ) );
+					// I dont know how to account for this error in getPossibleErrors()
 					
 				}	
 				
@@ -533,7 +556,20 @@ class ApiAuthorSubmissionEdit extends ApiBase
 	}
 	public function getPossibleErrors()
 	{	
-	
+		$user= $this->getUser();
+		return array_merge(parent::getPossibleErrors(), array(
+		array('mustbeloggedin','conference'),
+		array('invaliduser',$user->getName()),
+		array('badaccess-groups'),
+		array('missingparam','title'),
+		array('missingtitle','conference'),
+		array('code'=>'atleastparam','info'=>'Atleast one of the params should be passed in the request'),
+		array('invalidtitle','title'),
+		array('invalidtitle','conference'),
+		array('nocreate-missing'),
+		array('invalidtitle','titleto'),
+		array('createonly-exists')
+		));
 	}
 	public function getExamples()
 	{

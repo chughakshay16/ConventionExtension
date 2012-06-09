@@ -44,7 +44,7 @@ class ApiConferenceLocationEdit extends ApiBase
 			
 		} elseif (!isset($params['description']) && !isset($params['url']) && !isset($params['roomnoto'])){
 			
-			$this->dieUsageMsg(array('missingparam','Atleast description, url or roomnoto'));
+			$this->dieUsage('Atleast params except roomno should be passed in the request','atleastparam');
 			
 		} else {
 			
@@ -70,7 +70,7 @@ class ApiConferenceLocationEdit extends ApiBase
 			
 		} elseif (!$title->exists()){
 			
-			$this->dieUsageMsg(array('nocreate-missing',$params['roomno']));
+			$this->dieUsageMsg(array('nocreate-missing'));
 			
 		}
 		
@@ -167,6 +167,7 @@ class ApiConferenceLocationEdit extends ApiBase
 	{
 		return array(
 		'roomno'=>'Room no of the location',
+		'roomnoto'=>'New room no of the location',
 		'description'=>'Description of the location',
 		'url'=>'Url which points to the image of the location'
 		);
@@ -177,7 +178,18 @@ class ApiConferenceLocationEdit extends ApiBase
 	}
 	public function getPossibleErrors()
 	{	
-	
+		$user = $this->getUser();
+		return array_merge(parent::getPossibleErrors(), array(
+		array('mustbeloggedin','conference'),
+		array('invaliduser',$user->getName()),
+		array('badaccess-groups'),
+		array('missingparam','roomno'),
+		array('code'=>'atleastparam','info'=>'Atleast params except roomno should be passed in the request'),
+		array('invalidtitle','roomno'),
+		array('invalidtitle','roomnoto'),
+		array('createonly-exists'),
+		array('nocreate-missing'),
+		));
 	}
 	public function getExamples()
 	{
@@ -250,7 +262,7 @@ class ApiConferenceLocationDelete extends ApiBase
 			
 		} elseif (!$title->exists()){
 			
-			$this->dieUsageMsg(array('cannotdelete'));
+			$this->dieUsageMsg(array('cannotdelete', 'this location'));
 		}
 		
 		//now all the checks have been made
@@ -290,7 +302,15 @@ class ApiConferenceLocationDelete extends ApiBase
 	}
 	public function getPossibleErrors()
 	{	
-	
+		$user = $this->getUser();
+		return array_merge(parent::getPossibleErrors(), array(
+		array('mustbeloggedin','conference'),
+		array('invaliduser',$user->getName()),
+		array('badaccess-groups'),
+		array('missingparam','roomno'),
+		array('invalidtitle','roomno'),
+		array('cannot delete', 'this location')
+		));
 	}
 	public function getExamples()
 	{
@@ -357,7 +377,7 @@ class ApiConferenceLocationAdd extends ApiBase
 			
 		} elseif ($title->exists()) {
 			
-			$this->dieUsageMsg(array('createonly-exists',$params['roomno']));
+			$this->dieUsageMsg(array('createonly-exists'));
 			
 		}
 		
@@ -421,7 +441,15 @@ class ApiConferenceLocationAdd extends ApiBase
 	}
 	public function getPossibleErrors()
 	{	
-	
+		$user = $this->getUser();
+		return array_merge(parent::getPossibleErrors(), array(
+		array('mustbeloggedin','conference'),
+		array('invaliduser',$user->getName()),
+		array('badaccess-groups'),
+		array('missingparam','roomno'),
+		array('invalidtitle','roomno'),
+		array('createonly-exists')
+		));
 	}
 	public function getExamples()
 	{

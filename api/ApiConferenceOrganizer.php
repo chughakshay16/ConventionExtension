@@ -35,18 +35,16 @@ class ApiConferenceOrganizerEdit extends ApiBase
 			$username=$params['username'];
 			
 			//now check if one of the values category and post are passed if not throw the error
-			if(!isset($params['category']) && !isset($params['post']))
+			if(!isset($params['category']))
 			{
-				
-				$this->dieUsageMsg(array('missingparam','Atleast category or post'));
-				
+				$this->dieUsageMsg(array('missingparam',$params['category']));
+			} elseif (!isset($params['post'])) {
+				$this->dieUsageMsg(array('missingparam',$params['post']));
 			} else {
-				
-				$category=$params['category'];
-				$post=$params['post'];
-				
+				$category = $params['category'];
+				$post = $params['post'];
 			}
-			
+						
 		} else {
 			
 			$this->dieUsageMsg(array('missingparam',$params['username']));
@@ -125,7 +123,17 @@ class ApiConferenceOrganizerEdit extends ApiBase
 	}
 	public function getPossibleErrors()
 	{	
-	
+		$user = $this->getUser();
+		return array_merge(parent::getPossibleErrors(), array(
+		array('mustbeloggedin','conference'),
+		array('badaccess-groups'),
+		array('missingparam','category'),
+		array('missingparam','post'),
+		array('missingparam','username'),
+		array('nosuchuser', 'username'),
+		array('invaliduser', 'username'),
+		array('nocreate-missing')
+		));
 	}
 	public function getExamples()
 	{
@@ -225,7 +233,14 @@ class ApiConferenceOrganizerDelete extends ApiBase
 	}
 	public function getPossibleErrors()
 	{	
-	
+		return array_merge(parent::getPossibleErrors(), array(
+		array('mustbeloggedin', 'conference'),
+		array('badaccess-groups'),
+		array('nosuchuser', 'username'),
+		array('invaliduser', 'username'),
+		array('missingparam', 'username'),
+		array('cannotdelete', 'this organizer')
+		));
 	}
 	public function getExamples()
 	{
@@ -380,7 +395,16 @@ class ApiConferenceOrganizerAdd extends ApiBase
 	}
 	public function getPossibleErrors()
 	{	
-	
+		return array_merge(parent::getPossibleErrors(), array(
+		array('mustbeloggedin','conference'),
+		array('badaccess-groups'),
+		array('missingparam','username'),
+		array('missingparam','category'),
+		array('missingparam','post'),
+		array('nosuchuser','username'),
+		array('invaliduser','username'),
+		array('createonly-exists')	
+		));
 	}
 	public function getExamples()
 	{

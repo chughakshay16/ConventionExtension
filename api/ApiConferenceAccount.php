@@ -35,7 +35,7 @@ class ApiConferenceAccountEdit extends ApiBase
 		if(isset($params['gender']) && isset($params['firstname']) && isset($params['lastname']))
 		{
 			
-			$this->dieUsageMsg(array('missingparam','Atleast gender, firstname or lastname'));
+			$this->dieUsage('Atleast one of the params should be passed in the request','atleastparam');
 			
 		} else {
 			
@@ -98,7 +98,12 @@ class ApiConferenceAccountEdit extends ApiBase
 	}
 	public function getPossibleErrors()
 	{	
-	
+		$user = $this->getUser();
+		return array_merge(parent::getPossibleErrors(),array(
+		array('mustbeloggedin','conference'),
+		array('invaliduser',$user->getName()),
+		array('code'=>'atleastparam','info'=>'Atleast one of the params should be passed in the request'),
+		array('badaccess-groups')));
 	}
 	public function getExamples()
 	{
@@ -137,7 +142,7 @@ class ApiPassportEdit extends ApiBase
 		} elseif (!isset($params['pno']) && !isset($params['iby']) && !isset($params['vu']) && !isset($params['pl']) 
 		&& !isset($params['dob']) && !isset($params['ctry'])){
 			
-			$this->dieUsageMsg(array('missingparam','Atleast pno,iby,vu,pl,dob or ctry '));
+			$this->dieUsage('Atleast one of the params should be passed in the request','atleastparam');
 			
 		}
 		
@@ -147,6 +152,7 @@ class ApiPassportEdit extends ApiBase
 		{
 			//depending on the error
 						//$this->dieUsageMsg(array('spamdetected',put the parameter due to which error occurred))
+						//change getPossibleErrors()
 		}
 		
 		$passport = new ConferencePassportInfo($params['pno'], null, $params['iby'], $params['vu'], $params['pl'], $params['dob'], $params['ctry']);
@@ -194,7 +200,12 @@ class ApiPassportEdit extends ApiBase
 	}
 	public function getPossibleErrors()
 	{	
-	
+		$user = $this->getUser();
+		return array_merge(parent::getPossibleErrors(), array(
+		array('mustbeloggedin','conference'),
+		array('invaliduser',$user->getName()),
+		array('code'=>'atleastparam', 'Atleast one of the params should be passed in the request'),
+		));
 	}
 	public function getExamples()
 	{

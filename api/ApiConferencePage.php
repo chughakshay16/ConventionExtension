@@ -113,7 +113,17 @@ class ApiConferencePageEdit extends ApiBase
 	}
 	public function getPossibleErrors()
 	{	
-	
+		return array_merge(parent::getPossibleErrors(), array(
+		array('mustbeloggedin', 'conference'),
+		array('badaccess-groups'),
+		array('invaliduser', $user->getName()),
+		array('missingparam','type'),
+		array('missingparam','typeto'),
+		array('invalidtitle','type'),
+		array('invalidtitle','typeto'),
+		array('createonly-exists'),
+		array('nocreate-missing')
+		));
 	}
 	public function getExamples()
 	{

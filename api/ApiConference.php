@@ -48,7 +48,7 @@ class ApiConferenceEdit extends ApiBase
 					
 				} elseif ($titleTo->exists()){
 					
-					$this->dieUsageMsg(array('createonly-exists',$params['titleto']));
+					$this->dieUsageMsg(array('createonly-exists'));
 					
 				}
 			}	
@@ -60,7 +60,7 @@ class ApiConferenceEdit extends ApiBase
 		if(session_id()=='')
 		{
 			
-			$this->dieUsageMsg(array('mustbeloggedin',$user->getName()));
+			$this->dieUsageMsg(array('mustbeloggedin','conference'));
 			
 		} else {
 			if(!$request->getSessionData('conference'))
@@ -72,7 +72,7 @@ class ApiConferenceEdit extends ApiBase
 			if(!isset($params['venue']) && !isset($params['description']) && !isset($params['capacity']) && !isset($params['startdate']) && !isset($params['enddate']) && !$isTitleChange)
 			{
 				
-				$this->dieUsageMsg(array('missingparam','Atleast venue, description, capacity, startdate, enddate or titleto '));
+				$this->dieUsage('Atleast one of the params should be passed in the request','atleastparam');
 				
 			}
 		}
@@ -93,11 +93,15 @@ class ApiConferenceEdit extends ApiBase
 			
 			//depending on the error
 			//$this->dieUsageMsg(array('spamdetected',put the parameter due to which error was thrown))
+			//after writing this part add those errors to getPossibleErrors() function
 			
 		}
 		if($isTitleChange) //there is a title change, this is a big process
 		{
 			//just make a move operation with $createRedirect = false;see how its implemented in other api functions of this extension
+			//change getPossibleErrors()
+			$conferenceSessionArray = array('id'=>$conferenceId, 'title'=>$titleTo);
+			$request->setSessionData('conference', $conferenceSessionArray);
 			$title = $titleTo;
 			
 		} 
@@ -150,7 +154,15 @@ class ApiConferenceEdit extends ApiBase
 	}
 	public function getPossibleErrors()
 	{	
-	
+		return array_merge(parent::getPossibleErrors(), array(
+		array('invalidtitle','title'),
+		array('invalidtitle','titleto'),
+		array('nocreate-missing'),
+		array('createonly-exists'),
+		array('mustbeloggedin','conference'),
+		array('badaccess-groups'),
+		array('code'=>'atleastparam','info'=>'Atleast one of the params should be passed in the request')
+		));
 	}
 	public function getExamples()
 	{
