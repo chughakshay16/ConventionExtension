@@ -15,7 +15,7 @@ class ConferenceUtils
 	{
 		//first we will check for session data
 		global $wgRequest;
-		if($wgRequest->getSessionData('conference'))
+		if(isset($wgRequest->getSessionData('conference')))
 		{
 			$sessionArray= $wgRequest->getSessionData('conference');
 			if($sessionArray['title']===$title)

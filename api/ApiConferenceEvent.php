@@ -32,9 +32,9 @@ class ApiConferenceEventAdd extends ApiBase
 			
 			$this->dieUsageMsg(array('invaliduser',$user->getName()));
 			
-		} elseif (!isset($params['roomno'])){
+		} elseif (!isset($params['location'])){
 			
-			$this->dieUsageMsg(array('missingparam',$params['roomno']));
+			$this->dieUsageMsg(array('missingparam',$params['location']));
 			
 		} elseif (!isset($params['starttime'])){
 			
@@ -58,7 +58,7 @@ class ApiConferenceEventAdd extends ApiBase
 			
 		} else {
 			
-			$roomNo = $params['roomno'];
+			$roomNo = $params['location'];
 			$startTime = $params['starttime'];
 			$endTime = $params['endtime'];
 			$day = $params['day'];
@@ -141,7 +141,7 @@ class ApiConferenceEventAdd extends ApiBase
 	public function getAllowedParams()
 	{
 		return array(
-		'roomno'=>null,
+		'location'=>null,
 		'starttime'=>null,
 		'endtime'=>null,
 		'day'=>null,
@@ -152,7 +152,7 @@ class ApiConferenceEventAdd extends ApiBase
 	public function getParamDescription()
 	{
 		return array(
-		'roomno'=>'Room no of the location',
+		'location'=>'Room no of the location',
 		'starttime'=>'Starting time for the event',
 		'endtime'=>'Ending time for the event',
 		'day'=>'Day on which event is held',

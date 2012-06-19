@@ -24,7 +24,7 @@ $wgAutoloadClasses['ConferenceAuthorUtils']=$wgCurrentDir.'/utils/ConferenceAuth
 $wgAutoloadClasses['ConferenceAccountUtils']=$wgCurrentDir.'/utils/ConferenceAccountUtils.php';
 $wgAutoloadClasses['UserUtils']=$wgCurrentDir.'utils/UserUtils.php';
 $wgAutoloadClasses['ConferenceOrganizerUtils']=$wgCurrentDir.'utils/ConferenceOrganizerUtils.php';
-$wgAutoloadClassesp['ConferenceEventUtils']=$wgCurrentDir.'utils/ConferenceEventUtils.php';
+$wgAutoloadClasses['ConferenceEventUtils']=$wgCurrentDir.'utils/ConferenceEventUtils.php';
 $wgAutoloadClasses['Conference']=$wgCurrentDir.'model/Conference.php';
 $wgAutoloadClasses['ConferenceAuthor']=$wgCurrentDir.'model/ConferenceAuthor.php';
 $wgAutoloadClasses['ConferenceEvent']=$wgCurrentDir.'model/ConferenceEvent.php';
@@ -36,9 +36,25 @@ $wgAutoloadClasses['ConferenceRegistration']=$wgCurrentDir.'model/ConferenceRegi
 $wgAutoloadClasses['ConferencePassportInfo']=$wgCurrentDir.'model/ConferencePassportInfo.php';
 $wgAutoloadClasses['AuthorSubmission']=$wgCurrentDir.'model/AuthorSubmission.php';
 $wgAutoloadClasses['ConferenceHooks']=$wgCurrentDir.'ConferenceHooks.php';
+/*$wgAutoloadClasses['SpecialSample']=$wgCurrentDir.'sample/SpecialSample.php';
+$wgSpecialPages['SpecialSample']='SpecialSample';*/
+$wgAutoloadClasses['SpecialDashboard']=$wgCurrentDir.'ui/admin/SpecialDashboard.php';
+$wgSpecialPages['Dashboard']='SpecialDashboard';
+$wgAutoloadClasses['SpecialConferenceSetup']=$wgCurrentDir.'ui/admin/SpecialConferenceSetup.php';
+$wgSpecialPages['ConferenceSetup']='SpecialConferenceSetup';
+$wgAutoloadClasses['ConferenceSetupTemplate']=$wgCurrentDir.'templates/ConferenceSetupTemplate.php';
+$wgExtensionMessagesFiles['ConferenceSetup']=$wgCurrentDir.'ConventionExtension.i18n.php';
+$wgResourceModules['ext.conventionExtension.confsetup']=array(
+'scripts'=>'conference.setup.js',
+'dependencies'=>'jquery.ui.datepicker',
+'styles'=>'conference.setup.css',
+'localBasePath'=>$wgCurrentDir.'resources/conference.setup',
+'remoteExtPath'=>'ConventionExtension/resources/conference.setup');
+//$wgSpecialPageGroups['SpecialSample'] = 'other';
 $wgHooks['ParserFirstCallInit'][]='ConferenceHooks::onParserFirstCallInit';
 $wgHooks['UnitTestsList'][] = 'registerUnitTests';
 function registerUnitTests( &$files ) {
+        //$testDir = dirname( __FILE__ ) . '/';
         global $wgCurrentDir;
         $files[] = $wgCurrentDir . 'tests/ConferenceTest.php';
         return true;

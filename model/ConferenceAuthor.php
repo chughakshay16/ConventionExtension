@@ -530,17 +530,29 @@ class ConferenceAuthor
 		$conferenceIds=array();
 		foreach ($resConf as $row)
 		{
-			$conferenceIds[]=$row->pp_value;
+			$conferenceIds[]=array('sub-author'=>$row->pp_page,'conf'=>$row->pp_value);
 		}
 		$res=$dbr->select('page_props',
-		array('pp_page'),
+		array('pp_page','pp_value'),
 		array('pp_value IN ('.implode(',',$subIds).')','pp_propname'=>'cvext-submission-author'),
 		__METHOD__,
 		array());
 		$submissions=array();
+		//here one sub-author can contain more than one submissions
 		foreach($res as $row)
 		{
-			$submissions[]=AuthorSubmission::loadFromId($row->pp_page);	
+			foreach ($conferenceIds as $combo)
+			{
+				if($row->pp_value==$combo['sub-author'])
+				{
+					$conferenceId = $combo['conf'];
+					$subauthorId = $combo['sub-author'];
+				}
+			}
+			$key = 'conf-'.$conferenceId;
+			$submissions[$key]['conf']=$conferenceId;
+			$submissions[$key]['sub-author']=$subauthorId;
+			$submissions[$key]['submissions'][]=AuthorSubmission::loadFromId($row->pp_page);			
 		}
 		return new self($authorId,$conferenceIds, $matches[4][0], $matches[1][0], $matches[2][0], $matches[3][0],$submissions);
 	}

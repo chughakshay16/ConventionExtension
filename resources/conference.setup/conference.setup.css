@@ -1,0 +1,13 @@
+@CHARSET "ISO-8859-1";
+#conferenceSetupDiv {
+	border : solid 1px #cccccc;
+	float : left;
+	padding : 1.2em;
+	margin : .5em ;
+}
+select#countries {
+	width: 8em;
+}
+td.mw-label{
+	text-align:left;
+}

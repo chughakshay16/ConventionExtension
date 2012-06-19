@@ -111,6 +111,7 @@ class ConferenceAccount
 	/**
 	 * @param Int $accountId
 	 * @return ConferenceAccount
+	 * sub-account:registration 1:1 mapping
 	 */
 	public static function loadFromId($accountId)
 	{
@@ -140,6 +141,7 @@ class ConferenceAccount
 		$subAccountIds=array();
 		$conferenceIds=array();
 		$registrations=array();
+		//we are following an assumption that only one sub-account per conference
 		foreach ($resultSub as $row)
 		{
 			$subAccountIds[]=$row->pp_page;
@@ -152,17 +154,22 @@ class ConferenceAccount
 			__METHOD__);
 			foreach ($conferenceResult as $row)
 			{
-				$conferenceIds[]=$row->pp_value;
+				$conferenceIds[]=array('sub-account'=>$row->pp_page,'conf'=>$row->pp_value);
 			}
 			$res=$dbr->select('page_props',
-			array('pp_page'),
+			array('pp_page','pp_value'),
 			array('pp_value IN ('.implode(',',$subAccountIds).')','pp_propname'=>'cvext-registration-account'),
 			__METHOD__,
 			array());
 			
 			foreach ($res as $row)
 			{
-				$registrations[]=ConferenceRegistration::loadFromId($row->pp_page);
+				foreach ($conferenceIds as $combo)
+				{
+					if($row->pp_value==$combo['sub-account'])
+					$conf = $row->pp_value;
+				}
+				$registrations[]=array('conf'=>$conf,'registration'=>ConferenceRegistration::loadFromId($row->pp_page));
 
 			}
 		}
@@ -181,6 +188,7 @@ class ConferenceAccount
 	 * ConferenceAccount::loadFromId()
 	 * @param Object $registration
 	 * @param Int $confId
+	 * Note : do keep in mind that the registration object passed should only contain events that are part of the same conference 
 	 */
 	public function pushRegistration($registration=null,$confId)
 	{

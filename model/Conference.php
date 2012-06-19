@@ -134,6 +134,7 @@ class Conference
 	 * @param String $endDate - ending date
 	 * @param String $description - short description for this conference
 	 * @return Conference
+	 * if an error occurs during this process, then just return an object without the id property set
 	 */
 	public static function createFromScratch($title,$venue,$capacity,$startDate,$endDate,$description)
 	{
@@ -153,7 +154,8 @@ class Conference
 		}
 		else
 		{
-			//what should be done
+			//if the creating process didnt occur as expected , then just return the object back without the id property set
+			return new self($title, $description, $startDate, $endDate, $venue, $capacity);
 		}
 	}
 	/**
@@ -360,6 +362,24 @@ class Conference
 			$dbw->insert('page_props',array('pp_page'=>$conferenceId,'pp_propname'=>'cvext-type','pp_value'=>'conference'));
 		}
 		return '';
+	}
+	/**
+	 * 
+	 * Ugly Hack
+	 */
+	public static function getLocations($conferenceId)
+	{
+		$dbr= wfGetDB(DB_SLAVE);
+		$result = $wbr->select('page_props',
+		'*',
+		array('pp_propname'=>'cvext-location-conf','pp_value'=>$conferenceId),
+		__METHOD__);
+		$locations = array();
+		foreach ($result as $row)
+		{
+			$locations[] = EventLocation::loadFromId($row->pp_page);
+		}
+		return $locations;
 	}
 	/**
 	 * 
