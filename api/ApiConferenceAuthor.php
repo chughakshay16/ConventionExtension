@@ -225,8 +225,8 @@ class ApiAuthorSubmissionDelete extends ApiBase
 		{
 			$this->dieUsageMsg(array('mustbeloggedin', 'conference'));
 		}
-		
-		if(isset($params['title']) && isset($params['conference']))
+		//we have already added the 'required' condition for these parameters in getAllowedParams()
+		/*if(isset($params['title']) && isset($params['conference']))
 		{
 			
 			$title = $params['title'];
@@ -239,7 +239,9 @@ class ApiAuthorSubmissionDelete extends ApiBase
 		} elseif (!isset($params['conference'])){
 			
 			$this->dieUsageMsg(array('missingparam',$params['conference']));
-		}
+		}*/
+		$title = $params['title'];
+		$conferenceTitle = $params['conference'];
 		
 		//now we need the user-id
 		$user=$this->getUser();
@@ -299,8 +301,12 @@ class ApiAuthorSubmissionDelete extends ApiBase
 	public function getAllowedParams()
 	{
 		return array(
-		'title'=>null,
-		'conference'=>null
+		'title'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
+		'conference'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true)
 		);	
 	}
 	public function getParamDescription()
@@ -382,8 +388,8 @@ class ApiAuthorSubmissionEdit extends ApiBase
 			$this->dieUsageMsg(array('badaccess-groups'));
 			
 		}
-		//now fetch all the parameters
-		if(!isset($params['title']) && !isset($params['conference']))
+		//we have already added the 'required' condition for these parameters in getAllowedParams()
+		/*if(isset($params['title']) && isset($params['conference']))
 		{
 			
 			$title=$params['title'];
@@ -396,8 +402,9 @@ class ApiAuthorSubmissionEdit extends ApiBase
 		} elseif (!isset($params['conference'])){
 			
 			$this->dieUsageMsg(array('missingparam',$params['conference']));
-		}
-		
+		}*/
+		$title = $params['title'];
+		$conferenceTitle = $params['conference'];
 		
 		if(!isset($params['titleto']) && !isset($params['abstract']) && !isset($params['type']) 
 		&& !isset($params['track']) && !isset($params['length']) && !isset($params['slidesinfo']))
@@ -525,13 +532,20 @@ class ApiAuthorSubmissionEdit extends ApiBase
 	public function getAllowedParams()
 	{
 		return array(
-		'title'=>null,
-		'conference'=>null,
+		'title'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
+		'conference'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
 		'titleto'=>null,
 		'type'=>null,
 		'abstract'=>null,
 		'track'=>null,
-		'length'=>null,
+		'length'=>array(
+		ApiBase::PARAM_TYPE=>'integer',
+		ApiBase::PARAM_DFLT=>0,
+		ApiBase::PARAM_MIN=>0),
 		'slidesInfo'=>null,
 		'slotreq'=>null
 		);	

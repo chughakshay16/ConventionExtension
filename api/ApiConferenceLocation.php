@@ -37,12 +37,12 @@ class ApiConferenceLocationEdit extends ApiBase
 		}
 		
 		
-		if(!isset($params['roomno']))
+		/*if(!isset($params['roomno']))
 		{
 			
 			$this->dieUsageMsg(array('missingparam',$params['roomno']));
 			
-		} elseif (!isset($params['description']) && !isset($params['url']) && !isset($params['roomnoto'])){
+		} *else*/if (!isset($params['description']) && !isset($params['url']) && !isset($params['roomnoto'])){
 			
 			$this->dieUsage('Atleast params except roomno should be passed in the request','atleastparam');
 			
@@ -157,7 +157,9 @@ class ApiConferenceLocationEdit extends ApiBase
 	public function getAllowedParams()
 	{
 		return array(
-		'roomno'=>null,
+		'roomno'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
 		'roomnoto'=>null,
 		'description'=>null,
 		'url'=>null
@@ -238,11 +240,11 @@ class ApiConferenceLocationDelete extends ApiBase
 			
 			$this->dieUsageMsg(array('invaliduser', $user->getName()));
 			
-		} elseif (!isset($params['roomno'])){
+		} /*elseif (!isset($params['roomno'])){
 			
 			$this->dieUsageMsg(array('missingparam',$params['roomno']));
 			
-		} else {
+		} */else {
 			
 			$roomNo = $params['roomno'];
 			
@@ -287,7 +289,9 @@ class ApiConferenceLocationDelete extends ApiBase
 	public function getAllowedParams()
 	{
 		return array(
-		'roomno'=>null
+		'roomno'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true)
 		);	
 	}
 	public function getParamDescription()
@@ -346,11 +350,11 @@ class ApiConferenceLocationAdd extends ApiBase
 			
 			$this->dieUsageMsg(array('badaccess-groups'));
 			
-		} elseif (!isset($params['roomno'])){
+		} /*elseif (!isset($params['roomno'])){
 			
 			$this->dieUsageMsg(array('missingparam',$params['roomno']));
 			
-		} elseif ($user->getId()==0){
+		} */elseif ($user->getId()==0){
 			
 			$this->dieUsageMsg(array('invaliduser', $user->getName()));
 			
@@ -422,7 +426,9 @@ class ApiConferenceLocationAdd extends ApiBase
 	public function getAllowedParams()
 	{
 		return array(
-		'roomno'=>null,
+		'roomno'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
 		'description'=>null,
 		'url'=>null
 		);	

@@ -3,7 +3,8 @@
  * 
  * @todo complete mustValidateInputs()
  * @author chughakshay16
- *
+ *This module is implemented slightly differently in terms of the parameters passed, 
+ *here category and post values passed are the values to be updated and not the original values
  */
 class ApiConferenceOrganizerEdit extends ApiBase
 {
@@ -35,7 +36,9 @@ class ApiConferenceOrganizerEdit extends ApiBase
 			$username=$params['username'];
 			
 			//now check if one of the values category and post are passed if not throw the error
-			if(!isset($params['category']))
+			//Note : here '' or NULL means the same i.e dont change their value
+			//here we wont 
+			/*if(!isset($params['category']))
 			{
 				$this->dieUsageMsg(array('missingparam',$params['category']));
 			} elseif (!isset($params['post'])) {
@@ -43,6 +46,19 @@ class ApiConferenceOrganizerEdit extends ApiBase
 			} else {
 				$category = $params['category'];
 				$post = $params['post'];
+			}*/
+			if($params['category'] || $params['post'])
+			{
+				$category = $params['category'];
+				$post = $params['post'];
+			} else {
+				//throw an error
+				if(!$params['category'])
+				{
+					$this->dieUsageMsg(array('missingparam',$params['category']));
+				} else {
+					$this->dieUsageMsg(array('missingparam',$params['post']));
+				}
 			}
 						
 		} else {
@@ -171,7 +187,7 @@ class ApiConferenceOrganizerDelete extends ApiBase
 				
 			}
 		}
-		if(isset($params['username']))
+		/*if(isset($params['username']))
 		{
 			
 			$username=$params['username'];
@@ -180,8 +196,8 @@ class ApiConferenceOrganizerDelete extends ApiBase
 			
 			$this->dieUsageMsg(array('missingparam',$params['username']));
 			
-		}
-		
+		}*/
+		$username = $params['username'];
 		$conferenceSessionArray=$request->getSessionData('conference');
 		$conferenceId=$conferenceSessionArray['id'];
 		$deletedUser=User::newFromName($username,true);
@@ -218,7 +234,9 @@ class ApiConferenceOrganizerDelete extends ApiBase
 	public function getAllowedParams()
 	{
 		return array(
-		'username'=>null
+		'username'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true)
 		);	
 	}
 	public function getParamDescription()
@@ -287,7 +305,7 @@ class ApiConferenceOrganizerAdd extends ApiBase
 		}
 		
 		
-		if(isset($params['username']))
+		/*if(isset($params['username']))
 		{
 			
 			$username=$params['username'];
@@ -317,8 +335,11 @@ class ApiConferenceOrganizerAdd extends ApiBase
 		} else {
 			
 			$this->dieUsageMsg(array('missingparam',$params['post']));
-			
-		}
+			 
+		}*/
+		$username = $params['username'];
+		$category = $params['category'];
+		$post = $params['post'];
 		
 		$addedUser=User::newFromName($username,true);
 		if($addedUser->getId()==0)
@@ -376,9 +397,15 @@ class ApiConferenceOrganizerAdd extends ApiBase
 	public function getAllowedParams()
 	{
 		return array(
-		'username'=>null,
-		'category'=>null,
-		'post'=>null
+		'username'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
+		'category'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
+		'post'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true)
 		);	
 	}
 	public function getParamDescription()

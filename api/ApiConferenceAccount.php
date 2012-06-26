@@ -32,7 +32,7 @@ class ApiConferenceAccountEdit extends ApiBase
 			$this->dieUsageMsg(array('invaliduser',$user->getName()));
 			
 		}
-		if(isset($params['gender']) && isset($params['firstname']) && isset($params['lastname']))
+		if(!isset($params['gender']) && !isset($params['firstname']) && !isset($params['lastname']))
 		{
 			
 			$this->dieUsage('Atleast one of the params should be passed in the request','atleastparam');

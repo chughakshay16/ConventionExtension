@@ -24,35 +24,32 @@ class ApiConferenceEdit extends ApiBase
 	{
 		$params=$this->extractRequestParams();
 		
-		if(isset($params['title']))
+		$title=Title::newFromText($params['title']);
+		if(!$title)
 		{
-			$title=Title::newFromText($params['title']);
-			if(!$title)
+			$this->dieUsageMsg( array( 'invalidtitle', $params['title'] ) );
+				
+		} elseif (!$title->exists()){
+				
+			$this->dieUsageMsg(array('nocreate-missing'));
+				
+		}
+		if(isset($params['titleto']))
+		{
+				
+			$isTitleChange = true;
+			$titleTo = Title::newFromText($params['titleto']);
+			if(!$titleTo)
 			{
-				$this->dieUsageMsg( array( 'invalidtitle', $params['title'] ) );
-				
-			} elseif (!$title->exists()){
-				
-				$this->dieUsageMsg(array('nocreate-missing'));
-				
+					
+				$this->dieUsageMsg(array('invalidtitle',$params['titleto']));
+					
+			} elseif ($titleTo->exists()){
+					
+				$this->dieUsageMsg(array('createonly-exists'));
+					
 			}
-			if(isset($params['titleto']))
-			{
-				
-				$isTitleChange = true;
-				$titleTo = Title::newFromText($params['titleto']);
-				if(!$titleTo)
-				{
-					
-					$this->dieUsageMsg(array('invalidtitle',$params['titleto']));
-					
-				} elseif ($titleTo->exists()){
-					
-					$this->dieUsageMsg(array('createonly-exists'));
-					
-				}
-			}	
-		} 
+		}	
 		$request=$this->getRequest();
 		
 		//still need to decide on what messages you should choose while throwing these errors
@@ -126,10 +123,13 @@ class ApiConferenceEdit extends ApiBase
 	public function getAllowedParams()
 	{
 		return array(
-		'title'=>null,
+		'title'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
 		'titleto'=>null,
 		'capacity'=>array(
-		ApiBase::PARAM_TYPE => 'integer'),
+		ApiBase::PARAM_TYPE => 'integer',
+		ApiBase::PARAM_MIN=>0),
 		'venue'=>null,
 		'startdate'=>null,
 		'enddate'=>null,

@@ -30,7 +30,7 @@ class ApiConferencePageEdit extends ApiBase
 			
 			$this->dieUsageMsg(array('invaliduser',$user->getName()));
 			
-		} elseif (!isset($params['type'])){
+		} /*elseif (!isset($params['type'])){
 			
 			$this->dieUsageMsg(array('missingparam',$params['type']));
 			
@@ -38,7 +38,8 @@ class ApiConferencePageEdit extends ApiBase
 			
 			$this->dieUsageMsg(array('missingparam',$params['typeto']));
 			
-		}
+		}*/
+		
 		$conferenceSessionArray = $request->getSessionData('conference');
 		$oldText = $conferenceSessionArray['title'].'/pages/'.$params['type'];
 		$newText = $conferenceSessionArray['title'].'/pages/'.$params['typeto'];
@@ -96,8 +97,12 @@ class ApiConferencePageEdit extends ApiBase
 	public function getAllowedParams()
 	{
 		return array(
-		'type'=>null,
-		'typeto'=>null
+		'type'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
+		'typeto'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true)
 		);	
 	}
 	public function getParamDescription()
@@ -162,27 +167,20 @@ class ApiConferencePageDelete extends ApiBase
 			$this->dieUsageMsg(array('invaliduser', $user->getName()));
 			
 		}
-		if(isset($params['type']))
+		$conferenceSessionArray=$request->getSessionData('conference');
+		$conferenceId=$conferenceSessionArray['id'];
+		$text = $conferenceSessionArray['title'].'/pages/'.$params['type'];
+		$title=Title::newFromText($text);
+		if(!$title)
 		{
-			$conferenceSessionArray=$request->getSessionData('conference');
-			$conferenceId=$conferenceSessionArray['id'];
-			$text = $conferenceSessionArray['title'].'/pages/'.$params['type'];
-			$title=Title::newFromText($text);
-			if(!$title)
-			{
 				
-				$this->dieUsageMsg( array( 'invalidtitle', $params['title'] ) );
+			$this->dieUsageMsg( array( 'invalidtitle', $params['title'] ) );
 				
-			} elseif (!$title->exists()){
+		} elseif (!$title->exists()){
 				
-				$this->dieUsageMsg(array('cannotdelete','this page'));
+			$this->dieUsageMsg(array('cannotdelete','this page'));
 				
-			}	
-		} else {
-			
-			$this->dieUsageMsg(array('missingparam',$params['type']));
-			
-		}
+		}	
 		$result=ConferencePage::performDelete($conferenceId,$type);
 		$resultApi = $this->getResult();
 		$resultApi->addValue(null, $this->getModuleName(), $result);
@@ -199,7 +197,9 @@ class ApiConferencePageDelete extends ApiBase
 	public function getAllowedParams()
 	{
 		return array(
-		'type'=>null
+		'type'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true)
 		);	
 	}
 	public function getParamDescription()
@@ -253,17 +253,17 @@ class ApiConferencePageAdd extends ApiBase
 			$this->dieUsageMsg(array('mustbeloggedin', 'conference'));
 			
 		}
-		if(!isset($params['type']))
+		/*if(!isset($params['type']))
 		{
 			
 			$this->dieUsageMsg(array('missingparam',$params['type']));
 			
-		} else {
+		} else {*/
 			
 			$type = $params['type'];
 			$default = $params['default'];
 			
-		}
+		/*}*/
 		
 		$request = $this->getRequest();
 		if(!isset($request->getSessionData('conference')))
@@ -349,8 +349,12 @@ class ApiConferencePageAdd extends ApiBase
 	public function getAllowedParams()
 	{
 		return array(
-		'type'=>null,
-		'default'=>false
+		'type'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
+		'default'=>array(
+		ApiBase::PARAM_TYPE=>'boolean',
+		ApiBase::PARAM_DFLT=>false)
 		);	
 	}
 	public function getParamDescription()

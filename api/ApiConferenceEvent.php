@@ -32,7 +32,7 @@ class ApiConferenceEventAdd extends ApiBase
 			
 			$this->dieUsageMsg(array('invaliduser',$user->getName()));
 			
-		} elseif (!isset($params['location'])){
+		} /*elseif (!isset($params['location'])){
 			
 			$this->dieUsageMsg(array('missingparam',$params['location']));
 			
@@ -57,7 +57,7 @@ class ApiConferenceEventAdd extends ApiBase
 			$this->dieUsageMsg(array('missingparam',$params['group']));
 			
 		} else {
-			
+			*/
 			$roomNo = $params['location'];
 			$startTime = $params['starttime'];
 			$endTime = $params['endtime'];
@@ -65,7 +65,7 @@ class ApiConferenceEventAdd extends ApiBase
 			$topic = $params['topic'];
 			$group = $params['group'];
 			
-		}
+		/*} */
 		
 		
 		//now check for the validity of location and event titles
@@ -141,12 +141,24 @@ class ApiConferenceEventAdd extends ApiBase
 	public function getAllowedParams()
 	{
 		return array(
-		'location'=>null,
-		'starttime'=>null,
-		'endtime'=>null,
-		'day'=>null,
-		'topic'=>null,
-		'group'=>null
+		'location'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
+		'starttime'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
+		'endtime'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
+		'day'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
+		'topic'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
+		'group'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true)
 		);	
 	}
 	public function getParamDescription()
@@ -227,11 +239,16 @@ class ApiConferenceEventEdit extends ApiBase
 			$this->dieUsageMsg(array('invaliduser',$user->getName()));
 			
 		} 
-		if(isset($params['starttime']) && isset($params['endtime']) && isset($params['day']) 
-		&& isset($params['topic']) && isset($params['group']) && isset($params['starttimeto']) 
-		&& isset($params['endtimeto']) && isset($params['dayto']) && isset($params['topicto']) && isset($params['groupto']) )
-		{
+		if (!isset($params['starttimeto']) 
+			&& !isset($params['endtimeto']) && !isset($params['dayto']) && !isset($params['topicto']) && !isset($params['groupto']) ){
+				$this->dieUsage('Atleast one of the new params should be passed in the request','atleastparam');
+		} else {
 			
+			$starttimeto = $params['starttimeto'] ? $params['starttimetoo'] : $params['starttime'];
+			$endtimeto = $params['endtimeto'] ? $params['endtimeto'] : $params['endtime'];
+			$groupto = $params['groupto'] ? $params['groupto'] : $params['group'];
+			$topicto = $params['topicto'] ? $params['topicto'] : $params['topic'];
+			$dayto = $params['dayto'] ? $params['dayto'] : $params['day'];
 			$errors = $this->mustValidateInputs($params['starttime'],$params['endtime'], $params['day'], $params['topic'], $params['group']);
 			if(count($errors))
 			{
@@ -242,7 +259,7 @@ class ApiConferenceEventEdit extends ApiBase
 			$conferenceId = $conferenceSessionArray['id'];
 			$conferenceTitle = $conferenceSessionArray['title'];
 				$oldText = $conferenceTitle.'/events/'.$params['topic'].'-'.$params['day'].'-'.$params['starttime'].'-'.$params['endtime'].'-'.$params['group'];
-				$newText = $conferenceTitle.'/events/'.$params['topicto'].'-'.$params['dayto'].'-'.$params['starttimeto'].'-'.$params['endtimeto'].'-'.$params['groupto'];
+				$newText = $conferenceTitle.'/events/'.$topicto.'-'.$dayto.'-'.$starttimeto.'-'.$endtimeto.'-'.$groupto;
 				$newTitle = Title::newFromText($newText);
 				$oldTitle = Title::newFromText($oldText);
 				$oldTalkPage = $oldTitle->getTalkPage();
@@ -275,17 +292,21 @@ class ApiConferenceEventEdit extends ApiBase
 				$this->dieUsageMsg( reset( $retval ) );
 			}
 			//here we dont need to check if the location is modified or not (that case will eventually be checked in performEdit() function)
+			//$params['locationto] may be null or '', so do perform the check that location is not null in performEdit() function
+			// and if it is then dont change the location value
+			$location = null;
 			$locationText = $conferenceTitle.'/locations/'.$params['locationto'];
 			$titleLocation = Title::newFromText($locationText);
-			$locationId = $titleLocation->getArticleID();
-			$location = EventLocation::loadFromId($locationId);
+			if($titleLocation && $titleLocation->exists())
+			{
+				$locationId = $titleLocation->getArticleID();
+				$location = EventLocation::loadFromId($locationId);
+			}
 			$result=ConferenceEvent::performEdit($conferenceId, $location, $params['starttimeto'], $params['endtimeto'], $params['dayto'], $params['topicto'], $params['groupto']);
 			$resultApi = $this->getResult();
 			$resultApi->addValue(null, $this->getModuleName(), $result);
 			
-		} else {
-			$this->dieUsage('Atleast one of the params should be passed in the request','atleastparam');
-		}
+		} 
 	}
 	private function mustValidateInputs($startTime, $endTime, $day, $topic, $group)
 	{
@@ -302,18 +323,27 @@ class ApiConferenceEventEdit extends ApiBase
 	public function getAllowedParams()
 	{
 		return array(
-		'starttime'=>null,
-		'endtime'=>null,
-		'topic'=>null,
-		'group'=>null,
-		'day'=>null,
+		'starttime'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
+		'endtime'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
+		'topic'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
+		'group'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
+		'day'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
 		'starttimeto'=>null,
 		'endtimeto'=>null,
 		'topicto'=>null,
 		'groupto'=>null,
 		'dayto'=>null,
-		'locationto'=>null
-		);	
+		'locationto'=>null);	
 	}
 	public function getParamDescription()
 	{
@@ -393,7 +423,7 @@ class ApiConferenceEventDelete extends ApiBase
 			
 			$this->dieUsageMsg(array('invaliduser', $user->getName()));
 			
-		} elseif (!isset($params['starttime'])){
+		} /*elseif (!isset($params['starttime'])){
 			
 			$this->dieUsageMsg(array('missingparam', $params['starttime']));
 			
@@ -413,7 +443,7 @@ class ApiConferenceEventDelete extends ApiBase
 			
 			$this->dieUsageMsg(array('missingparam',$params['group']));
 			
-		} else {
+		} */else {
 			
 			$startTime = $params['starttime'];
 			$endTime = $params['endtime'];
@@ -470,11 +500,21 @@ class ApiConferenceEventDelete extends ApiBase
 	public function getAllowedParams()
 	{
 		return array(
-		'starttime'=>null,
-		'endtime'=>null,
-		'topic'=>null,
-		'group'=>null,
-		'day'=>null
+		'starttime'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
+		'endtime'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
+		'topic'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
+		'group'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true),
+		'day'=>array(
+		ApiBase::PARAM_TYPE=>'string',
+		ApiBase::PARAM_REQUIRED=>true)
 		);	
 	}
 	public function getParamDescription()
