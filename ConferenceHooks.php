@@ -16,7 +16,7 @@ class ConferenceHooks
 		$parser->setHook('location','EventLocation::render');
 		$parser->setHook('account', 'ConferenceAccount::render');
 		$parser->setHook('account-sub','ConferenceAccount::renderSub');
-		$parser->setHook('registration-event', 'ConferenceRegistration::renderSub')
+		$parser->setHook('registration-event', 'ConferenceRegistration::renderSub');
 		return true;
 	}
 }
