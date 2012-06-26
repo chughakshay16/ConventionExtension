@@ -35,12 +35,14 @@ class SpecialDashboard extends SpecialPage
 		 * if a user is logged then a session must be initialized in Setup.php, but it may not be necessary that the conference session data is
 		 * still there
 		 */
+		$this->setHeaders();
+		//$this->outputHeader();
 		$user = $this->getUser();
 		$out = $this->getOutput();
 		$request = $this->getRequest();
 		
 		
-		if(!$par)
+		if(!$par && false)
 		{
 			
 			$out->addHTML($this->noParValuePresent());
@@ -49,12 +51,12 @@ class SpecialDashboard extends SpecialPage
 			
 			//check for the validity of $par
 			$title = Title::newFromText($par);
-			if(!$title)
+			if(!$title && false)
 			{
 				
 				$out->addHTML($this->invalidParValue());
 				
-			} elseif (!$title->exists()) {
+			} elseif (/*!$title->exists()*/ false) {
 				
 				//title doesnt exist
 				$out->addHTML($this->titleNotExists());
@@ -79,12 +81,14 @@ class SpecialDashboard extends SpecialPage
 			
 						//scenario 4, 5 and scenario 6 are dealt similarly
 						//user must see the dashboard
-						if(!isset($request->getSessionData('conference')))
+						//to be added
+						/*$sessionData = $request->getSessionData('conference');
+						if(!isset($sessionData) && false)
 						{
 							//load the data from the database and set it in the session object
 							
 							$conferenceId = ConferenceUtils::getConferenceId($title->getDBkey());
-							if($conferenceId!==false)
+							if($conferenceId!==false && false)
 							{
 								$conferenceSessionArray['id']= $conferenceId;
 								$conferenceSessionArray['title']=$title->getDBkey();
@@ -94,9 +98,11 @@ class SpecialDashboard extends SpecialPage
 						}
 						$conferenceSessionArray = $request->getSessionData('conference');
 						$conferenceId = $conferenceSessionArray['id'];
-						$conferenceTitle = $conferenceSessionArray['title'];
-						$this->conference = Conference::loadFromId($conferenceId);
+						$conferenceTitle = $conferenceSessionArray['title'];*/ //to be added
+						//$this->conference = Conference::loadFromId($conferenceId);
+						$out->addModules('ext.conventionExtension.dashboard');
 						$out->addHTML($this->createDashboard());
+						
 			
 					} elseif (UserUtils::isOrganizer($user->getId())) {
 			
@@ -159,7 +165,7 @@ class SpecialDashboard extends SpecialPage
 	{
 		$html = '';
 		$html.= Xml::openElement('form',array('id'=>'cvext-dash-form','class'=>'visualClear','method'=>'get','action'=>'')).
-			Xml::openElement('ul',array('id'=>'cvext-dash-toc')).
+			/*Xml::openElement('ul',array('id'=>'dashtoc')).
 				'<li class="selected">'.
 					'<a id="dashtab-pages" href="#cvext-dash-pages">'.
 						wfMsg('dash-pages').
@@ -184,11 +190,11 @@ class SpecialDashboard extends SpecialPage
 					'<a id="dashtab-locs" href="#cvext-dash-locs">'.
 						wfMsg('dash-locations').
 					'</a></li>'.
-			Xml::closeElement('ul').
-			Xml::openElement('div',array('id'=>'dashboard','class'=>'jsdash')).
-				'<fieldset id="cvext-dash-pages" class="dashsection" style="display : block; ">'.
-					'<legend class="mainLegend" >'.
-						wfMsg('').
+			Xml::closeElement('ul').*/
+			Xml::openElement('div',array('id'=>'dashboard')).
+				'<fieldset id="cvext-dashsection-pages">'.
+					'<legend>'.
+						wfMsg('dash-pages').
 					'</legend>'.
 					'<fieldset>'.
 						'<legend>'.
@@ -204,9 +210,9 @@ class SpecialDashboard extends SpecialPage
 				 		'</p>'.
 				 	'</fieldset>'.
 				'</fieldset>'.
-				'<fieldset id="cvext-dash-orgs" class="dashsection" style="display : none;">'.
-					'<legend class="mainLegend">'.
-							wfMsg('').
+				'<fieldset id="cvext-dashsection-orgs">'.
+					'<legend>'.
+							wfMsg('dash-orgs').
 					'</legend>'.
 					'<fieldset>'.
 						'<legend>'.
@@ -254,9 +260,9 @@ class SpecialDashboard extends SpecialPage
 						'</tbody></table>'.			
 					'</fieldset>'.
 				'</fieldset>'.
-				'<fieldset id="cvext-dash-accts" class="dashsection" style="display : none;" >'.
-					'<legend class="mainLegend">'.
-						wfMsg('').
+				'<fieldset id="cvext-dashsection-accts">'.
+					'<legend>'.
+						wfMsg('dash-accts').
 					'</legend>'.
 					'<fieldset>'.
 						'<legend>'.
@@ -267,9 +273,9 @@ class SpecialDashboard extends SpecialPage
 						'</tbody></table>'.		
 					'</fieldset>'.
 				'</fieldset>'.
-				'<fieldset id="cvext-dash-athrs" class="dashsection" style="display : none;">'.
-					'<legend class="mainLegend">'.
-						wfMsg('').
+				'<fieldset id="cvext-dashsection-athrs">'.
+					'<legend>'.
+						wfMsg('dash-athrs').
 					'</legend>'.
 					'<fieldset>'.
 						'<legend>'.
@@ -282,9 +288,9 @@ class SpecialDashboard extends SpecialPage
 						'</table>'.	
 					'</fieldset>'.				
 				'</fieldset>'.
-				'<fieldset id="cvext-dash-evts class="dashsection" style="display : none;">'.
-					'<legend class="mainLegend" >'.
-						wfMsg('').
+				'<fieldset id="cvext-dashsection-evts">'.
+					'<legend>'.
+						wfMsg('dash-evts').
 					'</legend>'.
 					'<fieldset>'.
 						'<legend>'.
@@ -379,9 +385,9 @@ class SpecialDashboard extends SpecialPage
 						'</tbody></table>'.			
 					'</fieldset>'.										
 				'</fieldset>'.
-				'<fieldset id="cvext-dash-lcts" class="dashsection" style="display : none;">'.
-					'<legend class="mainLegend">'.
-						wfMsg('').
+				'<fieldset id="cvext-dashsection-lcts">'.
+					'<legend>'.
+						wfMsg('dash-lcts').
 					'</legend>'.
 					'<fieldset>'.
 						'<legend>'.
@@ -451,7 +457,8 @@ class SpecialDashboard extends SpecialPage
 		
 	}
 	private function getPageTypes()
-	{
+	{	
+		return '';
 		$html = '';
 		$pages = $this->conference->getPages();
 		$exists = false;
@@ -483,6 +490,7 @@ class SpecialDashboard extends SpecialPage
 	}
 	private function getOrganizers()
 	{
+		return '';
 		$html = '';
 		$organizers = $this->conference->getOrganizers();
 		foreach ($organizers as $organizer)
@@ -494,7 +502,7 @@ class SpecialDashboard extends SpecialPage
 			if($userPage->exists())
 			{
 				$classRed = false;
-				$url = $userPage->getFullUrl();
+				$url = $userPage->getFullURL();
 			}
 			
 			$html.= '<tr class="cvext-res">'.
@@ -516,6 +524,7 @@ class SpecialDashboard extends SpecialPage
 	}
 	private function getEvents()
 	{
+		return '';
 		$events = $this->conference->getEvents();
 		$html='';
 		foreach ($events as $event)
@@ -545,6 +554,7 @@ class SpecialDashboard extends SpecialPage
 	}
 	private function getLocations()
 	{
+		return '';
 		$html ='';
 		foreach ($this->locations as $location)
 		{
@@ -567,6 +577,7 @@ class SpecialDashboard extends SpecialPage
 	}
 	private function getAccounts()
 	{
+		return '';
 		$html ='';
 		$accounts = $this->conference->getAccounts();
 		foreach ($accounts as $account)
@@ -579,7 +590,7 @@ class SpecialDashboard extends SpecialPage
 			if($userPage->exists())
 			{
 				$classRed = false;
-				$url = $userPage->getFullUrl();
+				$url = $userPage->getFullURL();
 			}
 			$passportInfo = $account->getPassportInfo();
 			$registrations = $account->getRegistrations();
@@ -775,6 +786,7 @@ class SpecialDashboard extends SpecialPage
 	}
 	private function getEventLinks($registration)
 	{
+		return '';
 		$html ='';
 		$events = $registration->getEvents();
 		foreach ($events as $event)
@@ -788,8 +800,9 @@ class SpecialDashboard extends SpecialPage
 	}
 	private function getAuthors()
 	{
+		return '';
 		$html='';
-		$authors = $this->conference->getAuthors();
+		$authors = $this->conference->getAuthors(); 
 		//in a dashboard we will only display submissions for the given conference
 		foreach ($authors as $author)
 		{
@@ -874,6 +887,7 @@ class SpecialDashboard extends SpecialPage
 	}
 	private function getSubmissionUrls($submissions)
 	{
+		return '';
 		$html ='';
 		foreach ($submissions as $submission)
 		{
@@ -906,6 +920,7 @@ class SpecialDashboard extends SpecialPage
 	}
 	private function getDaysForEvents()
 	{
+		return '';
 		$startDate = $this->parseDate($this->conference->getStartDate());
 		$endDate = $this->parseDate($this->conference->getEndDate());
 		//calculate the days between startdate and enddate
@@ -922,6 +937,7 @@ class SpecialDashboard extends SpecialPage
 	}
 	private function getLocationsForEvents()
 	{
+		return '';
 		$this->locations = Conference::getLocations($this->conference->getId());
 		$html ='<select id="location name="location" >';
 		foreach ($this->locations as $location)
