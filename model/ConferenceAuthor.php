@@ -72,7 +72,7 @@ class ConferenceAuthor
 	 * @param Object(AuthorSubmission) $submission - this object only contains the info passed with the form, other author-id 
 	 * and ids are set in this function itself
 	 * @return ConferenceAuthor
-	 * This is a bit different from how its implemented in ConferenceAccount
+	 * This is a bit different from how createFromScratch() is implemented for ConferenceAccount
 	 * So in cases where parent, or parent and child both are present this is the function which we would call
 	 * For example , if we are adding a new submission for the already created parent and child authors we are gonna call this function with 
 	 * the appropriate ConferenceSubmission object
@@ -134,27 +134,30 @@ class ConferenceAuthor
 				}
 			
 			}
-			if($newParent)
+		if($newParent)
+		{
+			$properties[]=array('id'=>$id,'prop'=>'cvext-author-user','value'=>$uid);
+			if($newChild)
 			{
-				$properties[]=array('id'=>$id,'prop'=>'cvext-author-user','value'=>$uid);
-				if($newChild)
-				{
-					$properties[]=array('id'=>$idChild,'prop'=>'cvext-author-parent','value'=>$id);
-					$properties[]=array('id'=>$idChild,'prop'=>'cvext-author-conf','value'=>$cid);
-				}
+				$properties[]=array('id'=>$idChild,'prop'=>'cvext-author-parent','value'=>$id);
+				$properties[]=array('id'=>$idChild,'prop'=>'cvext-author-conf','value'=>$cid);
+			}
 				
-			}
-			$dbw=wfGetDB(DB_MASTER);
-			foreach($properties as $value)
-			{
-				$dbw->insert('page_props',array('pp_page'=>$value['id'],'pp_propname'=>$value['prop'],'pp_value'=>$value['value']));
-			}
-			$submission=AuthorSubmission::createFromScratch($idChild, $submission->getTitle(), $submission->getType(), 
-			$submission->getAbstract(), $submission->getTrack(), $submission->getLength(), $submission->getSlidesInfo(), 
-			$submission->getSlotReq());
-			$submissions=array();
-			$submissions[]=$submission;
-			return new self($id,$cid, $uid, $country, $affiliation, $url,$submissions);
+		}
+		$dbw=wfGetDB(DB_MASTER);
+		foreach($properties as $value)
+		{
+			$dbw->insert('page_props',array('pp_page'=>$value['id'],'pp_propname'=>$value['prop'],'pp_value'=>$value['value']));
+		}
+		$submission=AuthorSubmission::createFromScratch($idChild, $submission->getTitle(), $submission->getType(), 
+		$submission->getAbstract(), $submission->getTrack(), $submission->getLength(), $submission->getSlidesInfo(), 
+		$submission->getSlotReq());
+		$submissions=array();
+		$key = 'conf-'.$cid;
+		$submissions[$key]['conf']=$cid;
+		$submissions[$key]['sub-author']=$idchild;
+		$submissions[$key]['submissions'][]=$submission;
+		return new self($id,$cid, $uid, $country, $affiliation, $url,$submissions);
 		
 	}
 	/**
