@@ -1,4 +1,12 @@
 <?php
+/**
+ * 
+ * @author chughakshay16@gmail.com
+ * This class deals with the author registration process along with the submission of a proposal.
+ * @todo - 1. create error case templates 2. remove test template(line 45)
+ * 
+ *
+ */
 class SpecialAuthorRegister extends SpecialPage
 {
 	const INVALID_CONF_TITLE=0;
@@ -12,6 +20,10 @@ class SpecialAuthorRegister extends SpecialPage
 	const INVALID_SUB_TITLE=8;
 	const INVALID_PARAM_VALUE=9;
 	const MISSING_HIDDEN_PARAM_VALUE =10;
+	const SUCCESS_EDIT =11;
+	const SUCCESS_DELETE = 12;
+	const DELETE_OBJECT_FAIL=13;
+	const DELETE_OBJECT_ABSENT=14;
 	private $conferenceId;
 	private $conferenceTitle;
 	public function __construct($name = 'AuthorRegister')
@@ -29,6 +41,7 @@ class SpecialAuthorRegister extends SpecialPage
 		$request = $this->getRequest();
 		$out = $this->getOutput();
 		$out->setPageTitle('Submission Form');
+		/* test template - remove this when you are done with testing the UI in browsers*/
 		if(true)
 		{
 			$template = new AuthorRegisterTemplate();
@@ -55,7 +68,7 @@ class SpecialAuthorRegister extends SpecialPage
 			$template->set('minsmessage','in mins');
 			$out->addModules('ext.conventionExtension.authorregister');
 			$out->addTemplate($template);
-		} else {
+		} else {}
 			
 		
 		
@@ -122,371 +135,212 @@ class SpecialAuthorRegister extends SpecialPage
 					{
 						$redirectUrl = $output['redirect'];
 						$out->redirect($redirectUrl);
-					} elseif ($output['flag']==)
+					} elseif ($output['flag']==INVALID_SUB_TITLE) {
+						
+					} elseif ($output['flag']==INVALID_PARAM_VALUE) {
+						
+					} elseif ($output['flag']==CREATE_OBJECT_FAIL) {
+						
+					} elseif ($output['flag']==MISSING_HIDDEN_PARAM_VALUE) {
+						
+					}
 				} elseif ($action == 'processauthoredit') {
-					
+					$output = $this->processAuthorEdit();
+					if($output['flag']==SUCCESS_EDIT) 
+					{
+						$redirectUrl = $output['redirect'];
+						$out->redirect($redirectUrl);
+					} elseif ($output['flag']==LOAD_OBJECT_ABSENT) {
+						
+					} elseif ($output['flag']==LOAD_FROMID_FAIL) {
+						
+					}
 				} elseif ($action == 'processsubedit') {
-					
+					$output = $this->processSubEdit();
+					if($output['flag']==SUCCESS_EDIT) 
+					{
+						$redirectUrl = $output['redirect'];
+						$out->redirect($redirectUrl);
+					} elseif ($output['flag']==LOAD_OBJECT_ABSENT) {
+						
+					} elseif ($output['flag']==LOAD_FROMID_FAIL) {
+						
+					}
 				} elseif ($action == 'processauthordelete') {
-					
+					$output = $this->processAuthorDelete();
+					if($output['flag']==SUCCESS_DELETE) 
+					{
+						$redirectUrl = $output['redirect'];
+						$out->redirect($redirectUrl);
+					} elseif ($output['flag']==DELETE_OBJECT_ABSENT) {
+						
+					} elseif ($output['flag']==DELETE_OBJECT_FAIL) {
+						
+					}
 				} elseif ($action == 'processsubdelete') {
-					
+					$output = $this->processSubDelete();
+					if($output['flag']==SUCCESS_DELETE) 
+					{
+						$redirectUrl = $output['redirect'];
+						$out->redirect($redirectUrl);
+					} elseif ($output['flag']==DELETE_OBJECT_ABSENT) {
+						
+					} elseif ($output['flag']==DELETE_OBJECT_FAIL) {
+						
+					}
 				} else {
-					//error page
+					//no-action template
 				}
 				$out->addTemplate($template);
 			} elseif ($check['flag']==INVALID_CONF_TITLE) {
-			
+				//invalid conf-title template
 			} elseif ($check['flag']==TITLE_NOT_EXISTS) {
-			
+				//title not exists template
 			}
 		}
-		
-		
-		if( $action == 'createview')
+		}	
+	private function processSubDelete()
+	{
+		$request = $this->getRequest();
+		$user = $this->getUser();
+		$title = $request->getVal('title','');
+		//we have already checked the validity of conference in $par
+
+		$conference = $conferenceTitle;
+		$params = new DerivativeRequest(
+		$request,
+		array(
+		'title'=>$title,
+		'conference'=>$conference));
+		$api = new ApiMain($params);
+		$api->execute();
+		$data = & $api->getResultData();
+		if($data['done'])
 		{
-			/*$showAuthor = !UserUtils::isSpeaker($user->getId());
-			$template = new AuthorRegisterTemplate();
-			/* isAuthorPresent will decide if author fields are to be put in the form or not*/
-			/*$template->set('showAuthor', $showAuthor);
-			$titleObj = $this->getTitle();
-			$queryUrl = 'action=processcreate';
-			$actionUrl = $titleObj->getLocalURL($queryUrl);
-			$template->set('action', $actionUrl);
-			if(!$showAuthor)
-			{
+			//everything went fine , refirect user to the author page and state that the process went okay
+			$authorTitle = $conferenceTitle.'/authors/'.$user->getName();
+			$title = Title::newFromText($authorTitle);
+			$redirectUrl = $title->getLocalURL();
+			//$out->redirect($redirectUrl);
+			$output['flag']=SUCCESS_DELETE;
+			$output['redirect']=$redirectUrl;
+		} elseif ($data['flag']==Conference::ERROR_DELETE) {
+			$output['flag']=DELETE_OBJECT_FAIL;
+		} elseif ($data['flag']==Conference::ERROR_MISSING) {
+			$output['flag']=DELETE_OBJECT_MISSING;
+		}
+		return $output;
+	}
+	private function processAuthorDelete()
+	{
+		$request = $this->getRequest();
+		$user = $this->getUser();
+		$params = new DerivativeRequest(
+		$request,
+		array(
+		'action'=>'authordelete'));
+		$api = new ApiMain($params, true);
+		$api->execute();
+		$data = & $api->getResultData();
+		if($data['done'])
+		{
+			//redirect user to the user page
+			$userPage = $user->getUserPage();	
+			$userpageUrl = $userPage->getLocalURL();
+			//$out->redirect($userpageUrl);
+			$output['flag']=SUCCESS_DELETE;
+			$output['redirect']=$userPageUrl;
+		} elseif ($data['flag']==Conference::ERROR_DELETE) {
+			//error page , ask user to delete again(there wont be any undelete in this case, and if in future 
+			//u decide to add this as a functionality you would have to come up with a 
+			//complex function of undeleting all the sub-author and submission wiki pages)
+			$output['flag']=DELETE_OBJECT_FAIL;
 				
-				$template->set('create','onlysub');
-				
-			} else {
-				
-				$template->set('country',wfMsg('author-sub-reg-country'));
-				$template->set('affiliation',wfMsg('author-sub-reg-affiliation'));
-				$template->set('url',wfMsg('author-sub-reg-blogurl'));
-				$template->set('countries',$this->getCountries());
-				$template->set('showAuthorSubmit',false);
-				$template->set('create','bothauthorsub');
-				
-			}
-			$template->set('showSubmission',true);
-			$template->set('authorLegend', wfMsg('author-create-legend'));
-			$template->set('submissionLegend',wfMsg('sub-create-legend'));
-			$template->set('title',wfMsg('author-sub-reg-title'));
-			$template->set('type',wfMsg('author-sub-reg-type'));
-			$template->set('track',wfMsg('author-sub-reg-track'));
-			$template->set('minsmessage',wfMsg('author-sub-reg-minutes-msg'));
-			$template->set('abstract',wfMsg('author-sub-reg-abstract'));
-			$template->set('slotreq',wfMsg('author-sub-reg-slotreq'));
-			$template->set('slidesinfo',wfMsg('author-sub-reg-slidesinfo'));
-			$template->set('length',wfMsg('author-sub-reg-length'));
-			$template->set('submit',wfMsg('author-sub-reg-submit'));
-			$out->addTemplate($template);*/
-			
-			
-		} elseif ($action == 'editauthorview') {
-					
-			//do some checks
-			// 1. parent author exists or not
-			// 2. child author exists or not
-			/*$isParentPresent = UserUtils::isSpeaker($user->getId());
-			if($isParentPresent)
-			{
-			
-				$authorId = ConferenceAuthorUtils::getAuthorId($user->getId());
-				$author = ConferenceAuthor::loadFromId($authorId);	
-				if($author && $author->getAuthorId())
-				{
-					$country = $author->getCountry();
-					$affiliation = $author->getAffiliation();
-					$blogUrl = $author->getBlogUrl();
-					$template= new AuthorRegisterTemplate();
-					$template->set('showAuthor',true);
-					$template->set('showSubmission',false);
-					$template->set('showAuthorSubmit',true);
-					$template->set('submit',wfMsg('author-edit-submit'));
-					$titleObj = $this->getTitle();
-					$queryUrl = 'action=processauthoredit';
-					$actionUrl = $titleObj->getLocalURL($queryUrl);
-					$template->set('action',$actionUrl);
-					$template->set('authorLegend',wfMsg('author-edit-legend'));
-					$template->set('country',wfMsg('author-edit-country'));
-					$template->set('affiliation',wfMsg('author-edit-affiliation'));
-					$template->set('url',wfMsg('author-edit-blogurl'));
-					$template->set('countries',$this->getCountries($country));
-					$template->set('affiliationVal',$affiliation);
-					$template->set('urlVal',$blogUrl);
-					$out->addTemplate($template);
-				} else {
-					//error page
-				}
-			} else {
-				//error page
-			}*/
-		} elseif ($action == 'editsubview') {
-			/*if(UserUtils::isSpeaker($user->getId()))
-			{
-				//now check if the user has a sub-author account
-				$accountId = ConferenceAuthorUtils::getAuthorId($user->getId());
-				if(ConferenceAuthorUtils::hasChildAuthor($accountId,$conferenceId))
-				{
-					$submissionTitle = $request->getVal('submission',null);
-					if($submissionTitle)
-					{
-						$author = ConferenceAuthor::loadFromId($authorId);
-						$confKey = 'conf-'.$conferenceId;
-						$allSubmissions = $author->getSubmissions();
-						$confSubmissions = $submissions[$confKey]['submissions'];
-						foreach ($confSubmissions as $confSubmission)
-						{
-							if($confSubmission->getTitle()==$submissionTitle)
-							{
-								$thisSubmission = $confSubmission;
-								break;
-							}
-						}
-						//now set up the template
-						$template = new AuthorRegisterTemplate();
-						$template->set('showAuthor',false);
-						$template->showSubmission('showSubmission',true);
-						$titleObj = $this->getTitle();
-						$queryUrl = 'action=processsubedit';
-						$actionUrl = $titleObj->getLocalURL($queryUrl);
-						$template->set('action',$actionUrl);
-						$template->set('title',wfMsg('sub-edit-title'));
-						$template->set('titleVal',$thisSubmission->getTitle());
-						$template->set('type',wfMsg('sub-edit-type'));
-						$template->set('typeVal',$thisSubmission->getType());
-						$template->set('track',wfMsg('sub-edit-track'));
-						$template->set('trackVal',$thisSubmission->getTrack());
-						$template->set('abstract',wfMsg('sub-edit-abstract'));
-						$template->set('abstractVal',$thisSubmission->getAbstract());
-						$template->set('length',wfMsg('sub-edit-length'));
-						$template->set('lengthVal',$thiSubmission->getLength());
-						$template->set('slotreq',wfMsg('sub-edit-slotreq'));
-						$template->set('slotreqVal',$thisSubmission->getSlotReq());
-						$template->set('slidesinfo',wfMsg('sub-edit-slidesinfo'));
-						$template->set('slidesinfoVal',$thisSubmission->getSlidesInfo());
-						$template->set('submissionLegend',wfMsg('sub-edit-legend'));
-						$template->set('minsmessage',wfMsg('sub-edit-minutes-msg'));
-						$template->set('submit',wfMsg('sub-edit-submit'));
-						$out->addTemplate($template);
-					} else {
-						//error page
-					}
-				} else {
-					//error page
-				}
-			} else {
-				//error page
-			}*/
-		
-		} elseif ($action == 'processcreate') {
-			//no need for any checks , only criteria for anyone to create a new author is that the user must be logged in, which we have already tested before
-			$actionType = $request->getVal('create',null);
-			$title = $request->getVal('title',null);
-			if($title)
-			{
-				$titleObj = Title::newFromText($title);
-				if(!$title)
-				{
-					//error page
-				} else {
-					$type = $request->getVal('type','');
-					//we still have to figure out how we are storing the track values
-					$track = $request->getVal('track','');
-					$abstract = $request->getVal('abstract','');
-					$length = $request->getVal('length','');
-					$slotreq = $request->getVal('slotreq','');
-					$slidesinfo = $request->getVal('slidesinfo','');
-					$errors = $this->mustValidateInputs($type,$track,$abstract,$length,$slotreq,$slidesinfo);
-					if(count($errors))
-					{
-						//error page 
-					} else {
-						$submision = new AuthorSubmission(null,null,$title, $type, $abstract, $track, $length, $slidesinfo, $slotreq);
-						if($actionType==='onlysub')
-						{
-							//title is the only value that must be passed , rest all of the values are optional
-							$author = ConferenceAuthor::createFromScratch($conferenceId,$user->getId(),'','','',$submission);
-							$submissions = $author->getSubmissions();
-							$key = 'conf-'.$conferenceId;
-							$thisSubmission = $submissions[$key]['submissions'][0];
-							if($thisSubmission && $thisSubmission->getId())
-							{
-								$submissionTitle = $conferenceTitle.'/authors/'.$user->getName().'/submissions/'.$title;
-								$redirectTitle = Title::newFromText($submissionTitle);
-								$redirectUrl = $redirectTitle->getLocalURL();
-								$out->redirect($redirectUrl);
-							} else {
-								//error page
-							}
-				
-						} elseif ($actionType==='bothauthorsub') {
-						
-							//the author specific values are not necessary
-							$country = $request->getVal('country','');
-							$affiliation = $request->getVal('affiliation','');
-							$url = $request->getVal('url','');
-							$errors = $this->mustValidateInputs($country, $affiliation, $url);
-							if(count($errors))
-							{
-								//error page
-							} else {
-								$author = ConferenceAuthor::createFromScratch(null, null, $country, $affiliation, $url, $submission);
-								if($author && $author->getAuthorId())
-								{
-									//now lets check if the submission was saved successfully or not
-									$submissions = $author->getSubmissions();
-									$key = 'conf-'.$conferenceId;
-									$thisSubmission = $submissions[$key]['submissions'][0];
-									if($thisSubmission && $thisSubmission->getId())
-									{
-										$submissionTitle = $conferenceTitle.'/authors/'.$user->getName().'/submissions/'.$title;
-										$redirectTitle = Title::newFromText($submissionTitle);
-										$redirectUrl = $redirectTitle->getLocalURL();
-										$out->redirect($redirectUrl);	
-									} else {
-										//error page
-									}
-								} else {
-									//error page
-								}
-							}
-						
-						} else {
-							//error page
-						}
-					}
-					
-				}
-					
-			} else {
-				//error page
-			}
-			
-		} elseif ($action == 'processauthoredit') {
-			
-			$country = $request->getVal('country','');
-			$affiliation = $request->getVal('affiliation','');
-			$url = $request->getVal('url','');
-			//we wont have to perform many of the checks as they will eventually happen within the API module for authoredit
-			$params = new DerivativeRequest(
-			$request, 
-			array(
-			'action'=>'authoredit',
-			'country'=>$country,
-			'affiliation'=>$affiliation,
-			'url'=>$url)
-			);
-			//use try and catch block 
-			$api = new ApiMain($params, true);
-			$api->execute();
-			$data = & $api->getResultData();
-			if($data['done'])
-			{
-				//everything went fine 
-				//now redirect user to the author page
-				$authorTitle = $conferenceTitle.'/auhtors/'.$user->getName();
-				$titleObj = Title::newFromText($authorTitle);
-				$redirectUrl = $titleObj->getLocalURL();
-				$out->redirect($redirectUrl);
-			} elseif ($data['flag']==Conference::ERROR_MISSING) {
-				//error page stating that the author with this username doesnt exist
-			} elseif ($data['flag']==Conference::ERROR_EDIT) {
-				//error page stating that some internal error occurred and ask user to re-do the edit process
-				//error page should also contain a link to the author page
-			}
-			
-		} elseif ($action == 'processsubedit') {
-			
-			$title = $request->getVal('title','');
-			$track = $request->getVal('track','');
-			$type = $request->getVal('type','');
-			$length = $request->getVal('length','');
-			$abstract = $request->getVal('abstract','');
-			$slidesinfo = $request->getVal('slidesinfo','');
-			$slotreq = $request->getVal('slotreq','');
-			$params = new DerivativeRequest(
-			$request,
-			array('action'=>'subedit',
-			'title'=>$title,
-			'track'=>$track,
-			'type'=>$type,
-			'length'=>$length,
-			'abstract'=>$abstract,
-			'slidesinfo'=>$slidesinfo,
-			'slotreq'=>$slotreq));
-			//use try and catch block
-			$api = new ApiMain($params, true);
-			$api->execute();
-			$data = & $api->getResultData();
-			if($data['done'])
-			{
-				//everything went fine , redirect user to the updated submission page
-				$submissionTitle = $conferenceTitle.'/authors/'.$user->getName().'/submissions/'.$title;
-				$title = Title::newFromText($submissionTitle);
-				$redirectUrl = $title->getFullURL();
-				$out->redirect($redirectUrl);
-				
-			} elseif ($data['flag']==Conference::ERROR_EDIT) {
-				// error page
-			} elseif ($data['flag']==Conference::ERROR_MISSING) {
-				//error page	
-			}
-		} elseif ($action == 'processauthordelete') {
-			$params = new DerivativeRequest(
-			$request,
-			array(
-			'action'=>'authordelete'));
-			$api = new ApiMain($params, true);
-			$api->execute();
-			$data = & $api->getResultData();
-			if($data['done'])
-			{
-				//redirect user to the user page
-				$userPage = $user->getUserPage();	
-				$userpageUrl = $userPage->getLocalURL();
-				$out->redirect($userpageUrl);
-			} elseif ($data['flag']==Conference::ERROR_DELETE) {
-				//error page , ask user to delete again(there wont be any undelete in this case, and if in future 
-				//u decide to add this as a functionality you would have to come up with a 
-				//complex function of undeleting all the sub-author and submission wiki pages)
-				
-			} elseif ($data['flag']==Conference::ERROR_MISSING) {
+		} elseif ($data['flag']==Conference::ERROR_MISSING) {
 				//error page stating that no author was found with this user account
-			}
-		} elseif ($action == 'processsubdelete') {
-			$title = $request->getVal('title','');
-			//we have already checked the validity of conference in $par
-			$conference = $conferenceTitle;
-			$params = new DerivativeRequest(
-			$request,
-			array(
-			'title'=>$title,
-			'conference'=>$conference));
-			$api = new ApiMain($params);
-			$api->execute();
-			$data = & $api->getResultData();
-			if($data['done'])
-			{
-				//everything went fine , refirect user to the author page and state that the process went okay
-				$authorTitle = $conferenceTitle.'/authors/'.$user->getName();
-				$title = Title::newFromText($authorTitle);
-				$redirectUrl = $title->getLocalURL();
-				$out->redirect($redirectUrl);
-			} elseif ($data['flag']==Conference::ERROR_DELETE) {
-				//error page
-			} elseif ($data['flag']==Conference::ERROR_MISSING) {
-				//error page
-			}
-			
-			}else {
-			//error page
+				$output['flag']=DELETE_OBJECT_ABSENT;
 		}
-		//now we will fetch all the author details from the request
-		//we wont have to do any more checks as createFromScratch() internally takes care of all the scenarios
-		// we just need to validate the inputs
+		return $output;
+	}
+	private function processSubEdit()
+	{
+		$output = array();
+		$request = $this->getRequest();
+		$title = $request->getVal('title','');
+		$track = $request->getVal('track','');
+		$type = $request->getVal('type','');
+		$length = $request->getVal('length','');
+		$abstract = $request->getVal('abstract','');
+		$slidesinfo = $request->getVal('slidesinfo','');
+		$slotreq = $request->getVal('slotreq','');
+		$params = new DerivativeRequest(
+		$request,
+		array('action'=>'subedit',
+		'title'=>$title,
+		'track'=>$track,
+		'type'=>$type,
+		'length'=>$length,
+		'abstract'=>$abstract,
+		'slidesinfo'=>$slidesinfo,
+		'slotreq'=>$slotreq));
+		//use try and catch block
+		$api = new ApiMain($params, true);
+		$api->execute();
+		$data = & $api->getResultData();
+		if($data['done'])
+		{
+			//everything went fine , redirect user to the updated submission page
+			$submissionTitle = $conferenceTitle.'/authors/'.$user->getName().'/submissions/'.$title;
+			$title = Title::newFromText($submissionTitle);
+			$redirectUrl = $title->getFullURL();
+			//$out->redirect($redirectUrl);
+			$output['flag']=SUCCESS_EDIT;
+			$output['redirect']=$redirectUrl;	
+		} elseif ($data['flag']==Conference::ERROR_EDIT) {
+			$output['flag']=LOAD_FROMID_FAIL;
+		} elseif ($data['flag']==Conference::ERROR_MISSING) {
+			$output['flag']=LOAD_OBJECT_ABSENT;	
 		}
+		return $output;
+	}
+	private function processAuthorEdit()
+	{
+		$output = array();
+		$request = $this->getRequest();
+		$country = $request->getVal('country','');
+		$affiliation = $request->getVal('affiliation','');
+		$url = $request->getVal('url','');
+		//we wont have to perform many of the checks as they will eventually happen within the API module for authoredit
+		$params = new DerivativeRequest(
+		$request, 
+		array(
+		'action'=>'authoredit',
+		'country'=>$country,
+		'affiliation'=>$affiliation,
+		'url'=>$url)
+		);
+		//use try and catch block 
+		$api = new ApiMain($params, true);
+		$api->execute();
+		$data = & $api->getResultData();
+		if($data['done'])
+		{
+			//everything went fine 
+			//now redirect user to the author page
+			$authorTitle = $conferenceTitle.'/auhtors/'.$user->getName();
+			$titleObj = Title::newFromText($authorTitle);
+			$redirectUrl = $titleObj->getLocalURL();
+			$output['flag']=SUCCESS_EDIT;
+			$output['redirect']=$redirectUrl;
+			//$out->redirect($redirectUrl);
+		} elseif ($data['flag']==Conference::ERROR_MISSING) {
+			$output['flag'] = LOAD_OBJECT_ABSENT;
+		} elseif ($data['flag']==Conference::ERROR_EDIT) {
+			//error page stating that some internal error occurred and ask user to re-do the edit process
+			//error page should also contain a link to the author page
+			$output['flag']=LOAD_FROMID_FAIL;
+		}
+		return $output;
 	}
 	private function processCreate()
 	{
