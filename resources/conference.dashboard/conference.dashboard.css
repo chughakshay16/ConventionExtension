@@ -62,7 +62,7 @@
 	/* @embed */
 	background-image: url(images/dashboard-base.png);
 }
-#dashboard fieldset {
+#dashboard fieldset, div.dashsection fieldset {
 	border: none;
 	border-top: solid 1px #cccccc;
 }
@@ -87,12 +87,31 @@
 	padding: .2em 2em;
 	color: #666666;
 }
-#dashboard div.mw-prefs-buttons {
-	padding: 1em;
-}
-#dashboard div.mw-prefs-buttons input {
-	margin-right: 0.25em;
-}
 td.mw-label {
 	text-align: left;
 }
+div.dashsection {
+				position:absolute;
+                 margin-top:50px;
+                 margin-left:250px;
+                 z-index:5;
+                 padding:20px;
+                 background:#fff;
+}
+div.opaque {
+	position:absolute;
+	top:0px;
+	left:0px;
+	width:100%;
+	z-index:1;
+	display:block;
+	height:100%;
+	opacity:.6;
+	background:white;
+} 
+#ajaxform {
+	border: solid 3px #cccccc;
+} 
+span.absent {
+	color:#ccc;
+}             
