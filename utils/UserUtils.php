@@ -16,20 +16,22 @@ class UserUtils
 		$dbr=wfGetDB(DB_SLAVE);
 		$res=$dbr->select('page_props',
 		'*',
-		array('pp_propname'=>'account-user','pp_value'=>$userId),
+		array('pp_propname'=>'cvext-account-user','pp_value'=>$userId),
 		__METHOD__,
 		array());
 		return $dbr->numRows($res)?true:false;
 	}
-	public static function isSpeaker($userId)
+	public static function isSpeaker( $userId )
 	{
-		$dbr=wfGetDB(DB_SLAVE);
+		$dbr=wfGetDB( DB_SLAVE );
+		# fetch the results from page_props table
 		$res=$dbr->select('page_props',
-		'*',
-		array('pp_propname'=>'speaker-user','pp_value'=>$userId),
-		__METHOD__,
-		array());
-		return $dbr->numRows($res)?true:false;
+			'*',
+			array('pp_propname'=>'cvext-author-user','pp_value'=>$userId),
+			__METHOD__,
+			array());
+		
+		return $dbr->numRows( $res ) ? true : false;
 	}
 	public static function isApplicant($userId)
 	{
@@ -46,7 +48,7 @@ class UserUtils
 		$dbr=wfGetDB(DB_SLAVE);
 		$res=$dbr->select('page_props',
 		'*',
-		array('pp_propname'=>'organizer-user','pp_value'=>$userId),
+		array('pp_propname'=>'cvext-organizer-user','pp_value'=>$userId),
 		__METHOD__,
 		array());
 		return $dbr->numRows($res)?true:false;

@@ -19,19 +19,41 @@ class ConferenceAuthorUtils
 	}
 	/**
 	 * 
-	 * Checks if the sub-author id exists for a particular conference
-	 * @param Int (page_id of the sub-author page) $aid
+	 * Checks if the sub-author id exists
+	 * @param Int (page_id of the parent author page) $aid
 	 * @param Int $cid
+	 * @param boolean $getValue it should be set to true when you want to fetch the value
+	 * its value is only taken into consideration when both $aid and $cid are passed otherwise
+	 * its value is just ignored
 	 */
-	public static function hasChildAuthor($aid,$cid)
+	public static function hasChildAuthor($aid,$cid=null,$getValue=false)
 	{
-		$dbr=wfGetDB(DB_SLAVE);
-		$resultRow=$dbr->selectRow("page_props",
-		"*",
-		array('pp_page'=>$aid,'pp_propname'=>'cvext-author-conf','pp_value'=>$cid),
-		__METHOD__,
-		array());
-		return $resultRow?$resultRow->pp_page:false;
+		$dbr = wfGetDB( DB_SLAVE );
+		$childrenResult = $dbr->select('page_props',
+				'*',
+				array('pp_propname'=>'cvext-author-parent','pp_value'=>$aid)
+		);
+		if($dbr->numRows($childrenResult)==false || !$cid )
+		{
+			return false;
+		}	
+		if($cid && $aid)
+		{
+	 
+			//try this with INNER JOIN if possible
+			$childrenArray= array();
+			foreach ($childrenResult as $childRow)
+			{
+				$childrenArray[]=$childRow->pp_page;
+			}
+			//if no row is found selectRow() returns false
+			$child = $dbr->selectRow('page_props',
+					'*',
+					array('pp_propname'=>'cvext-author-conf','pp_page IN ('.implode(',',$childrenArray).')')
+					);
+			return $child ? ( $getValue ? $child->pp_page : true ) : false ;
+		} 
+		
 	}
 	/**
 	 * 
@@ -58,7 +80,7 @@ class ConferenceAuthorUtils
 		{
 			$parentRow=$dbr->selectRow('page_props',
 			'*',
-			array('pp_propname'=>'cvext-account-user','pp_page'=>$resultRow->pp_value),
+			array('pp_propname'=>'cvext-author-user','pp_page'=>$resultRow->pp_value),
 			__METHOD__);
 			if($parentRow)
 			{
@@ -94,5 +116,14 @@ class ConferenceAuthorUtils
 		array(),
 		array());
 		return $resultRow->pp_page?$resultRow->pp_page:null;
+	}
+	/**
+	 * 
+	 * @param Int $aid page_id of the parent author page
+	 * @todo - complete this function
+	 */
+	public static function hasSubmissions($aid)
+	{
+		
 	}
 }

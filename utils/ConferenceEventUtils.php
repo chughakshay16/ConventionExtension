@@ -23,4 +23,14 @@ class ConferenceEventUtils
 		array());
 		return $dbr->numRows($result)?true:false;
 	}
+	
+	
+	public static function getLocationId($eventId)
+	{
+		$dbr = wfGetDB(DB_SLAVE);
+		$res = $dbr->selectRow('page_props',
+				'pp_value',
+				array('pp_propname'=>'cvext-event-location','pp_page'=>$eventId));
+		return $res ? $res->pp_value : null;
+	}
 }
