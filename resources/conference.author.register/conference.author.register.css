@@ -1,14 +1,21 @@
-@CHARSET "ISO-8859-1";
 select#countries {
 	width: 8em;
 }
-td.mw-label{
-	text-align:left;
+
+td.mw-label {
+	text-align: left;
 }
+
 #authorRegisterDiv fieldset {
 	border: none;
 	border-top: solid 1px #cccccc;
 }
+
+#authorRegisterDiv legend {
+	color: #666666;
+	background: transparent;
+}
+
 #authorRegisterDiv {
 	margin : .5em ;
 }

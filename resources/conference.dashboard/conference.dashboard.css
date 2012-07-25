@@ -1,4 +1,3 @@
-@CHARSET "ISO-8859-1";
 #dashtoc {
 	/* Tabs */
 	width: 100%;
@@ -11,46 +10,52 @@
 	background-position: bottom left;
 	background-repeat: no-repeat;
 }
-	#dashtoc li {
-		/* Tab */
-		float: left;
-		margin: 0;
-		padding: 0;
-		padding-right: 1px;
-		height: 2.25em;
-		white-space: nowrap;
-		list-style-type: none;
-		list-style-image: none;
-		/* @embed */
-		background-image: url(images/dashboard-break.png);
-		background-position: bottom right;
-		background-repeat: no-repeat;
-	}
-	#dashtoc li:first-child {
-		margin-left: 1px;
-	}
-	#dashtoc a,
-	#dashtoc a:active {
-		display: inline-block;
-		position: relative;
-		color: #0645ad;
-		padding: 0.5em;
-		text-decoration: none;
-		background-image: none;
-		font-size: 0.9em;
-	}
-	#dashtoc a:hover,
-	#preftoc a:focus {
-		text-decoration: underline;
-	}
-	#dashtoc li.selected a {
-		/* @embed */
-		background-image: url(images/dashboard-fade.png);
-		background-position: bottom;
-		background-repeat: repeat-x;
-		color: #333333;
-		text-decoration: none;
-	}
+
+#dashtoc li {
+	/* Tab */
+	float: left;
+	margin: 0;
+	padding: 0;
+	padding-right: 1px;
+	height: 2.25em;
+	white-space: nowrap;
+	list-style-type: none;
+	list-style-image: none;
+	/* @embed */
+	background-image: url(images/dashboard-break.png);
+	background-position: bottom right;
+	background-repeat: no-repeat;
+}
+
+#dashtoc li:first-child {
+	margin-left: 1px;
+}
+
+#dashtoc a,
+#dashtoc a:active {
+	display: inline-block;
+	position: relative;
+	color: #0645ad;
+	padding: 0.5em;
+	text-decoration: none;
+	background-image: none;
+	font-size: 0.9em;
+}
+
+#dashtoc a:hover,
+#preftoc a:focus {
+	text-decoration: underline;
+}
+
+#dashtoc li.selected a {
+	/* @embed */
+	background-image: url(images/dashboard-fade.png);
+	background-position: bottom;
+	background-repeat: repeat-x;
+	color: #333333;
+	text-decoration: none;
+}
+
 #dashboard {
 	float: left;
 	width: 100%;
@@ -62,56 +67,145 @@
 	/* @embed */
 	background-image: url(images/dashboard-base.png);
 }
-#dashboard fieldset, div.dashsection fieldset {
+
+#dashboard fieldset {
 	border: none;
 	border-top: solid 1px #cccccc;
 }
+
 #dashboard fieldset.dashsection {
 	border: none;
 	padding: 0;
 	margin: 1em;
 }
+
 #dashboard legend {
 	color: #666666;
 	background: transparent;
 }
+
 #dashboard fieldset.dashsection legend.mainLegend {
 	display: none;
 }
+
 #dashboard td {
 	padding-left: 0.5em;
 	padding-right: 0.5em;
 }
-#dashboard td.htmlform-tip {
-	font-size: x-small;
-	padding: .2em 2em;
-	color: #666666;
-}
+
 td.mw-label {
 	text-align: left;
 }
-div.dashsection {
-				position:absolute;
-                 margin-top:50px;
-                 margin-left:250px;
-                 z-index:5;
-                 padding:20px;
-                 background:#fff;
+
+div.dashsection,
+div.delsection,
+div.orgeditsection,
+div.evteditsection,
+div.loceditsection,
+div.confeditsection,
+div.pagecreatesection {
+	position: absolute;
+	margin-top: 50px;
+    margin-left: 400px;
+    z-index: 5;
+    padding: 20px;
+    background: #fff;
+    box-shadow: 10px 10px 10px #ccc;
+    border: solid 1px #ccc;
+    width: 350px;
+    height: 125px;
 }
+
+div.orgeditsection,
+div.loceditsection {
+	height: 200px;
+}
+
+div.delsection {
+	width: 150px;
+	height: 50px;
+	padding-left: 50px;
+}
+
+div.evteditsection {
+	height: 300px;
+}
+
+div.confeditsection {
+	margin-top: 5px;
+	margin-left: 300px;
+	width: 550px;
+	height: 360px;
+}
+
 div.opaque {
-	position:absolute;
-	top:0px;
-	left:0px;
-	width:100%;
-	z-index:1;
-	display:block;
-	height:100%;
-	opacity:.6;
-	background:white;
-} 
-#ajaxform {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	z-index: 1;
+	display: block;
+	height: 100%;
+	opacity: .6;
+	background: white;
+}
+
+#ajaxform,
+#delform,
+#orgajaxform,
+#evtajaxform,
+#evtdelform,
+#orgdelform,
+#locajaxform,
+#confajaxform {
 	border: solid 3px #cccccc;
-} 
+}
+
 span.absent {
-	color:#ccc;
-}             
+	color: #ccc;
+}
+
+#ajaxmsg {
+	margin: .3em;
+	padding: .5em;
+	position: absolute;
+	border:	solid 1px #ccc;
+	width: auto;
+	background:	white;
+	opacity: .8;
+}
+
+/*div.dashsection p{
+	padding: 2.5em;
+	float: left;
+	clear: both;
+}*/
+
+.closeIcon {
+	float: right;
+	clear: both;
+}
+
+.textCenter {
+	text-align: center;
+}
+
+.orgeditsection p {
+	color: #ccc;
+	font-style: italic;
+}
+
+p.errAjax {
+	background: #ffadad;
+	color: #827878;
+	font-style: italic;
+}
+
+p.noerrAjax {
+	background: #adffad;
+	color: #827878;
+}
+
+table.cvext-tbl-evt {
+	width: 80%;
+}
