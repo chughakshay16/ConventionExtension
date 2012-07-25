@@ -172,10 +172,10 @@ class ConferenceEvent
 				if($matches[2][0]==$mLocation->getLocationId())
 				{
 					$mLocationId = $matches[2][0];
-					$isPagePropChanged = false;
+					//$isPagePropChanged = false;
 				} else {
 					$mLocationId = $mLocation->getLocationId();
-					$isPagePropChanged = true;
+					//$isPagePropChanged = true;
 				}
 			} else {
 				$mLocationId = $matches[2][0];
@@ -210,7 +210,7 @@ class ConferenceEvent
 			$status=$page->doEdit($content,"Event has been modified",EDIT_UPDATE);
 			if($status->value['revision'])
 			{
-				if($isPagePropChanged)
+				/*if($isPagePropChanged)
 				{
 					$dbw=wfGetDB(DB_MASTER);
 					$res=$dbw->update('page_props',
@@ -219,12 +219,22 @@ class ConferenceEvent
 					__METHOD__);
 					if($res)
 					{
+						$completeLocTitle = $confTitle.'/locations/'.$mLocation->getRoomNo();
+						$locationUrl = Title::makeTitle(NS_MAIN, $completeLocTitle)->getFullURL();
 						$result['done']=true;
-						$result['msg']='The event was successfully updated';	
+						$result['msg']='The event was successfully updated';
+						$result['eventurl']= $page->getTitle()->getFullURL();
+						$result['starttime']= $mStartTime;
+						$result['endtime'] = $mEndTime;
+						$result['day'] = $mDay;
+						$result['topic'] = $mTopic;
+						$result['group'] = $mGroup;
+						$result['location'] = $mLocation->getRoomNo();
+						$result['locationurl'] = $locationUrl;
 						$result['flag']=Conference::SUCCESS_CODE;
 					} else {
 						$result['done']=false;
-						$result['msg']='The properties were not updated properly';
+						$result['msg']='The properties were not updated properly. Try again. ';
 						$result['flag']=Conference::ERROR_EDIT;
 					}
 						
@@ -233,8 +243,22 @@ class ConferenceEvent
 					$result['done']=true;
 					$result['msg']='The event was successfully updated';
 					$result['flag']=Conference::SUCCESS_CODE;
-				}
-			} else {
+				}*/
+				$completeLocTitle = $confTitle.'/locations/'.$mLocation->getRoomNo();
+				$locationUrl = Title::makeTitle(NS_MAIN, $completeLocTitle)->getFullURL();
+				$result['done']=true;
+				$result['msg']='The event was successfully updated';
+				$result['eventurl']= $page->getTitle()->getFullURL();
+				$result['starttime']= $mStartTime;
+				$result['endtime'] = $mEndTime;
+				$result['day'] = $mDay;
+				$result['topic'] = $mTopic;
+				$result['group'] = $mGroup;
+				$result['location'] = $mLocation->getRoomNo();
+				$result['locationurl'] = $locationUrl;
+				$result['flag']=Conference::SUCCESS_CODE;
+				
+			}  else {
 				$result['done']=false;
 				$result['msg']='The event could not be successfully updated';
 				$result['flag']=Conference::ERROR_EDIT;
@@ -330,7 +354,8 @@ class ConferenceEvent
 			$dbw=wfGetDB(DB_MASTER);
 			foreach ($ids as $name=>$value)
 			{
-				$dbw->insert('page_props',array('pp_page'=>$id,'ppp_propname'=>$name,'pp_value'=>$value));
+				//$dbw->insert('page_props',array('pp_page'=>$id,'ppp_propname'=>$name,'pp_value'=>$value));
+				$parser->getOutput()->setProperty($name, $value);
 			}
 		}
 		return '';
@@ -373,18 +398,18 @@ class ConferenceEvent
 	 * 
 	 * getter function
 	 */
-	public function getLocationId()
+	public function getLocation()
 	{
-		return $this->mLocationId;
+		return $this->mLocation;
 	}
 	/**
 	 * 
 	 * setter function
 	 * @param Int $id
 	 */
-	public function setLocationId($id)
+	public function setLocation($location)
 	{
-		$this->mLocationId=$id;
+		$this->mLocation=$location;
 	}
 	/**
 	 * 

@@ -1,4 +1,10 @@
 <?php
+/**
+ * 
+ * @author chughakshay16
+ * @todo - in performEdit(), one error scenario left
+ *
+ */
 class ConferencePage
 {
 	/**
@@ -21,6 +27,18 @@ class ConferencePage
 	private $mType;
 	/**
 	 * 
+	 * @var unknown_type
+	 */
+	private static $mPreloadedTypes = array(
+			'Welcome Page',
+			'Submissions Page',
+			'Contact Us Page',
+			'Registration Page',
+			'Organizers Page',
+			'Schedule Page',
+	);
+	/**
+	 * 
 	 * Constructor function
 	 * @param Int $mId
 	 * @param Int $mConferenceId
@@ -32,12 +50,17 @@ class ConferencePage
 		$this->mConferenceId=$mConferenceId;
 		$this->mType=$mType;
 	}
+	public static function isPreloadedType($type)
+	{
+		return in_array($type, ConferencePage::$mPreloadedTypes);
+	}
 	/**
 	 * @param Int $mConferenceId - page_id of the conference
 	 * @param String $type type/name of the page(Main page, Registration page...)
 	 * @param bool $default it tells whether to add default content or not
 	 * @return ConferencePage
 	 * For already defined types default content will be added to the page at the time of creation
+	 * If the process fails , it just returns a ConferencePage object with id property not set
 	 */
 	public static function createFromScratch($mConferenceId, $type ,$default=true )
 	{
@@ -49,6 +72,7 @@ class ConferencePage
 		/**
 		 * add default text to the page only if $default is true
 		 * then <page> tag 
+		 * $text = $text.$this->getDefaultContent()
 		 */
 		$status=$page->doEdit($text,'new page added',EDIT_NEW);
 		if($status->value['revision'])
@@ -65,8 +89,36 @@ class ConferencePage
 		}
 		else
 		{
-		//do something here
+			return new self(null, $mConferenceId, $type);
 		}
+	}
+	/**
+	 * @return - the default text for the page type
+	 * 
+	 */
+	public static function getDefaultContent($type)
+	{
+		$text = '';
+		switch ($type){
+			case 'Welcome Page':
+				break;
+			case 'Registration Page':
+				break;
+			case 'Sponsor Us Page':
+				break;
+			case 'Schedule Page':
+				break;
+			case 'Submissions Page':
+				break;
+			case 'Scholarships Page':
+				break;
+			case 'Press Page':
+				break;
+			default :
+				break;	
+											
+		}
+		return $text;
 	}
 	/**
 	 * @param Int $pageId page_id of the conference page
@@ -99,11 +151,13 @@ class ConferencePage
 		$result=array();
 		if($page->exists())
 		{
-			$status=$page->doDeleteArticle("admin deletes the page of type ".$type,DELETED_TEXT);
+			$status=$page->doDeleteArticle("admin deletes the page of type ".$type,Revision::DELETED_TEXT);
 			if($status===true)
 			{
 				$result['done']=true;
 				$result['msg']="Page has been successfully deleted";
+				$result['preloaded']=self::isPreloadedType($type);
+				$result['pagetype'] = $type;
 				$result['flag']=Conference::SUCCESS_CODE;
 			} else {
 				$result['done']=false;
@@ -118,7 +172,7 @@ class ConferencePage
 		
 		return $result;
 	}
-	public static function performEdit($conferenceId, $type)
+	public static function performEdit($conferenceId, $type , $oldType)
 	{
 		
 		$confTitle = ConferenceUtils::getTitle($conferenceId);
@@ -148,7 +202,7 @@ class ConferencePage
 			{
 				
 				$result['done']=false;
-				$result['msg']='The type value was passed as null';
+				$result['msg']='The type value passed as null';
 				$result['flag']=Conference::INVALID_CONTENT;
 				return $result;
 				
@@ -157,6 +211,7 @@ class ConferencePage
 				$result['done']=true;
 				$result['msg']='Passed content is same as previous content';
 				$result['flag']=Conference::NO_EDIT_NEEDED;
+				$result['urlto'] = $page->getTitle()->getFullURL();
 				return $result;
 				
 			} else {
@@ -172,17 +227,38 @@ class ConferencePage
 			if($status->value['revision'])
 			{
 				
-				$dbw = wfGetDB(DB_MASTER);
-				
-				$dbw->update('page_props',
-				array('pp_page'=>$id,'pp_propname'=>'cvext-page-type','pp_value'=>$type),
-				array('pp_page'=>$id,'pp_propname'=>'cvext-page-type','pp_value'=>$oldType),
-				__METHOD__);
-				//do check to see if row was updated properly
-				
 				$result['done']=true;
 				$result['msg']="The page details were successfully updated";
-				$result['flag']=Conference::SUCCESS_CODE;
+				$result['pagetypeto'] = $type;
+				$result['urlto'] = $page->getTitle()->getFullURL();
+				/*$dbw = wfGetDB(DB_MASTER);
+				/* deleting properties from the old page, thereby removing all the connections between the old page and the conference 
+				$oldTitleText = $confTitle.'/pages/'.$oldType;
+				$oldtitle = Title::newFromText($oldTitleText);
+				/* for some reason it returns 0 
+				//$oldid = $oldtitle->getArticleID();//
+				//so we will have to fetch the id from the database
+				
+				$row = $dbw->selectRow('page',
+						'page_id',
+						array('page_title'=>$oldtitle->getDBkey()),
+						__METHOD__);
+				if($row)
+				{
+					$dbw->delete('page_props',
+							array('pp_page'=>$row->page_id,'page_propname IN (cvext-page-conf,cvext-page-type)'),
+							__METHOD__);
+				}
+				//do check to see if row was updated properly
+				if ($dbw->affectedRows()!=0)
+				{
+					
+				} else {
+					//what would be the perfect solution in this case ? 
+				}*/
+
+				//$result['flag']=Conference::SUCCESS_CODE;
+				
 				
 			} else {
 				
@@ -198,6 +274,7 @@ class ConferencePage
 			$result['flag']=Conference::ERROR_MISSING;
 			
 		}
+		return $result;
 	}
 	/**
 	 * 
@@ -212,10 +289,11 @@ class ConferencePage
 		$id=$parser->getTitle()->getArticleId();
 		if($id!=0)
 		{
-			$dbw=wfGetDB(DB_MASTER);
+			//$dbw=wfGetDB(DB_MASTER);
 			foreach ($args as $name=>$value)
 			{
-				$dbw->insert('page_props',array('pp_page'=>$id,'pp_propname'=>$name,'pp_value'=>$value));
+				//$dbw->insert('page_props',array('pp_page'=>$id,'pp_propname'=>$name,'pp_value'=>$value));
+				$parser->getOutput()->setProperty($name, $value);
 			}
 		}
 		

@@ -104,8 +104,8 @@ class EventLocation
 				$result['flag']=Conference::ERROR_PARENT_PRESENT;
 			}
 			else {
-				//do note that doArticleDelete() doesnt delete the rows in page_props so we will have to manually delete them
-				$status=$page->doArticleDelete("location deleted by admin",DELETED_TEXT);
+				//do note that doArticleDelete() deletes the rows in page_props, so we will not have to manually delete them
+				$status=$page->doDeleteArticle("location deleted by admin",Revision::DELETED_TEXT);
 				if($status===true)
 				{
 					$result['done']=true;
@@ -177,8 +177,12 @@ class EventLocation
 			if($roomNo===$matches[1][0] && $description===$matches[2][0] && $url===$matches[3][0])
 			{
 				$result['done']=true;
-				$result['msg']='Passed content is similar to previous content';
+				$result['msg']='Passed content was similar to previous content';
 				$result['flag']=Conference::NO_EDIT_NEEDED;
+				$result['roomno'] = $roomNo;
+				$result['description'] = $description;
+				$result['url'] = $url;
+				$result['locurl'] = $title->getFullURL();
 				return $result;
 			}
 			$newTag=Xml::element('location',array('roomNo'=>$roomNo,'description'=>$description,'url'=>$url,'cvext-type'=>'location','cvext-location-conf'=>$matches[5][0]));
@@ -188,6 +192,10 @@ class EventLocation
 			{
 				$result['done']=true;
 				$result['msg']="The location has been successfully edited";
+				$result['roomno'] = $roomNo;
+				$result['description'] = $description;
+				$result['url'] = $url;
+				$result['locurl'] = $title->getFullURL();
 				$result['flag']=Conference::SUCCESS_CODE;
 			} else {
 				$result['done']=false;
@@ -225,8 +233,13 @@ class EventLocation
 		$id=$parser->getTitle()->getArticleId();
 		if($id!=0)
 		{
-			wfGetDB(DB_MASTER)->insert('page_props',array('pp_page'=>$id
-			,'pp_propname'=>'cvext-type','pp_value'=>'location'));
+			//wfGetDB(DB_MASTER)->insert('page_props',array('pp_page'=>$id
+			//,'pp_propname'=>'cvext-type','pp_value'=>'location'));
+			foreach ($args as $name=>$value)
+			{
+				if($name=='cvext-type' || $name=='cvext-location-conf')
+				$parser->getOutput()->setProperty($name, $value);
+			}
 		}
 		return '';
 	}

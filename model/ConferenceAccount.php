@@ -167,7 +167,9 @@ class ConferenceAccount
 				foreach ($conferenceIds as $combo)
 				{
 					if($row->pp_value==$combo['sub-account'])
-					$conf = $row->pp_value;
+					{
+						$conf = $row->pp_value;
+					}
 				}
 				$registrations[]=array('conf'=>$conf,'registration'=>ConferenceRegistration::loadFromId($row->pp_page));
 

@@ -109,9 +109,9 @@ class ConferenceAuthor
 				$id=$pageObj->getId();
 			}
 		}
-		$newChild=!(ConferenceAuthorUtils::hasChildAuthor($id, $cid));
-		$username=UserUtils::getUsername($uid);
-		$titleChild=$confTitle.'/authors/'.$username;
+		$newChild= $newParent || !(ConferenceAuthorUtils::hasChildAuthor($id, $cid, true));
+		//$username=UserUtils::getUsername($uid);
+		$titleChild=$confTitle.'/authors/'.$userName;
 		$titleChildObj=Title::newFromText($titleChild);
 		$pageChildObj=WikiPage::factory($titleChildObj);
 		if($newChild)
@@ -136,9 +136,11 @@ class ConferenceAuthor
 			}
 		if($newParent)
 		{
+			# parent properties
 			$properties[]=array('id'=>$id,'prop'=>'cvext-author-user','value'=>$uid);
 			if($newChild)
 			{
+				# child properties
 				$properties[]=array('id'=>$idChild,'prop'=>'cvext-author-parent','value'=>$id);
 				$properties[]=array('id'=>$idChild,'prop'=>'cvext-author-conf','value'=>$cid);
 			}
@@ -147,15 +149,18 @@ class ConferenceAuthor
 		$dbw=wfGetDB(DB_MASTER);
 		foreach($properties as $value)
 		{
-			$dbw->insert('page_props',array('pp_page'=>$value['id'],'pp_propname'=>$value['prop'],'pp_value'=>$value['value']));
+			$dbw->insert('page_props',array('pp_page'=>$value['id'],
+				'pp_propname'=>$value['prop'],'pp_value'=>$value['value']));
 		}
-		$submission=AuthorSubmission::createFromScratch($idChild, $submission->getTitle(), $submission->getType(), 
-		$submission->getAbstract(), $submission->getTrack(), $submission->getLength(), $submission->getSlidesInfo(), 
-		$submission->getSlotReq());
+		$submission=AuthorSubmission::createFromScratch($idChild, $submission->getTitle(), 
+					$submission->getType(), $submission->getAbstract(), $submission->getTrack(), 
+					$submission->getLength(), $submission->getSlidesInfo(), 
+					$submission->getSlotReq());
 		$submissions=array();
+		# just a convenient way of storing submissions in author object
 		$key = 'conf-'.$cid;
 		$submissions[$key]['conf']=$cid;
-		$submissions[$key]['sub-author']=$idchild;
+		$submissions[$key]['sub-author']=$idChild;
 		$submissions[$key]['submissions'][]=$submission;
 		return new self($id,$cid, $uid, $country, $affiliation, $url,$submissions);
 		
@@ -170,25 +175,26 @@ class ConferenceAuthor
 	 */
 	public static function performAuthorDelete($uid)
 	{
-		//we need to delete the whole chain of author starting from parent author and ending with submission
-		//step 1. get all the sub-author ids
-		//step 2. get all the submissions for all the corresponding sub-author ids
-		//step 3. delete all the submissions
-		//step 4. delete all the sub-author ids
-		//step 5. delete the parent author
+		/*we need to delete the whole chain of author starting from parent author and ending with submission
+		*	step 1. get all the sub-author ids
+		*	step 2. get all the submissions for all the corresponding sub-author ids
+		*	step 3. delete all the submissions
+		*	step 4. delete all the sub-author ids
+		*	step 5. delete the parent author
+		*/
 		$result=array();
 		$authorId=ConferenceAuthorUtils::getAuthorId($uid);
 		if($authorId)
 		{
 			$dbr=wfGetDB(DB_SLAVE);
-			$result=$dbr->select("page_props",
+			$resultSet=$dbr->select("page_props",
 			"pp_page",
-			array("pp_propname"=>"cvext-account-parent","pp_value"=>$authorId),
+			array("pp_propname"=>"cvext-author-parent","pp_value"=>$authorId),
 			__METHOD__,
 			array(),
 			array());
 			$subAuthorIds=array();
-			foreach ($result as $row)
+			foreach ($resultSet as $row)
 			{
 				$subAuthorIds[]=$row->pp_page;	
 			}
@@ -249,41 +255,45 @@ class ConferenceAuthor
 	/**
 	 * 
 	 * deletes the submission from the database
-	 * @param Int $uid
-	 * @param Int $cid
-	 * @param String title of the submission $title
+	 * @param Title $title - Title object
 	 * @return $result
 	 * $result['done'] - true/false depending upon whether the process was successful or not
 	 * $result['msg'] - message for success or failure
+	 * Its a simple wiki page delete, where the properties (stored in page_props)  associated with this wiki page are deleted as well.
 	 */
-	public static function performSubmissionDelete($uid,$cid,$title)
+	public static function performSubmissionDelete( $title )
 	{
-		//step 1. just extract the sub-author id
-		//step 2. get all the submissions for that sub-author id
-		//step 3. delete all those submissions
-		$confTitle=ConferenceUtils::getTitle($cid);
-		$username=UserUtils::getUsername($uid);
-		$titleText=$confTitle.'/authors/'.$username.'/submissions/'.$title;
-		$title=Title::newFromText($titleText);
-		$page=WikiPage::factory($title);
-		$result=array();
-		if($page->exists())
+	
+		# wiki page for the submission
+		$page = WikiPage::factory($title);
+		$result = array();
+		
+		if( $page->exists() )
 		{
-			$status=$page->doDeleteArticle("submission deleted by the author",Revision::DELETED_TEXT);
-			if($status===true)
+			
+			$status = $page->doDeleteArticle("submission deleted by the author",Revision::DELETED_TEXT);
+			
+			if( $status === true )
 			{
-				$result['done']=true;
-				$result['msg']='Submission has been successfully deleted';
-				$result['flag']=Conference::SUCCESS_CODE;
+				
+				$result['done'] = true;
+				$result['msg'] = 'Submission has been successfully deleted';
+				$result['flag'] = Conference::SUCCESS_CODE;
+				
 			} else {
-				$result['done']=false;
-				$result['msg']="Submission couldnt be deleted";
-				$result['flag']=Conference::ERROR_DELETE;
+				
+				$result['done'] = false;
+				$result['msg'] = "Submission couldnt be deleted";
+				$result['flag'] = Conference::ERROR_DELETE;
+				
 			}
+			
 		} else {
+			
 			$result['done']=false;
 			$result['msg']="Submission with the given title was not found in the database";
 			$result['flag']=Conference::ERROR_MISSING;
+			
 		}
 		return $result;
 	}
@@ -361,10 +371,10 @@ class ConferenceAuthor
 	 * $result['done'] - true/false depending upon whether the process was carried out successfully or not
 	 * $result['msg'] - message for success or failure
 	 */
-	public static function performAuthorEdit($uid,$country, $affiliation, $url)
+	public static function performAuthorEdit($username,$country, $affiliation, $url)
 	{
-		$username=UserUtils::getUsername($uid);
-		$titleText='/authors/'.$username;
+		//$username=UserUtils::getUsername($uid);
+		$titleText='authors/'.$username;
 		$title=Title::newFromText($titleText);
 		$page=WikiPage::factory($title);
 		$result=array();
@@ -374,7 +384,7 @@ class ConferenceAuthor
 			$article=Article::newFromID($id);
 			$content=$article->fetchContent();
 			preg_match_all("/<author country=\"(.*)\" affiliation=\"(.*)\" blogUrl=\"(.*)\" cvext-author-user=\"(.*)\" \/>/",$content,$matches);
-			//we will never be modifying the cvext-author-user property
+			# we will never be modifying the cvext-author-user property
 			if (!$country)
 			{
 				$country = $matches[1][0];
@@ -425,13 +435,13 @@ class ConferenceAuthor
 	 * $result['done']true/false depending on whether the operation was successful or not
 	 * $result['msg']- message for failure or success
 	 */
-	public static function performSubmissionEdit($cid,$uid,$title,$type,$abstract, $track, $length, $slidesInfo, $slotReq)
+	public static function performSubmissionEdit($conferenceTitle,$username,$title,$type,$abstract, $track, $length, $slidesInfo, $slotReq)
 	{
-		$confTitle=ConferenceUtils::getTitle($cid);
-		$username=UserUtils::getUsername($uid);
-		$titleText=$confTitle.'/authors/'.$username.'/submissions/'.$title;
-		$title=Title::newFromText($titleText);
-		$page=WikiPage::factory($title);
+		/*$confTitle=ConferenceUtils::getTitle($cid);
+		$username=UserUtils::getUsername($uid);*/
+		$titleText = $conferenceTitle.'/authors/'.$username.'/submissions/'.$title;
+		$titleObj=Title::newFromText($titleText);
+		$page=WikiPage::factory($titleObj);
 		$result=array();
 		if($page->exists())
 		{
@@ -489,7 +499,53 @@ class ConferenceAuthor
 			$result['done']=false;
 			$result['msg']="The submission with this title name doesnt exist in the database";
 			$result['flag']=Conference::ERROR_MISSING;
-		}	
+		}
+		return $result;	
+	}
+	/**
+	 * 
+	 * @param Array $subAuthorIds Collection of sub-author wiki page ids 
+	 * @todo - make it more generic, such as when subIds is not supplied
+	 */
+	public function loadSubmissions($subAuthorIds)
+	{
+		$dbr = wfGetDB( DB_SLAVE );
+		$res=$dbr->select('page_props',
+				array('pp_page','pp_value'),
+				array('pp_value IN ('.implode(',',$subAuthorIds).')','pp_propname'=>'cvext-submission-author'),
+				__METHOD__,
+				array());
+		$submissions=array();
+		//here one sub-author can contain more than one submissions
+		foreach($res as $row)
+		{
+			foreach ($this->mConferenceIds as $combo)
+			{
+				if($row->pp_value == $combo['sub-author'])
+				{
+					$conferenceId = $combo['conf'];
+					$subauthorId = $combo['sub-author'];
+				}
+			}
+			$key = 'conf-'.$conferenceId;
+			$submissions[$key]['conf']=$conferenceId;
+			$submissions[$key]['sub-author']=$subauthorId;
+			$submissions[$key]['submissions'][]=AuthorSubmission::loadFromId($row->pp_page);
+		}
+		$this->mSubmissions = $submissions;
+	}
+	/**
+	 * 
+	 * @param Int $authorId page_id of the parent author wiki page
+	 * Just get an author object preloaded with parent author page details
+	 */
+	public static function getParentAuthor($authorId)
+	{
+		$article=Article::newFromID($authorId);
+		$text=$article->fetchContent();
+		preg_match_all("/<author country=\"(.*)\" affiliation=\"(.*)\" blogUrl=\"(.*)\" cvext-author-user=\"(.*)\" \/>/",$text,$matches);
+		return new self($authorId,null, $matches[4][0], $matches[1][0], $matches[2][0], $matches[3][0],null);
+		
 	}
 	/**
 	 * @param Int $authorId (this is the page_id of the parent author)
@@ -517,29 +573,29 @@ class ConferenceAuthor
 		}*/
 		//get all the sub authors
 		$resSub=$dbr->select('page_props',
-		'*',
-		array('pp_value'=>$authorId,'pp_propname'=>'cvext-author-parent'),
-		__METHOD__,
-		array());
-		$subIds=array();
+				'*',
+				array('pp_value'=>$authorId,'pp_propname'=>'cvext-author-parent'),
+				__METHOD__,
+				array());
+		$subAuthorIds=array();
 		foreach ($resSub as $row)
 		{
-			$subIds[]=$row->pp_page;
+			$subAuthorIds[]=$row->pp_page;
 		}
 		$resConf=$dbr->select('page_props',
-		'*',
-		array('pp_page IN ('.implode(',', $subIds).')','pp_propname'=>'cvext-author-conf'),
-		__METHOD__);
+				'*',
+				array('pp_page IN ('.implode(',', $subAuthorIds).')','pp_propname'=>'cvext-author-conf'),
+				__METHOD__);
 		$conferenceIds=array();
 		foreach ($resConf as $row)
 		{
 			$conferenceIds[]=array('sub-author'=>$row->pp_page,'conf'=>$row->pp_value);
 		}
 		$res=$dbr->select('page_props',
-		array('pp_page','pp_value'),
-		array('pp_value IN ('.implode(',',$subIds).')','pp_propname'=>'cvext-submission-author'),
-		__METHOD__,
-		array());
+				array('pp_page','pp_value'),
+				array('pp_value IN ('.implode(',',$subAuthorIds).')','pp_propname'=>'cvext-submission-author'),
+				__METHOD__,
+				array());
 		$submissions=array();
 		//here one sub-author can contain more than one submissions
 		foreach($res as $row)
@@ -555,9 +611,40 @@ class ConferenceAuthor
 			$key = 'conf-'.$conferenceId;
 			$submissions[$key]['conf']=$conferenceId;
 			$submissions[$key]['sub-author']=$subauthorId;
-			$submissions[$key]['submissions'][]=AuthorSubmission::loadFromId($row->pp_page);			
+			$submissions[$key]['submissions'][]=AuthorSubmission::loadFromId($row->pp_page);
 		}
+		
 		return new self($authorId,$conferenceIds, $matches[4][0], $matches[1][0], $matches[2][0], $matches[3][0],$submissions);
+	}
+	/**
+	 * 
+	 * @param Array $subIds collection of all the sub-author wiki page ids
+	 * @return Array - unique parent author wiki page ids
+	 */
+	public static function getParentIds($subIds)
+	{
+		//hese subIds are the collection of all the sub-authors
+		$dbr = wfGetDB(DB_SLAVE);
+		/* we could also perform a query for getting just the unique elements */
+		$parentsResult = $dbr->select('page_props',
+				'*',
+				array('pp_propname'=>'cvext-author-parent','pp_page IN ('.implode(',',$subIds).')'));
+		/* parentsResult will contain the values which may be repeated, so remove the repeating elements */
+		$parentIds = array();
+		foreach ($parentsResult as $parentRow)
+		{
+			/*if(!in_array($parentRow->pp_value, $parentIds))
+			{
+				$parentIds[] = $parentRow->pp_value;
+			}*/
+			$authorId = $parentRow->pp_value;
+			$key = 'auth-'.$authorId;
+			$parentIds[$key]['author'] = $authorId;
+			$parentIds[$key]['sub-author'][] = $parentRow->pp_page;	
+					
+		}
+		return $parentIds;
+			
 	}
 	/**
 	 * 
@@ -574,7 +661,8 @@ class ConferenceAuthor
 		$authorId=$parser->getTitle()->getArticleId();
 		if($authorId!=0)
 		{
-			$dbw->insert('page_props',array('pp_page'=>$authorId,'pp_propname'=>'cvext-author-user','pp_value'=>$args['cvext-author-user']));
+			//$dbw->insert('page_props',array('pp_page'=>$authorId,'pp_propname'=>'cvext-author-user','pp_value'=>$args['cvext-author-user']));
+			$parser->getOutput()->setProperty('cvext-author-user', $args['cvext-author-user']);
 		}	
 		return '';
 	}
@@ -594,7 +682,8 @@ class ConferenceAuthor
 			$properties=array(array('id'=>$authorId,'prop'=>'cvext-author-conf','value'=>$args['cvext-author-conf']),array('id'=>$authorId,'prop'=>'cvext-author-parent','value'=>$args['cvext-author-parent']));
 			foreach ($properties as $property)
 			{
-				$dbw->insert('page_props',array('pp_page'=>$property['id'],'pp_propname'=>$property['prop'],'pp_value'=>$property['value']));
+				//$dbw->insert('page_props',array('pp_page'=>$property['id'],'pp_propname'=>$property['prop'],'pp_value'=>$property['value']));
+				$parser->getOutput()->setProperty($property['prop'], $property['value']);
 			}
 		}
 		

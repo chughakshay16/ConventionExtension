@@ -168,8 +168,8 @@ class Conference
 	{
 		$article=Article::newFromID($conferenceId);
 		$text=$article->fetchContent();
-		preg_match_all('/<conference title="(.*)" venue="(.*)" capacity="(.*)" startDate="(.*)"
-		endDate="(.*)" description="(.*)" cvext-type="(.*)" \/>/',$text,$matches);
+		preg_match_all('/<conference title="(.*)" venue="(.*)" capacity="(.*)" startDate="(.*)" endDate="(.*)" description="(.*)" cvext-type="(.*)" \/>/',
+		$text,$matches);
 		// now get the information on speakers
 		$dbr=wfGetDB(DB_SLAVE);
 		//collect all the pages pointing to $conferenceId as their parent conference
@@ -184,35 +184,61 @@ class Conference
 		$applicants=array();
 		$events=array();
 		$authors=array();
+		$subAuthorIds = array();
+		$subAccountIds = array();
 		//now depending on the property name initialise
 		foreach($res as $row)
 		{
-			if($res->pp_propname=='cvext-account-conf')
+			if($row->pp_propname=='cvext-account-conf')
 			{
-				$accounts[]=ConferenceAccount::loadFromId($res->pp_page);
+				$subAccountIds[] = $row->pp_page;
+				//$accounts[]=ConferenceAccount::loadFromId($row->pp_page);
 			}
-			else if($res->pp_propname=='cvext-page-conf')
+			else if($row->pp_propname=='cvext-page-conf')
 			{
-				$pages[]=ConferencePage::loadFromId($res->pp_page);
+				$pages[]=ConferencePage::loadFromId($row->pp_page);
 			}
-			else if($res->pp_propname=='cvext-author-conf')
+			else if($row->pp_propname=='cvext-author-conf')
 			{
-				$authors[]=ConferenceAuthor::loadFromId($res->pp_page);
+				//$authors[]=ConferenceAuthor::loadFromId($row->pp_page);
+				$subAuthorIds[] = $row->pp_page;
+				//$conferenceIds[] = array('sub-author'=>$row->pp_page,'conf'=>$conferenceId);
 			}
-			else if($res->pp_propname=='cvext-event-conf')
+			else if($row->pp_propname=='cvext-event-conf')
 			{
-				$events[]=ConferenceEvent::loadFromId($res->pp_page);
+				$events[]=ConferenceEvent::loadFromId($row->pp_page);
 			}
-			else if($res->pp_propname=='cvext-organizer-conf')
+			else if($row->pp_propname=='cvext-organizer-conf')
 			{
-				$organizers[]=ConferenceOrganizer::loadFromId($res->pp_page);
+				$organizers[]=ConferenceOrganizer::loadFromId($row->pp_page);
 			}
 			else 
 			{
-				$applicants[]=ConferenceApplicant::loadFromId($res->pp_page);
+				/*$applicants[]=ConferenceApplicant::loadFromId($row->pp_page); add this when you have completed the ConferenceApplicant class */
 			}
 			
 		}
+		# load the author objects from the subauthorIds collected above
+		if(count($subAuthorIds))
+		{
+			$parentAuthorIds = ConferenceAuthor::getParentIds($subAuthorIds);
+			$authorKeys = array_keys($parentAuthorIds);
+			foreach ($authorKeys as $key)
+			{
+				$author = ConferenceAuthor::getParentAuthor($parentAuthorIds[$key]['author']);
+				$subIds = $parentAuthorIds[$key]['sub-author'];
+				/* on our case there will be only one element in subIds for each author */
+				$conferenceIds = array(array('sub-author'=>$subIds[0],'conf'=>$conferenceId));
+				$author->setconferenceIds($conferenceIds);
+				$author->loadSubmissions($subIds);
+				$authors[] = $author;
+			}
+		}	
+
+		
+		# load the account objects from the subaccountIds collected above
+		# @todo - ConferenceAccount::loadFromSubIds()
+		
 		/*$res=$dbr->select('page_props',
 		array('pp_page'),
 		array('pp_propname'=>'speaker-conf','pp_value'=>$conferenceId),
@@ -265,15 +291,28 @@ class Conference
 		{
 			$applicants[]=ConferenceApplicant::loadFromId($row->pp_page);
 		}*/
-		return new self($conferenceId,$matches[1][0],$matches[6][0],$matches[4][0],$matches[5][0],$matches[2][0],$matches[3][0],$speakers,$events,$applicants,$organizers,$accounts,$pages);
+		return new self($conferenceId,$matches[1][0],$matches[6][0],$matches[4][0],$matches[5][0],$matches[2][0],$matches[3][0],$authors,$events,$applicants,$organizers,$accounts,$pages);
 
+	}
+	/**
+	 * 
+	 */
+	public function getPageTitles()
+	{
+		//just extract the titles from the array of ConferencePage objects
+		$pageTitles = array();
+		foreach ($this->mPages as $page)
+		{
+			$pageTitles[] = $page->getType(); 
+		}
+		return $pageTitles;
 	}
 	/**
 	 * 
 	 * edits the conference details
 	 * called via ApiConferenceEdit class
 	 * @param Int $cid
-	 * @param String $title
+	 * @param Title $title 
 	 * @param String  $venue
 	 * @param String $description
 	 * @param String $capacity
@@ -281,24 +320,24 @@ class Conference
 	 * @param String $endDate
 	 * @param String $mDescription
 	 */
-	public static function performEdit($cid,$title,$venue,$description,$capacity,$startDate,$endDate,$description)
+	public static function performEdit($cid,$title,$venue,$description,$capacity,$startDate,$endDate)
 	{
-		$confTitle=ConferenceUtils::getTitle($cid);
-		$titleText='conferences/'.$confTitle;
-		$title=Title::newFromText($titleText);
-		$page=WikiPage::factor($title);
+		//$confTitle=ConferenceUtils::getTitle($cid);
+		//$titleText='conferences/'.$confTitle;
+		//$titleObj=Title::newFromText($title);
+		$page=WikiPage::factory($title);
 		$result=array();
 		if($page->exists())
 		{
 			$id=$page->getId();
 			$article=Article::newFromID($id);
 			$content=$article->fetchContent();
-			preg_match_all('/<conference title="(.*)" venue="(.*)" capacity="(.*)" startDate="(.*)"
-			endDate="(.*)" description="(.*)" cvext-type="(.*)" \/>/', $content, $matches);
-			if(!$title)
+			preg_match_all('/<conference title="(.*)" venue="(.*)" capacity="(.*)" startDate="(.*)" endDate="(.*)" description="(.*)" cvext-type="(.*)" \/>/',
+			 $content, $matches);
+			/*if(!$title)
 			{
 				$title = $matches[1][0];
-			} 
+			} */
 			if(!$venue)
 			{
 				$venue = $matches[2][0];
@@ -323,15 +362,21 @@ class Conference
 			$newTag = Xml::element('conference',array('title'=>$title,'venue'=>$venue,'capacity'=>$capacity
 			,'startDate'=>$startDate,'endDate'=>$endDate,'description'=>$description,'cvext-type'=>'conference'));
 			
-			$content = preg_replace('/<conference title=".*" venue=".*" capacity=".*" startDate=".*"
-			endDate=".*" description=".*" cvext-type=".*" \/>/',$newTag, $content);
+			$content = preg_replace('/<conference title=".*" venue=".*" capacity=".*" startDate=".*" endDate=".*" description=".*" cvext-type=".*" \/>/',
+					$newTag, $content);
 			
 			$status=$page->doEdit($content,"conference details modified by the admin",EDIT_UPDATE);	
 			if($status->value['revision'])
 			{
 				$result['done']=true;
-				$result['msg']="conference details are successfully saved";	
 				$result['flag']=self::SUCCESS_CODE;
+				$result['msg']="Conference details were successfully saved";	
+				/*$result['title']=$title;
+				$result['venue']=$venue;
+				$result['capacity']=$capacity;
+				$result['description']=$description;
+				$result['startdate']=$startDate;
+				$result['enddate']=$endDate;*/
 			} else {
 				$result['done']=false;
 				$result['msg']="conference details couldnt be saved";
@@ -354,13 +399,25 @@ class Conference
 	 */
 	public static function render($input, array $args, Parser $parser, PPFrame $frame)
 	{
-		//$conferenceType=$args['type'];
+		$conferenceType=$args['cvext-type'];
 		$conferenceId=$parser->getTitle()->getArticleId();
-		if($conferenceId!=0)
+		//just check if the id already exists in page_props table then dont modify else add
+		//these values again
+		/*$dbr = wfGetDB(DB_SLAVE);
+		$res = $dbr->select('page_props',
+				'*',
+				array('pp_page'=>$conferenceId));
+		if(!$dbr->numRows($res))
 		{
-			$dbw=wfGetDB(DB_MASTER);
-			$dbw->insert('page_props',array('pp_page'=>$conferenceId,'pp_propname'=>'cvext-type','pp_value'=>'conference'));
-		}
+			if($conferenceId!=0)
+			{
+				$dbw=wfGetDB(DB_MASTER);
+				$dbw->insert('page_props',array('pp_page'=>$conferenceId,'pp_propname'=>'cvext-type','pp_value'=>'conference'));
+			}
+		}*/
+		if($conferenceId!=0)
+		$parser->getOutput()->setProperty('cvext-type', $conferenceType);
+		
 		return '';
 	}
 	/**
@@ -369,8 +426,8 @@ class Conference
 	 */
 	public static function getLocations($conferenceId)
 	{
-		$dbr= wfGetDB(DB_SLAVE);
-		$result = $wbr->select('page_props',
+		$dbr= wfGetDB( DB_SLAVE );
+		$result = $dbr->select('page_props',
 		'*',
 		array('pp_propname'=>'cvext-location-conf','pp_value'=>$conferenceId),
 		__METHOD__);
@@ -380,6 +437,15 @@ class Conference
 			$locations[] = EventLocation::loadFromId($row->pp_page);
 		}
 		return $locations;
+	}
+	/**
+	 * returns an associative array
+	 * array('country'=>,'city'=>,'place'=>)
+	 * @todo - complete this function
+	 */
+	public function splitVenueAsString()
+	{
+		
 	}
 	/**
 	 * 
@@ -574,7 +640,7 @@ class Conference
 	 */
 	public function getVenue()
 	{
-		return $this->mEvents;
+		return $this->mVenue;
 	}
 	/**
 	 * 

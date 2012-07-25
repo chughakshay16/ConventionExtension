@@ -157,10 +157,41 @@ class AuthorSubmission
 		if($submissionId!=0)
 		{
 			$dbw=wfGetDB(DB_MASTER);
-			$dbw->insert('page_props',array('pp_page'=>$submissionId,'pp_propname'=>'cvext-submission-author'
-			,'pp_value'=>$args['cvext-submission-author']));
+			//$dbw->insert('page_props',array('pp_page'=>$submissionId,'pp_propname'=>'cvext-submission-author'
+			//,'pp_value'=>$args['cvext-submission-author']));
+			$parser->getOutput()->setProperty('cvext-submission-author',$args['cvext-submission-author']);
 		}
 		return '';
+	}
+	
+	/**
+	 * gets the url to access this submission page
+	 */
+	public function getURL()
+	{
+		if($this->getDBKey())
+		{
+			return Title::makeTitle(NS_MAIN,$this->getDBKey())->getFullURL();
+		} else {
+			return Title::newMainPage();//just a fallback
+		}
+		
+	}
+	/**
+	 * returns the complete DB title
+	 */
+	public function getDBKey()
+	{
+		$dbr = wfGetDB( DB_SLAVE );
+		if($this->getId())
+		{
+			$resultRow = $dbr->selectRow('page',
+					'page_title',
+					array('page_id'=>$this->getId())
+			);
+		} 
+		
+		return $resultRow ? $resultRow->page_title : null ;
 	}
 	/**
 	 * 

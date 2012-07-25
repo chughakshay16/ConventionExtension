@@ -72,7 +72,7 @@ class ConferenceOrganizer
 			}
 			else
 			{
-				return new self($cid, $uid, $catpost);
+				return new self(null,$cid, $uid, $catpost);
 			}
 		}
 		else 
@@ -119,7 +119,17 @@ class ConferenceOrganizer
 			else
 			{}
 		}*/
-		$catpost=array(array('cat'=>$matches[1][0],'post'=>$matches[2][0]));
+		$categoryString = $matches[1][0];
+		$postString = $matches[2][0];
+		$categoryArray = explode(',',$categoryString);
+		$postArray = explode(',',$postString);
+		//no of elements in both postArray and categoryArray will be the same
+		$catpost = array();
+		foreach ($postArray as $index=>$post)
+		{
+			$catpost[] = array('category'=>$categoryArray[$index],'post'=>$post);
+		}
+		//$catpost=array(array('cat'=>$matches[1][0],'post'=>$matches[2][0]));
 		return new self($organizerId,$matches[3][0], $matches[4][0], $catpost);
 		
 	}
@@ -132,22 +142,25 @@ class ConferenceOrganizer
 	 * @return $result
 	 * $result['done'] - true/false (success or failure)
 	 * $result['msg'] - success or failure message
-	 * 
+	 * This function kind of works for adding a new cat,post for the same organizer (ugly hack)
+	 * if $catpostOld is not passed it means its an add operation, and if it is not null it will perform an edit operation on the same catpostOld
 	 */
-	public static function performEdit($cid,$username,$catpost)
+	public static function performEdit($cid,$username,$catpostNew , $catpostOld=null )
 	{
 		$confTitle=ConferenceUtils::getTitle($cid);
 		//$username=UserUtils::getUsername($uid);
 		$title=$confTitle.'/organizers/'.$username;
 		$titleObj=Title::newFromText($title);
 		$page=WikiPage::factory($titleObj);
-		if(!count($catpost) || !$catpost[0] || !$catpost[0]['category'] || !$catpost[0]['post'])
+
+		if(!count($catpostNew) || !count($catpostNew[0]))
 		{
 			$result['done']=false;
 			$result['msg']='Both category and post must be present';
 			$result['flag']=Conference::ERROR_EDIT;
 			return $result;
 		}
+
 		$result=array();
 		if($page->exists())
 		{
@@ -160,22 +173,53 @@ class ConferenceOrganizer
 			$postString = $matches[2][0];
 			$categoryArray = explode(',', $categoryString);
 			$postArray = explode(',', $postString);
-			//The thumb of rule is (category,post) combination should not be the same
+			//The rule of thumb is that (category,post) combination should not be the same for the user in the same conference
+			$available = false;
 			foreach ($categoryArray as $index=>$category)
 			{
-				if($category==$catpost[0]['category'])
+				# check if the new pair is unique
+				if($category==$catpostNew[0]['category'])
 				{
-					if ($catpost[0]['post']==$postArray[$index])
+					if ($catpostNew[0]['post']==$postArray[$index])
 					{
-						$result['done']=false;
-						$result['msg']='The same (category,post) combination already available';
-						$result['flag']=Conference::ERROR_EDIT;
-						return $result;
+						
+						$available = true;
+						break;
+					}
+				} 
+				if( $catpostOld && $category == $catpostOld[0]['category'])
+				{
+					if($catpostOld[0]['post'] == $postArray[$index])
+					{
+						$changeIndex = $index;
 					}
 				}
 			}
-			$categoryArray[]=$catpost[0]['category'];
-			$postArray[]=$catpost[0]['post'];
+			
+			if($available)
+			{
+				
+				#error
+				$result['done']=false;
+				$result['msg']='The same (category,post) combination already available';
+				$result['flag']=Conference::ERROR_EDIT;
+				return $result;
+				
+			} elseif (isset($changeIndex)) {
+				
+				#edit
+				$categoryArray[$changeIndex] = $catpostNew[0]['category'];
+				$postArray[$changeIndex] = $catpostNew[0]['post'];
+				
+			} else {
+				
+				# add
+				$categoryArray[]=$catpostNew[0]['category'];
+				$postArray[]=$catpostNew[0]['post'];
+				
+			}
+				
+			
 			$newCategoryPost = array();
 			for ($i=0;$i<count($categoryArray);$i++)
 			{
@@ -190,6 +234,8 @@ class ConferenceOrganizer
 			{
 				$result['done']=true;
 				$result['msg']="The organizer info has been successfully updated";
+				$result['category'] = $catpostNew[0]['category'];
+				$result['post'] = $catpostNew[0]['post'];
 				$result['flag']=Conference::SUCCESS_CODE;
 				$result['catpost']=$newCategoryPost;
 			} else {
@@ -210,20 +256,41 @@ class ConferenceOrganizer
 	 * Deletes the organizer from the database
 	 * @param Int $cid
 	 * @param String $username
+	 * @param String category
+	 * @param String post
 	 * @return $result 
 	 * $result['done'] - true/false (success or failure)
 	 * $result['msg'] - success or failure message 
+	 * If category and post both are passed as null values, it will delete the organizer page completely
 	 */
-	public static function performDelete($cid,$username)
+	public static function performDelete($cid,$username, $category=null, $post=null, $completeDelete=false)
 	{
 		$confTitle=ConferenceUtils::getTitle($cid);
-		//$username=UserUtils::getUsername($uid);
 		$title=$confTitle.'/organizers/'.$username;
 		$titleObj=Title::newFromText($title);
 		$page=WikiPage::factory($titleObj);
-		$result=array();
-		if($page->exists())
+		
+		if(!$page->exists())
 		{
+			$result['done']=false;
+			$result['msg']="The organizer with this username ".$username." doesnt exist for the conference ".$confTitle;
+			$result['flag']=Conference::ERROR_MISSING;
+			return $result;
+		}
+		
+		$id = $page->getId();
+		$article = Article::newFromID($id);
+		$content = $article->fetchContent();
+		preg_match_all("/<organizer category=\"(.*)\" post=\"(.*)\" cvext-organizer-conf=\"(.*)\" cvext-organizer-user=\"(.*)\" \/>/",$content,$matches);
+		$categoryString = $matches[1][0];
+		$postString = $matches[2][0];
+		$categoryArray = explode(',',$categoryString);
+		$postArray = explode(',',$postString);
+			
+		if($completeDelete || (is_null($category) || is_null($post)) || 
+				(count($categoryArray)==1 && $category==$categoryArray[0] && $post == $postArray[0]))
+		{
+			
 			$status=$page->doDeleteArticle("admin deletes the organizer",DELETED_TEXT);
 			if($status===true)
 			{
@@ -235,12 +302,52 @@ class ConferenceOrganizer
 				$result['msg']="The organizer could not be deleted";
 				$result['flag']=Conference::ERROR_EDIT;
 			}
+			
 		} else {
-			$result['done']=false;
-			$result['msg']="The organizer with this username ".$username." doesnt exist for the conference ".$confTitle;
-			$result['flag']=Conference::ERROR_MISSING;
-		}
+			//the edit form of delete
+			$available = false;
+			foreach ($categoryArray as $index=>$value)
+			{
+				if($value == $category)
+				{
+					if($postArray[$index] == $post)
+					{
+						$available = true;
+						array_splice($categoryArray, $index, 1);
+						array_splice($postArray, $index, 1);
+						break;
+					}
+				}
+			}
+			if(!$available)
+			{
+				
+				//it means cat,post pair was not found
+				$result['done'] = false;
+				$result['msg'] = 'The category,post pair supplied was not found in the database.';
+				$result['flag'] = Conference::ERROR_MISSING;
+				return $result;
+				
+			}
+			$categoryString = implode(',',$categoryArray);
+			$postString = implode(',',$postArray);
+			$newTag = Xml::element('organizer',array('category'=>$categoryString,'post'=>$postString,'cvext-organizer-conf'=>$matches[3][0],'cvext-organizer-user'=>$matches[4][0]));
+			$content = preg_replace("/<organizer category=\".*\" post=\".*\" cvext-organizer-conf=\".*\" cvext-organizer-user=\".*\" \/>/", $newTag, $content);
+			$status=$page->doEdit($content, "The (".$category.','.$post.') pair was deleted',EDIT_UPDATE);
+			if($status->value['revision'])
+			{
+				$result['done']=true;
+				$result['msg']="The organizer info has been successfully deleted";
+				$result['flag']=Conference::SUCCESS_CODE;
+			} else {
+				$result['done']=false;
+				$result['msg']="The organizer info could not be deleted. Try again .";
+				$result['flag']=Conference::ERROR_EDIT;
+			}
+			
+		} 	
 		return $result;
+
 		
 	}
 	/**
@@ -258,21 +365,21 @@ class ConferenceOrganizer
 		{
 			if($attribute=='cvext-organizer-conf')
 			{
-				$ids[]=$value;
+				$ids['cvext-organizer-conf']=$value;
 			}
 			if($attribute=='cvext-organizer-user')
 			{
-				$ids[]=$value;
+				$ids['cvext-organizer-user']=$value;
 			}
 			
 		}
 		$id=$parser->getTitle()->getArticleId();
 		if($id!=0)
 		{
-			$dbw=wfGetDB(DB_MASTER);
 			foreach ($ids as $name=>$value)
 			{
-				$dbw->insert('page_props',array('pp_page'=>$id,'pp_propname'=>$name,'pp_value'=>$value));
+				//$dbw->insert('page_props',array('pp_page'=>$id,'pp_propname'=>$name,'pp_value'=>$value));
+				$parser->getOutput()->setProperty($name, $value);
 			}
 		}
 		
