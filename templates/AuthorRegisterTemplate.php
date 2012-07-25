@@ -24,6 +24,11 @@ class AuthorRegisterTemplate extends QuickTemplate
 		?>
 		<div id="authorRegisterDiv">
 			<form name="registerSetup" method="post" action="<?php $this->text('action');?>" >
+				<?php if($this->haveData('error') && $this->data['error']){	?>
+					<div class="errMsg">
+						<p><?php $this->html('errorMsg')?></p>
+					</div>
+				<?php }?>
 				<?php if($this->data['showAuthor']){?>
 					<fieldset id="authorSet">
 					<legend>
@@ -64,8 +69,8 @@ class AuthorRegisterTemplate extends QuickTemplate
 					<table>
 						<tbody>
 							<tr>
-								<td class="mw-label"><label for="title"><?php $this->html('title');?> :</label></td>
-								<td class="mw-input"><input type="text" size="25" id="title" name="title" tabindex="<?php echo ++$i;?>" value="<?php if($this->haveData('titleVal')){
+								<td class="mw-label"><label for="title"><?php $this->html('titlelbl');?> :</label></td>
+								<td class="mw-input"><input type="text" size="25" id="title" name="subtitle" tabindex="<?php echo ++$i;?>" value="<?php if($this->haveData('titleVal')){
 									$this->html('titleVal');
 								}?>" /></td>
 							</tr>
@@ -102,14 +107,16 @@ class AuthorRegisterTemplate extends QuickTemplate
 							</tr>
 							<tr>
 								<td class="mw-label"><label for="abstract"><?php $this->html('abstract');?> :</label></td>
-								<td class="mw-input"><textarea id="abstract" name="abstract" tabindex="<?php echo ++$i;?>" rows="5" cols="30" value="<?php if($this->haveData('abstractVal')){
+								<td class="mw-input"><textarea id="abstract" name="abstract" tabindex="<?php echo ++$i;?>" rows="5" cols="30"><?php if($this->haveData('abstractVal')){
 									$this->html('abstractVal');
-								}?>" ></textarea></td>
+								}?></textarea></td>
 							</tr>
 							<tr>
 								<td></td>
 								<td class="mw-submit"><input type="submit" id="submission-submit" value="<?php $this->html('submit');?>" tabindex="<?php echo ++$i;?>" /></td>
+								<?php if($this->haveData('create')){?>
 								<td><input type="hidden" name="create" value="<?php $this->html('create');?>" /></td>
+								<?php }?>
 							</tr>
 						</tbody>
 					</table>

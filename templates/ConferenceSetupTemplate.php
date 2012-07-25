@@ -39,7 +39,7 @@ class ConferenceSetupTemplate extends QuickTemplate
 							<label for="startDate"><?php $this->html('startdate');?> : </label>
 						</td>
 						<td class="mw-input">
-							<input type="text" size="7" tabindex="2" id="startDate" name="sdvalue"/>
+							<input type="text" size="7" tabindex="2" id="startDate" name="sdvalue" class="datepicker" />
 						</td>
 					</tr>
 					<tr>
@@ -47,7 +47,7 @@ class ConferenceSetupTemplate extends QuickTemplate
 							<label for="endDate"><?php $this->html('enddate');?> : </label>
 						</td>
 						<td class="mw-input">
-							<input type="text" size="7" tabindex="3" id="endDate" name="edvalue" />
+							<input type="text" size="7" tabindex="3" id="endDate" name="edvalue" class="datepicker" />
 						</td>
 					</tr>
 					<tr>
