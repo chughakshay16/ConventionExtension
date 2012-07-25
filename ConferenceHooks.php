@@ -4,7 +4,7 @@ class ConferenceHooks
 	public static function onParserFirstCallInit(Parser &$parser)
 	{
 		$parser->setHook('conference','Conference::render');
-		$parser->setHook('conference-page','ConferencePage::render');
+		$parser->setHook('page','ConferencePage::render');
 		$parser->setHook('author','ConferenceAuthor::render');
 		$parser->setHook('author-sub','ConferenceAuthor::renderSub');
 		$parser->setHook('submission','AuthorSubmission::render');

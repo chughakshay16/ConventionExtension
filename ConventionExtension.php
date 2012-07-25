@@ -18,10 +18,12 @@ $wgExtensionCredits[ 'other' ][] = array(
 	'description' => 'An extension to convert a wiki into a conference management system',
 	'version'  => 1.0,
 );
-$wgCurrentDir = dirname( __FILE__ ) . DIRECTORY_SEPARATOR;
+$wgCurrentDir = dirname( __FILE__ ).'/';
+
+/* model classes */
 $wgAutoloadClasses['ConferenceUtils']=$wgCurrentDir.'utils/ConferenceUtils.php';
-$wgAutoloadClasses['ConferenceAuthorUtils']=$wgCurrentDir.'/utils/ConferenceAuthorUtils.php';
-$wgAutoloadClasses['ConferenceAccountUtils']=$wgCurrentDir.'/utils/ConferenceAccountUtils.php';
+$wgAutoloadClasses['ConferenceAuthorUtils']=$wgCurrentDir.'utils/ConferenceAuthorUtils.php';
+$wgAutoloadClasses['ConferenceAccountUtils']=$wgCurrentDir.'utils/ConferenceAccountUtils.php';
 $wgAutoloadClasses['UserUtils']=$wgCurrentDir.'utils/UserUtils.php';
 $wgAutoloadClasses['ConferenceOrganizerUtils']=$wgCurrentDir.'utils/ConferenceOrganizerUtils.php';
 $wgAutoloadClasses['ConferenceEventUtils']=$wgCurrentDir.'utils/ConferenceEventUtils.php';
@@ -36,25 +38,64 @@ $wgAutoloadClasses['ConferenceRegistration']=$wgCurrentDir.'model/ConferenceRegi
 $wgAutoloadClasses['ConferencePassportInfo']=$wgCurrentDir.'model/ConferencePassportInfo.php';
 $wgAutoloadClasses['AuthorSubmission']=$wgCurrentDir.'model/AuthorSubmission.php';
 $wgAutoloadClasses['ConferenceHooks']=$wgCurrentDir.'ConferenceHooks.php';
+
+/* sample Special Page, will eventually be removed */
 $wgAutoloadClasses['SpecialSample']=$wgCurrentDir.'sample/SpecialSample.php';
 $wgSpecialPages['SpecialSample']='SpecialSample';
+
+/* special pages */
 $wgAutoloadClasses['SpecialDashboard']=$wgCurrentDir.'ui/admin/SpecialDashboard.php';
 $wgSpecialPages['Dashboard']='SpecialDashboard';
 $wgAutoloadClasses['SpecialConferenceSetup']=$wgCurrentDir.'ui/admin/SpecialConferenceSetup.php';
 $wgSpecialPages['ConferenceSetup']='SpecialConferenceSetup';
-$wgAutoloadClasses['ConferenceSetupTemplate']=$wgCurrentDir.'templates/ConferenceSetupTemplate.php';
-$wgExtensionMessagesFiles['ConferenceSetup']=$wgCurrentDir.'ConventionExtension.i18n.php';
 $wgAutoloadClasses['SpecialAuthorRegister']=$wgCurrentDir.'ui/user/SpecialAuthorRegister.php';
 $wgSpecialPages['AuthorRegister']= 'SpecialAuthorRegister';
+
+/* templates */
+$wgAutoloadClasses['ConferenceSetupTemplate']=$wgCurrentDir.'templates/ConferenceSetupTemplate.php';
 $wgAutoloadClasses['AuthorRegisterTemplate']=$wgCurrentDir.'templates/AuthorRegisterTemplate.php';
-$wgAutoloadClasses['ApiConferenceAuthorEdit']=$wgCurrentDir.'api/ApiConferenceAuthor.php';
+$wgAutoloadClasses['ErrorTemplate'] = $wgCurrentDir.'templates/ErrorTemplate.php';
+
+/* api modules */
+$wgAutoloadClasses['ApiConferenceAuthorEdit']=$wgCurrentDir.'api/ApiConferenceAuthorEdit.php';
 $wgAPIModules['authoredit']='ApiConferenceAuthorEdit';
-$wgAutoloadClasses['ApiAuthorSubmissionEdit']=$wgCurrentDir.'api/ApiConferenceAuthor.php';
+$wgAutoloadClasses['ApiAuthorSubmissionEdit']=$wgCurrentDir.'api/ApiAuthorSubmissionEdit.php';
 $wgAPIModules['subedit']='ApiAuthorSubmissionEdit';
-$wgAutoloadClasses['ApiConferenceAuthorDelete']=$wgCurrentDir.'api/ApiConferenceAuthor.php';
-$wgAPIModules['authordelete']='ApiConferenceAuthorDelete';
-$wgAutoloadClassses['ApiAuthorSubmissionDelete']=$wgCurrentDir.'api/ApiConferenceAuthor.php';
+$wgAutoloadClasses['ApiAuthorSubmissionDelete']=$wgCurrentDir.'api/ApiAuthorSubmissionDelete.php';
 $wgAPIModules['subdelete']='ApiAuthorSubmissionDelete';
+$wgAutoloadClasses['ApiConferenceAuthorDelete']=$wgCurrentDir.'api/ApiConferenceAuthorDelete.php';
+$wgAPIModules['authordelete']='ApiConferenceAuthorDelete';
+$wgAutoloadClasses['ApiConferencePageAdd']=$wgCurrentDir.'api/ApiConferencePageAdd.php';
+$wgAPIModules['pagecreate']='ApiConferencePageAdd';
+$wgAutoloadClasses['ApiConferencePageEdit']=$wgCurrentDir.'api/ApiConferencePageEdit.php';
+$wgAPIModules['pageedit']='ApiConferencePageEdit';
+$wgAutoloadClasses['ApiConferencePageDelete']=$wgCurrentDir.'api/ApiConferencePageDelete.php';
+$wgAPIModules['pagedelete']='ApiConferencePageDelete';
+$wgAutoloadClasses['ApiConferenceOrganizerEdit']=$wgCurrentDir.'api/ApiConferenceOrganizerEdit.php';
+$wgAPIModules['orgedit']='ApiConferenceOrganizerEdit';
+$wgAutoloadClasses['ApiConferenceOrganizerDelete']=$wgCurrentDir.'api/ApiConferenceOrganizerDelete.php';
+$wgAPIModules['orgdelete']='ApiConferenceOrganizerDelete';
+$wgAutoloadClasses['ApiConferenceOrganizerAdd']=$wgCurrentDir.'api/ApiConferenceOrganizerAdd.php';
+$wgAPIModules['orgcreate']='ApiConferenceOrganizerAdd';
+$wgAutoloadClasses['ApiConferenceEventEdit']=$wgCurrentDir.'api/ApiConferenceEventEdit.php';
+$wgAPIModules['eventedit']='ApiConferenceEventEdit';
+$wgAutoloadClasses['ApiConferenceEventDelete']=$wgCurrentDir.'api/ApiConferenceEventDelete.php';
+$wgAPIModules['eventdelete']='ApiConferenceEventDelete';
+$wgAutoloadClasses['ApiConferenceEventAdd']=$wgCurrentDir.'api/ApiConferenceEventAdd.php';
+$wgAPIModules['eventcreate']='ApiConferenceEventAdd';
+$wgAutoloadClasses['ApiConferenceLocationEdit']=$wgCurrentDir.'api/ApiConferenceLocationEdit.php';
+$wgAPIModules['locedit']='ApiConferenceLocationEdit';
+$wgAutoloadClasses['ApiConferenceLocationDelete']=$wgCurrentDir.'api/ApiConferenceLocationDelete.php';
+$wgAPIModules['locdelete']='ApiConferenceLocationDelete';
+$wgAutoloadClasses['ApiConferenceLocationAdd']=$wgCurrentDir.'api/ApiConferenceLocationAdd.php';
+$wgAPIModules['loccreate']='ApiConferenceLocationAdd';
+$wgAutoloadClasses['ApiConferenceEdit']=$wgCurrentDir.'api/ApiConferenceEdit.php';
+$wgAPIModules['confedit']='ApiConferenceEdit';
+
+/* other */
+$wgExtensionMessagesFiles['ConferenceSetup']=$wgCurrentDir.'ConventionExtension.i18n.php';
+
+/* resource modules */
 $wgResourceModules['ext.conventionExtension.confsetup']=array(
 	'scripts'			=>'conference.setup.js',
 	'dependencies'		=>'jquery.ui.datepicker',
@@ -69,12 +110,13 @@ $wgResourceModules['ext.conventionExtension.authorregister']=array(
 );
 $wgResourceModules['ext.conventionExtension.dashboard']=array(
 	'scripts'			=>'conference.dashboard.js',
+	'dependencies'		=>'jquery.ui.datepicker',
 	'styles'			=>'conference.dashboard.css',
 	'localBasePath'		=>$wgCurrentDir.'resources/conference.dashboard',
 	'remoteBasePath'	=>'ConventionExtension/resources/conference.dashboard'
 );
 
-//$wgSpecialPageGroups['SpecialSample'] = 'other';
+/* parser tag and test hooks */
 $wgHooks['ParserFirstCallInit'][]='ConferenceHooks::onParserFirstCallInit';
 $wgHooks['UnitTestsList'][] = 'registerUnitTests';
 function registerUnitTests( &$files ) {
@@ -83,6 +125,8 @@ function registerUnitTests( &$files ) {
         $files[] = $wgCurrentDir . 'tests/ConferenceTest.php';
         return true;
 }
+
+
 $wgCountries = array("Unspecified",
 		"Afghanistan",
 		"Albania",
