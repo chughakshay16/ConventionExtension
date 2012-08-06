@@ -8,49 +8,49 @@
 class ApiAuthorSubmissionDelete extends ApiBase
 {
 	//how do we store conference details in the session for the author ? Answer : We don't !!
-	public function __construct($main, $action)
+	public function __construct( $main, $action )
 	{
-		parent::__construct($main, $action);
+		parent::__construct( $main, $action );
 	}
 	public function execute()
 	{
 		$params= $this->extractRequestParams();
-		# here $params['title'] signifies just the core title of the submission and not the 'confTitle/submissions/title'
+		# here $params['title'] signifies just the core title of the submission and not 'confTitle/submissions/title'
 		$user = $this->getUser();
 		
-		if(!$user->isLoggedIn())
+		if ( !$user->isLoggedIn() )
 		{
-			$this->dieUsageMsg(array('mustbeloggedin', 'conference'));
+			$this->dieUsageMsg( array( 'mustbeloggedin', 'Wiki' ) );
 		}
 		$title = $params['title'];
 		$conferenceTitle = $params['conference'];
 		
 		# now we have a valid user, check if we have a valid author as well
-		$isAuthor=UserUtils::isSpeaker($user->getId());
-		if($isAuthor)
+		$isAuthor = UserUtils::isSpeaker( $user->getId() );
+		if ( $isAuthor )
 		{
 			# now check for the validity of title passed and conference title
-			$text = $conferenceTitle.'/authors/'.$user->getName().'/submissions/'.$title;
-			$titleObj=Title::newFromText($text);
-			$titleConfObj = Title::newFromText($conferenceTitle);
-			$conferenceId = ConferenceUtils::getConferenceId($titleConfObj->getDBkey());
+			$text = $conferenceTitle . '/authors/' . $user->getName() . '/submissions/' . $title;
+			$titleObj = Title::newFromText( $text );
+			$titleConfObj = Title::newFromText( $conferenceTitle );
+			$conferenceId = ConferenceUtils::getConferenceId( $titleConfObj->getDBkey() );
 				
-			if(!$titleObj)
+			if ( !$titleObj )
 			{
 
-				$this->dieUsageMsg(array('invalidtitle',$params['title']));
+				$this->dieUsageMsg( array( 'invalidtitle', $params['title'] ) );
 
-			} elseif (!$titleConfObj){
+			} elseif ( !$titleConfObj ) {
 
-				$this->dieUsageMsg(array('invalidtitle',$params['conference']));
+				$this->dieUsageMsg( array( 'invalidtitle', $params['conference'] ) );
 
-			} elseif (!$conferenceId){
+			} elseif ( !$conferenceId ) {
 
-				$this->dieUsageMsg(array('invalidtitle',$params['conference']));
+				$this->dieUsageMsg( array( 'invalidtitle', $params['conference'] ) );
 
-			} elseif (!$titleObj->exists()){
+			} elseif ( !$titleObj->exists() ) {
 
-				$this->dieUsageMsg(array('cannotdelete', 'this submission'));
+				$this->dieUsageMsg( array( 'cannotdelete', 'this submission' ) );
 			}
 				
 			
@@ -77,19 +77,19 @@ class ApiAuthorSubmissionDelete extends ApiBase
 	public function getAllowedParams()
 	{
 		return array(
-				'title'=>array(
-						ApiBase::PARAM_TYPE=>'string',
-						ApiBase::PARAM_REQUIRED=>true),
-				'conference'=>array(
-						ApiBase::PARAM_TYPE=>'string',
-						ApiBase::PARAM_REQUIRED=>true)
+				'title'			=>array(
+						ApiBase::PARAM_TYPE		=> 'string',
+						ApiBase::PARAM_REQUIRED	=> true),
+				'conference'	=>array(
+						ApiBase::PARAM_TYPE		=> 'string',
+						ApiBase::PARAM_REQUIRED	=> true)
 		);
 	}
 	public function getParamDescription()
 	{
 		return array(
-				'title'=>'Title of the submission',
-				'conference'=>'Title of the conference this submission belongs to'
+				'title'		=> 'Title of the submission',
+				'conference'=> 'Title of the conference this submission belongs to'
 		);
 	}
 	public function getDescription()
@@ -99,15 +99,15 @@ class ApiAuthorSubmissionDelete extends ApiBase
 	public function getPossibleErrors()
 	{
 		$user = $this->getUser();
-		return array_merge(parent::getPossibleErrors(), array(
-				array('mustbeloggedin','conference'),
-				array('missingparam','title'),
-				array('missingparam','conference'),
-				array('invaliduser',$user->getName()),
-				array('invalidtitle','title'),
-				array('invalidtitle','conference'),
-				array('cannotdelete','this submission'),
-				array('badaccess-groups')
+		return array_merge( parent::getPossibleErrors(), array(
+				array( 'mustbeloggedin', 'Wiki' ),
+				array( 'missingparam', 'title' ),
+				array( 'missingparam', 'conference' ),
+				/*array( 'invaliduser', $user->getName() ),*/
+				array( 'invalidtitle', 'title' ),
+				array( 'invalidtitle', 'conference' ),
+				array( 'cannotdelete', 'this submission' ),
+				array( 'badaccess-groups' )
 		));
 	}
 	public function getExamples()

@@ -8,9 +8,9 @@
  */
 class ApiConferenceLocationDelete extends ApiBase
 {
-	public function __construct($main, $action)
+	public function __construct( $main, $action )
 	{
-		parent::__construct($main, $action);
+		parent::__construct( $main, $action );
 	}
 	public function execute()
 	{
@@ -21,21 +21,21 @@ class ApiConferenceLocationDelete extends ApiBase
 		$params = $this->extractRequestParams();
 		$request = $this->getRequest();
 		$user = $this->getUser();
-		if( !$user->isLoggedIn() )
+		if ( !$user->isLoggedIn() )
 		{
-			$this->dieUsageMsg(array('mustbeloggedin','Wiki'));
+			$this->dieUsageMsg( array( 'mustbeloggedin', 'Wiki' ) );
 		}
 		
 		$groups = $user->getGroups();
-		if( !in_array('sysop',$groups))
+		if ( !in_array( 'sysop', $groups ) )
 		{
-			$this->dieUsageMsg(array('badaccess-groups'));
+			$this->dieUsageMsg( array( 'badaccess-groups' ) );
 		}
 		
-		$sessionData = $request->getSessionData('conference');
-		if( !$sessionData )
+		$sessionData = $request->getSessionData( 'conference' );
+		if ( !$sessionData )
 		{
-			$this->dieUsage('No conference details were found in the session object for this user','noconfinsession');
+			$this->dieUsage( 'No conference details were found in the session object for this user', 'noconfinsession' );
 		}	
 		$roomNo = $params['roomno'];
 		// we are performing this check even though its gonna be done again in performDelete() function, 
@@ -43,23 +43,36 @@ class ApiConferenceLocationDelete extends ApiBase
 		$conferenceId = $sessionData['id'];
 		$conferenceTitle = $sessionData['title'];
 
-		$titleText = $conferenceTitle.'/locations/'.$roomNo;
-		$title = Title::newFromText($titleText);
-		if(!$title)
+		$titleText = $conferenceTitle . '/locations/' . $roomNo;
+		$title = Title::newFromText( $titleText );
+		if ( !$title )
 		{
 				
-			$this->dieUsageMsg(array('invalidtitle',$params['roomno']));
+			$this->dieUsageMsg( array( 'invalidtitle', $params['roomno'] ) );
 				
-		} elseif (!$title->exists()){
+		} elseif ( !$title->exists() ) {
 				
-			$this->dieUsageMsg(array('cannotdelete', 'this location'));
+			$this->dieUsageMsg( array( 'cannotdelete', 'this location' ) );
 		}
 
 		//now all the checks have been made
 		//do the actual delete
-		$result = EventLocation::performDelete($conferenceId, $roomNo);
+		$result = EventLocation::performDelete( $conferenceId, $roomNo );
+		if ( $result['done'] )
+		{
+			/* modify the template */
+			$conferenceTag = ConferenceUtils::loadFromConferenceTag( $conferenceId );
+			$days = CommonUtils::getAllConferenceDays( $conferenceTag['startDate'], $conferenceTag['endDate']);
+			foreach ( $days as $day )
+			{
+				$name = $conferenceTitle . '/' . $day;
+				$schedule = ConferenceSchedule::loadFromName( $name );
+				$dummyLocation = new EventLocation( $roomNo, null, null );
+				$schedule->deleteLocation( $dummyLocation );
+			}
+		}
 		$resultApi = $this->getResult();
-		$resultApi->addValue(null, $this->getModuleName(), $result);
+		$resultApi->addValue( null, $this->getModuleName(), $result );
 
 	}
 	private function mustValidateInputs($description , $url)
@@ -95,14 +108,14 @@ class ApiConferenceLocationDelete extends ApiBase
 	public function getPossibleErrors()
 	{
 		$user = $this->getUser();
-		return array_merge(parent::getPossibleErrors(), array(
-				array('mustbeloggedin','conference'),
-				array('invaliduser',$user->getName()),
-				array('badaccess-groups'),
-				array('missingparam','roomno'),
-				array('invalidtitle','roomno'),
-				array('cannot delete', 'this location')
-		));
+		return array_merge( parent::getPossibleErrors(), array(
+				array( 'mustbeloggedin', 'Wiki' ),
+				/*array('invaliduser',$user->getName()),*/
+				array( 'badaccess-groups' ),
+				array( 'missingparam', 'roomno' ),
+				array( 'invalidtitle', 'roomno' ),
+				array( 'cannot delete', 'this location' )
+		) );
 	}
 	public function getExamples()
 	{

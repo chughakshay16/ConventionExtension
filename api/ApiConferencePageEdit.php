@@ -7,9 +7,9 @@
  */
 class ApiConferencePageEdit extends ApiBase
 {
-	public function __construct($main, $action)
+	public function __construct( $main, $action )
 	{
-		parent::__construct($main,$action);
+		parent::__construct( $main,$action );
 	}
 	public function execute()
 	{
@@ -18,63 +18,63 @@ class ApiConferencePageEdit extends ApiBase
 		$request = $this->getRequest();
 		$user = $this->getUser();
 		$resultApi = $this->getResult();
-		if( !$user->isLoggedIn() )
+		if ( !$user->isLoggedIn() )
 		{
-			$this->dieUsageMsg(array('mustbeloggedin','Wiki'));
+			$this->dieUsageMsg( array( 'mustbeloggedin', 'Wiki' ) );
 		}
 		
 		$groups = $user->getGroups();
-		if( !in_array('sysop',$groups))
+		if ( !in_array( 'sysop', $groups ) )
 		{
-			$this->dieUsageMsg(array('badaccess-groups'));
+			$this->dieUsageMsg( array( 'badaccess-groups' ) );
 		}
 		
-		$sessionData = $request->getSessionData('conference');
-		if( !$sessionData )
+		$sessionData = $request->getSessionData( 'conference' );
+		if ( !$sessionData )
 		{
-			$this->dieUsage('No conference details were found in the session object for this user','noconfinsession');
+			$this->dieUsage( 'No conference details were found in the session object for this user', 'noconfinsession' );
 		}
-		$oldText = $sessionData['title'].'/pages/'.$params['pagetype'];
-		$newText = $sessionData['title'].'/pages/'.$params['pagetypeto'];
-		$oldTitle = Title::newFromText($oldText);
-		$newTitle = Title::newFromText($newText);
+		$oldText = $sessionData['title'] . '/pages/' . $params['pagetype'];
+		$newText = $sessionData['title'] . '/pages/' . $params['pagetypeto'];
+		$oldTitle = Title::newFromText( $oldText );
+		$newTitle = Title::newFromText( $newText );
 		$oldTalkPage = $oldTitle->getTalkPage();
 		$newTalkPage = $newTitle->getTalkPage();
 		# if pagetype and pagetypeto are same dont do anything, just send back what was given
-		if($params['pagetype']===$params['pagetypeto'])
+		if ( $params['pagetype'] === $params['pagetypeto'] )
 		{
-			$result['done']=true;
+			$result['done'] = true;
 			$result['pagetype'] = $params['pagetype'];
 			$result['pagetypeto'] = $params['pagetypeto'];
-			$result['urlto'] =$newTitle->getFullURL();
+			$result['urlto'] = $newTitle->getFullURL();
 			$result['msg'] = 'The details were successfully edited';
-			$resultApi->addValue(null, $this->getModuleName(),$result);
+			$resultApi->addValue( null, $this->getModuleName(), $result );
 			return ;
 		}
 		
-		if(!$oldTitle)
+		if ( !$oldTitle )
 		{
 				
-			$this->dieUsageMsg(array('invalidtitle',$params['pagetype']));
+			$this->dieUsageMsg( array( 'invalidtitle', $params['pagetype'] ) );
 				
-		} elseif (!$newTitle){
+		} elseif ( !$newTitle ) {
 				
-			$this->dieUsageMsg(array('invalidtitle',$params['pagetypeto']));
+			$this->dieUsageMsg( array( 'invalidtitle', $params['pagetypeto'] ) );
 				
-		} elseif (!$oldTitle->exists()){
+		} elseif ( !$oldTitle->exists() ) {
 				
-			$this->dieUsageMsg(array('nocreate-missing'));
+			$this->dieUsageMsg( array( 'nocreate-missing' ) );
 				
-		} elseif ($newTitle->exists()){
+		} elseif ( $newTitle->exists() ) {
 				
-			$this->dieUsageMsg(array(array('createonly-exists')));
+			$this->dieUsageMsg( array( array( 'createonly-exists' ) ) );
 				
-		} elseif ($oldTalkPage && $oldTalkPage->exists()){
+		} elseif ( $oldTalkPage && $oldTalkPage->exists() ) {
 				
 			//debug
 			//and do something about it
 				
-		} elseif ($newTalkPage && $newTalkPage->exists()){
+		} elseif ( $newTalkPage && $newTalkPage->exists() ) {
 				
 			//debug
 			//and do something about it
@@ -87,8 +87,8 @@ class ApiConferencePageEdit extends ApiBase
 		{
 			$this->dieUsageMsg( reset( $retval ) );
 		}
-		$result = ConferencePage::performEdit($sessionData['id'], $params['pagetypeto'], $params['pagetype']);
-		$resultApi->addValue(null, $this->getModuleName(), $result);
+		$result = ConferencePage::performEdit( $sessionData['id'], $params['pagetypeto'], $params['pagetype'] );
+		$resultApi->addValue( null, $this->getModuleName(), $result );
 	}
 	public function isWriteMode()
 	{
@@ -101,10 +101,10 @@ class ApiConferencePageEdit extends ApiBase
 	public function getAllowedParams()
 	{
 		return array(
-				'pagetype'=>array(
+				'pagetype'		=>array(
 						ApiBase::PARAM_TYPE=>'string',
 						ApiBase::PARAM_REQUIRED=>true),
-				'pagetypeto'=>array(
+				'pagetypeto'	=>array(
 						ApiBase::PARAM_TYPE=>'string',
 						ApiBase::PARAM_REQUIRED=>true)
 		);
@@ -112,8 +112,8 @@ class ApiConferencePageEdit extends ApiBase
 	public function getParamDescription()
 	{
 		return array(
-				'pagetype'=>'Type of the conference page',
-				'pagetypeto'=>'New type for the conference page'
+				'pagetype'		=> 'Type of the conference page',
+				'pagetypeto'	=> 'New type for the conference page'
 		);
 	}
 	public function getDescription()
@@ -122,17 +122,17 @@ class ApiConferencePageEdit extends ApiBase
 	}
 	public function getPossibleErrors()
 	{
-		return array_merge(parent::getPossibleErrors(), array(
-				array('mustbeloggedin', 'conference'),
-				array('badaccess-groups'),
-				array('invaliduser', $user->getName()),
-				array('missingparam','type'),
-				array('missingparam','typeto'),
-				array('invalidtitle','type'),
-				array('invalidtitle','typeto'),
-				array('createonly-exists'),
-				array('nocreate-missing')
-		));
+		return array_merge( parent::getPossibleErrors(), array(
+				array( 'mustbeloggedin', 'Wiki' ),
+				array( 'badaccess-groups' ),
+				/*array('invaliduser', $user->getName()),*/
+				array( 'missingparam', 'type' ),
+				array( 'missingparam', 'typeto' ),
+				array( 'invalidtitle', 'type' ),
+				array( 'invalidtitle', 'typeto' ),
+				array( 'createonly-exists' ),
+				array( 'nocreate-missing' )
+		) );
 	}
 	public function getExamples()
 	{

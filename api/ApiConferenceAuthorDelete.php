@@ -1,32 +1,32 @@
 <?php
 class ApiConferenceAuthorDelete extends ApiBase
 {
-	public function __construct($main, $action)
+	public function __construct( $main, $action )
 	{
-		parent::__construct($main, $action);
+		parent::__construct( $main, $action );
 	}
 	public function execute()
 	{
-		//only an author can delete itself
+		#only an author can delete itself
 		$user = $this->getUser();
-		if( !$user->isLoggedIn() )
+		if ( !$user->isLoggedIn() )
 		{
 				
-			$this->dieUsageMsg(array('mustbeloggedin','Wiki'));
+			$this->dieUsageMsg( array( 'mustbeloggedin', 'Wiki' ) );
 				
 		}
-		//no all the user checks are complete, now go for author checks
-		$isAuthor = UserUtils::isSpeaker($user->getId());
-		if($isAuthor)
+		#now go for author checks
+		$isAuthor = UserUtils::isSpeaker( $user->getId() );
+		if ( $isAuthor )
 		{
 				
-			$result=ConferenceAuthor::performAuthorDelete($user->getId());
+			$result = ConferenceAuthor::performAuthorDelete( $user->getId() );
 			$resultApi = $this->getResult();
-			$resultApi->addValue(null, $this->getModuleName(), $result);
+			$resultApi->addValue( null, $this->getModuleName(), $result );
 				
 		} else {
 				
-			$this->dieUsageMsg(array('badaccess-groups'));
+			$this->dieUsageMsg( array( 'badaccess-groups' ) );
 				
 		}
 
@@ -56,11 +56,11 @@ class ApiConferenceAuthorDelete extends ApiBase
 	public function getPossibleErrors()
 	{
 		$user = $this->getUser();
-		return array_merge(parent::getPossibleErrors(), array(
-				array('mustbeloggedin','conference'),
-				array('invaliduser',$user->getName()),
-				array('badaccess-groups')
-		));
+		return array_merge( parent::getPossibleErrors(), array(
+				array( 'mustbeloggedin', 'Wiki' ),
+				array( 'invaliduser', $user->getName() ),
+				array( 'badaccess-groups' )
+		) );
 	}
 	public function getExamples()
 	{

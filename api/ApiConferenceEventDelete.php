@@ -7,9 +7,9 @@
  */
 class ApiConferenceEventDelete extends ApiBase
 {
-	public function __construct($main, $action)
+	public function __construct( $main, $action )
 	{
-		parent::__construct($main, $action);
+		parent::__construct( $main, $action );
 	}
 	public function execute()
 	{
@@ -18,33 +18,33 @@ class ApiConferenceEventDelete extends ApiBase
 
 		$request = $this->getRequest();
 		$user = $this->getUser();
-		if( !$user->isLoggedIn() )
+		if ( !$user->isLoggedIn() )
 		{
-			$this->dieUsageMsg(array('mustbeloggedin','Wiki'));
+			$this->dieUsageMsg( array( 'mustbeloggedin', 'Wiki' ) );
 		}
 		
 		$groups = $user->getGroups();
-		if( !in_array('sysop',$groups))
+		if ( !in_array( 'sysop', $groups ) )
 		{
-			$this->dieUsageMsg(array('badaccess-groups'));
+			$this->dieUsageMsg( array( 'badaccess-groups' ) );
 		}
 		
-		$sessionData = $request->getSessionData('conference');
-		if( !$sessionData )
+		$sessionData = $request->getSessionData( 'conference' );
+		if ( !$sessionData )
 		{
-			$this->dieUsage('No conference details were found in the session object for this user','noconfinsession');
+			$this->dieUsage( 'No conference details were found in the session object for this user', 'noconfinsession' );
 		}
 		$startTime = $params['starttime'];
 		$endTime = $params['endtime'];
 		$day = $params['day'];
 		$topic = $params['topic'];
 		$group = $params['group'];
-		$day = str_replace('/','',$day);
+		$day = str_replace( '/', '', $day );
 		//now check for the validity of location and event titles
 		$conferenceId = $sessionData['id'];
 		$conferenceTitle = $sessionData['title'];
-		$errors = $this->mustValidateInputs($startTime, $endTime , $day, $topic, $group);
-		if(count($errors))
+		$errors = $this->mustValidateInputs( $startTime, $endTime , $day, $topic, $group );
+		if ( count( $errors ) )
 		{
 				
 			//depending on the error
@@ -52,25 +52,30 @@ class ApiConferenceEventDelete extends ApiBase
 				
 		}
 
-		$eventTitleText = $conferenceTitle.'/events/'.$topic.'-'.$day.'-'.$startTime.'-'.$endTime.'-'.$group;
-		$eventTitle = Title::newFromText($eventTitleText);
-		if(!$eventTitle)
+		$eventTitleText = $conferenceTitle . '/events/' . $topic . '-' . $day . '-' . $startTime . '-' . $endTime . '-' . $group;
+		$eventTitle = Title::newFromText( $eventTitleText );
+		if ( !$eventTitle )
 		{
 				
-			$this->dieUsageMsg(array('invalidtitle','Title created with the params passed'));
+			$this->dieUsageMsg( array( 'invalidtitle', 'Title created with the params passed' ) );
 				
-		} elseif (!$eventTitle->exists()){
+		} elseif ( !$eventTitle->exists() ) {
 				
-			$this->dieUsageMsg(array('cannotdelete','this event'));
+			$this->dieUsageMsg( array( 'cannotdelete', 'this event' ) );
 				
 		}
 
 
-		$result = ConferenceEvent::performDelete($conferenceId, $startTime, $endTime, $day, $topic, $group);
+		$result = ConferenceEvent::performDelete( $conferenceId, $startTime, $endTime, $day, $topic, $group );
+		$dummyEvent = new ConferenceEvent( null, $startTime, $endTime, $day, $topic, $group );
+		$dateArray = CommonUtils::parseDate( $day );
+		$name = $conferenceTitle . '/' . $dateArray['month'] . ' ' . $dateArray['date'] . ', ' . $dateArray['year'];
+		$schedule = ConferenceSchedule::loadFromName( $name );
+		$schedule->deleteEvent( $dummyEvent );
 		$resultApi = $this->getResult();
-		$resultApi->addValue(null, $this->getModuleName(), $result);
+		$resultApi->addValue( null, $this->getModuleName(), $result );
 	}
-	private function mustValidateInputs($startTime, $endTime, $day, $topic, $group)
+	private function mustValidateInputs( $startTime, $endTime, $day, $topic, $group )
 	{
 		//no need to perform null checks as none of the values passed will be null
 	}
@@ -85,19 +90,19 @@ class ApiConferenceEventDelete extends ApiBase
 	public function getAllowedParams()
 	{
 		return array(
-				'starttime'=>array(
+				'starttime'	=>array(
 						ApiBase::PARAM_TYPE=>'string',
 						ApiBase::PARAM_REQUIRED=>true),
-				'endtime'=>array(
+				'endtime'	=>array(
 						ApiBase::PARAM_TYPE=>'string',
 						ApiBase::PARAM_REQUIRED=>true),
-				'topic'=>array(
+				'topic'		=>array(
 						ApiBase::PARAM_TYPE=>'string',
 						ApiBase::PARAM_REQUIRED=>true),
-				'group'=>array(
+				'group'		=>array(
 						ApiBase::PARAM_TYPE=>'string',
 						ApiBase::PARAM_REQUIRED=>true),
-				'day'=>array(
+				'day'		=>array(
 						ApiBase::PARAM_TYPE=>'string',
 						ApiBase::PARAM_REQUIRED=>true)
 		);
@@ -105,11 +110,11 @@ class ApiConferenceEventDelete extends ApiBase
 	public function getParamDescription()
 	{
 		return array(
-				'starttime'=>'Starting time of the event',
-				'endtime'=>'Ending time of the event',
-				'topic'=>'Topic of the event',
-				'group'=>'Group that will be attending this event',
-				'day'=>'Day on which this event will happen'
+				'starttime'	=> 'Starting time of the event',
+				'endtime'	=> 'Ending time of the event',
+				'topic'		=> 'Topic of the event',
+				'group'		=> 'Group that will be attending this event',
+				'day'		=> 'Day on which this event will happen'
 		);
 	}
 	public function getDescription()
@@ -119,18 +124,18 @@ class ApiConferenceEventDelete extends ApiBase
 	public function getPossibleErrors()
 	{
 		$user = $this->getUser();
-		return array_merge(parent::getPossibleErrors(), array(
-				array('mustbeloggedin', 'conference'),
-				array('badaccess-groups'),
-				array('invaliduser', $user->getName()),
-				array('invalidtitle', 'Title created with passed params'),
-				array('cannotdelete','this event'),
-				array('missingparam','starttime'),
-				array('missingparam','endtime'),
-				array('missingparam','topic'),
-				array('missingparam','group'),
-				array('missingparam','day'),
-		));
+		return array_merge( parent::getPossibleErrors(), array(
+				array( 'mustbeloggedin', 'Wiki' ),
+				array( 'badaccess-groups' ),
+				/*array( 'invaliduser', $user->getName() ),*/
+				array( 'invalidtitle', 'Title created with passed params' ),
+				array( 'cannotdelete', 'this event' ),
+				array( 'missingparam', 'starttime' ),
+				array( 'missingparam', 'endtime' ),
+				array( 'missingparam', 'topic' ),
+				array( 'missingparam', 'group' ),
+				array( 'missingparam', 'day' ),
+		) );
 	}
 	public function getExamples()
 	{

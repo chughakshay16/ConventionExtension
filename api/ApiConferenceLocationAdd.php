@@ -1,30 +1,30 @@
 <?php
 class ApiConferenceLocationAdd extends ApiBase
 {
-	public function __construct($main , $action)
+	public function __construct( $main , $action )
 	{
-		parent::__construct($main, $action);
+		parent::__construct( $main, $action );
 	}
 	public function execute()
 	{
 		$params = $this->extractRequestParams();
 		$request = $this->getRequest();
 		$user = $this->getUser();
-		if( !$user->isLoggedIn() )
+		if ( !$user->isLoggedIn() )
 		{
-			$this->dieUsageMsg(array('mustbeloggedin','Wiki'));
+			$this->dieUsageMsg( array( 'mustbeloggedin', 'Wiki' ) );
 		}
 		
 		$groups = $user->getGroups();
-		if( !in_array('sysop',$groups))
+		if ( !in_array( 'sysop', $groups ) )
 		{
-			$this->dieUsageMsg(array('badaccess-groups'));
+			$this->dieUsageMsg( array( 'badaccess-groups' ) );
 		}
 		
-		$sessionData = $request->getSessionData('conference');
-		if( !$sessionData )
+		$sessionData = $request->getSessionData( 'conference' );
+		if ( !$sessionData )
 		{
-			$this->dieUsage('No conference details were found in the session object for this user','noconfinsession');
+			$this->dieUsage( 'No conference details were found in the session object for this user', 'noconfinsession' );
 		}		
 		$roomNo = $params['roomno'];
 		$description = $params['description'];
@@ -33,53 +33,63 @@ class ApiConferenceLocationAdd extends ApiBase
 		$conferenceId = $sessionData['id'];
 		$conferenceTitle = $sessionData['title'];
 
-		$titleText = $conferenceTitle.'/locations/'.$roomNo;
-		$title = Title::newFromText($titleText);
-		if (!$title)
+		$titleText = $conferenceTitle . '/locations/' . $roomNo;
+		$title = Title::newFromText( $titleText );
+		if ( !$title )
 		{
 				
-			$this->dieUsageMsg(array('invalidtitle',$params['roomno']));
+			$this->dieUsageMsg( array( 'invalidtitle', $params['roomno'] ) );
 				
-		} elseif ($title->exists()) {
+		} elseif ( $title->exists() ) {
 				
-			$this->dieUsageMsg(array('createonly-exists'));
+			$this->dieUsageMsg( array( 'createonly-exists' ) );
 				
 		}
 
 
 		//now we have checked the validity of roomno
 		//go and validate the other inputs if at all they are passed
-		$errors = $this->mustValidateInputs($description, $url);
-		if(count($errors))
+		$errors = $this->mustValidateInputs( $description, $url );
+		if ( count( $errors ) )
 		{
 			//depending on the error
 			//$this->dieUsageMsg(array('spamdetected',put the parameter due to which error was thrown))
 		}
-		$location = EventLocation::createFromScratch($conferenceId, $roomNo, $description, $url);
+		$location = EventLocation::createFromScratch( $conferenceId, $roomNo, $description, $url );
 		//now we need to check if the creation process went well
 		$resultApi = $this->getResult();
-		if($location && $location->getLocationId())
+		if ( $location && $location->getLocationId() )
 		{
 				
-			$result['done']=true;
-			$result['id']=$location->getLocationId();
+			/* modify the template */
+			$conferenceTag = ConferenceUtils::loadFromConferenceTag( $conferenceId );
+			$days = CommonUtils::getAllConferenceDays( $conferenceTag['startDate'], $conferenceTag['endDate'] );
+			foreach ( $days as $day )
+			{
+				$name = $conferenceTitle . '/' . $day;
+				$schedule = ConferenceSchedule::loadFromName( $name );
+				$schedule->addLocation( $location );
+			}
+			
+			$result['done'] = true;
+			$result['id'] = $location->getLocationId();
 			$result['roomno'] = $roomNo;
 			$result['description'] = $description;
 			$result['url'] = $url;
-			$locUrl = Title::makeTitle(NS_MAIN,$title->getDBkey())->getFullURL();
+			$locUrl = Title::makeTitle( NS_MAIN, $title->getDBkey() )->getFullURL();
 			$result['locurl'] = $locUrl;
 			$result['msg'] = 'The location was successfully added';
-			$resultApi->addValue(null, $this->getModuleName(), $result);
+			$resultApi->addValue( null, $this->getModuleName(), $result );
 				
 		} else {
 				
-			$result['done']=false;
+			$result['done'] = false;
 			$result['msg'] = 'The location could not be added . Try again .';
-			$resultApi->addValue(null, $this->getModuleName(), $result);
+			$resultApi->addValue( null, $this->getModuleName(), $result );
 				
 		}
 	}
-	private function mustValidateInputs($description , $url)
+	private function mustValidateInputs( $description , $url )
 	{
 		//dont throw errors if values are null
 		return array();
@@ -95,19 +105,19 @@ class ApiConferenceLocationAdd extends ApiBase
 	public function getAllowedParams()
 	{
 		return array(
-				'roomno'=>array(
+				'roomno'		=>array(
 						ApiBase::PARAM_TYPE=>'string',
 						ApiBase::PARAM_REQUIRED=>true),
-				'description'=>null,
-				'url'=>null
+				'description'	=>null,
+				'url'			=>null
 		);
 	}
 	public function getParamDescription()
 	{
 		return array(
-				'roomno'=>'Room no of the location',
-				'description'=>'Description of the location',
-				'url'=>'Url for the image of the location'
+				'roomno'		=> 'Room no of the location',
+				'description'	=> 'Description of the location',
+				'url'			=> 'Url for the image of the location'
 		);
 	}
 	public function getDescription()
@@ -117,13 +127,13 @@ class ApiConferenceLocationAdd extends ApiBase
 	public function getPossibleErrors()
 	{
 		$user = $this->getUser();
-		return array_merge(parent::getPossibleErrors(), array(
-				array('mustbeloggedin','conference'),
-				array('invaliduser',$user->getName()),
-				array('badaccess-groups'),
-				array('missingparam','roomno'),
-				array('invalidtitle','roomno'),
-				array('createonly-exists')
+		return array_merge( parent::getPossibleErrors(), array(
+				array( 'mustbeloggedin', 'Wiki' ),
+				/*array( 'invaliduser',$user->getName()),*/
+				array( 'badaccess-groups' ),
+				array( 'missingparam', 'roomno' ),
+				array( 'invalidtitle', 'roomno' ),
+				array( 'createonly-exists' )
 		));
 	}
 	public function getExamples()

@@ -4,13 +4,16 @@
  * @todo see line 74
  * @todo complete mustValidateInputs()
  * @author chughakshay16
+ * Concept :
+ * Even if a move operation is performed on a location wiki page (due to change in room no.) nothing would 
+ * have to be changed for an event wiki page( as it will still point to the correct location page -- in move operation page_id is not changed)
  *
  */
 class ApiConferenceLocationEdit extends ApiBase
 {
-	public function __construct($main, $action)
+	public function __construct( $main, $action )
 	{
-		parent::__construct($main, $action);
+		parent::__construct( $main, $action );
 	}
 	public function execute()
 	{
@@ -20,25 +23,25 @@ class ApiConferenceLocationEdit extends ApiBase
 		
 		$request = $this->getRequest();
 		$user = $this->getUser();
-		if( !$user->isLoggedIn() )
+		if ( !$user->isLoggedIn() )
 		{
-			$this->dieUsageMsg(array('mustbeloggedin','Wiki'));
+			$this->dieUsageMsg( array( 'mustbeloggedin', 'Wiki' ) );
 		}
 		
 		$groups = $user->getGroups();
-		if( !in_array('sysop',$groups))
+		if ( !in_array( 'sysop', $groups))
 		{
-			$this->dieUsageMsg(array('badaccess-groups'));
+			$this->dieUsageMsg( array( 'badaccess-groups' ) );
 		}
 		
-		$sessionData = $request->getSessionData('conference');
-		if( !$sessionData )
+		$sessionData = $request->getSessionData( 'conference' );
+		if ( !$sessionData )
 		{
-			$this->dieUsage('No conference details were found in the session object for this user','noconfinsession');
+			$this->dieUsage( 'No conference details were found in the session object for this user', 'noconfinsession' );
 		}
-		if (!isset($params['description']) && !isset($params['url']) && !isset($params['roomnoto'])){
+		if ( !isset( $params['description'] ) && !isset( $params['url'] ) && !isset( $params['roomnoto'] ) ){
 			
-			$this->dieUsage('Atleast params except roomno should be passed in the request','atleastparam');
+			$this->dieUsage( 'Atleast params except roomno should be passed in the request', 'atleastparam' );
 			
 		} else {
 			
@@ -53,52 +56,51 @@ class ApiConferenceLocationEdit extends ApiBase
 		//we dont need to check the validity of location title , or do we ?
 		$conferenceId = $sessionData['id'];
 		$conferenceTitle =$sessionData['title'];
-		
-		$titleText = $conferenceTitle.'/locations/'.$roomNo;
-		$title = Title::newFromText($titleText);
-		if(!$title)
+		$titleText = $conferenceTitle . '/locations/' . $roomNo;
+		$title = Title::newFromText( $titleText );
+		if ( !$title )
 		{
 			
-			$this->dieUsageMsg(array('invalidtitle',$params['roomno']));
+			$this->dieUsageMsg( array( 'invalidtitle', $params['roomno'] ) );
 			
-		} elseif (!$title->exists()){
+		} elseif ( !$title->exists() ) {
 			
-			$this->dieUsageMsg(array('nocreate-missing'));
+			$this->dieUsageMsg( array( 'nocreate-missing' ) );
 			
 		} else {
-			$errors = $this->mustValidate($params['roomno']);
-			if(count($errors))
+			$errors = $this->mustValidate( $params['roomno'] );
+			if( count( $errors ) )
 			{
-				$this->dieUsageMsg(array('invalidtitle',$params['roomno']));
+				$this->dieUsageMsg( array( 'invalidtitle', $params['roomno'] ) );
 			}
 		}
 		
-		$errors = $this->mustValidateInputs($description, $url);
-		if(count($errors))
+		$errors = $this->mustValidateInputs( $description, $url );
+		if ( count( $errors ) )
 		{
 			
 			//depending on the error
 					//$this->dieUsageMsg(array('spamdetected',put the parameter due to which error was thrown))
 			
 		} else {
-			if ($roomNoTo!=$roomNo && $roomNoTo)
+			if ( $roomNoTo != $roomNo && $roomNoTo )
 			{
 				
 				//its a big change need to think about it
 				//now we need to check the validity of roomnoto 
-				$toTitleText = $conferenceTitle.'/locations/'.$roomNoTo;
-				$titleTo = Title::newFromText($toTitleText);
-				if(!$titleTo)
+				$toTitleText = $conferenceTitle . '/locations/' . $roomNoTo;
+				$titleTo = Title::newFromText( $toTitleText );
+				if ( !$titleTo )
 				{
-					$this->dieUsageMsg(array('invalidtitle',$params['roomnoto']));
+					$this->dieUsageMsg( array( 'invalidtitle', $params['roomnoto'] ) );
 					
-				} elseif ($titleTo->exists()){
+				} elseif ( $titleTo->exists() ) {
 					
-					$this->dieUsageMsg(array('createonly-exists'));
+					$this->dieUsageMsg( array( 'createonly-exists' ) );
 					
 				}
-				$errors = $this->mustValidate($roomNoTo);//this step could totally be skipped by just passing the default type in getAllowedParams()
-				if(count($errors))
+				$errors = $this->mustValidate( $roomNoTo );//this step could totally be skipped by just passing the default type in getAllowedParams()
+				if ( count( $errors ) )
 				{
 					
 					//depending on the error
@@ -117,7 +119,7 @@ class ApiConferenceLocationEdit extends ApiBase
 				$oldTalkPage = $title->getTalkPage();
 				$newTalkPage = $titleTo->getTalkPage();
 				//have a small doubt here that is it possible to have a talk page and not a user page
-				if($newTalkPage->exists() || $oldTalkPage->exists())
+				if ( $newTalkPage->exists() || $oldTalkPage->exists() )
 				{
 					//debug this error
 					//and do something about it
@@ -133,19 +135,28 @@ class ApiConferenceLocationEdit extends ApiBase
 					
 					$this->dieUsageMsg( reset( $retval ) );
 				}
+				/* modify the template */
+				$conferenceTag = ConferenceUtils::loadFromConferenceTag( $conferenceId );
+				$days = CommonUtils::getAllConferenceDays( $conferenceTag['startDate'], $conferenceTag['endDate']);
+				foreach ( $days as $day )
+				{
+					$name = $conferenceTitle . '/' . $day;
+					$schedule = ConferenceSchedule::loadFromName( $name );
+					$schedule->editLocation(new EventLocation( $roomNo, null, null ), new EventLocation( $roomNoTo , null, null ) );
+				}
 				$roomNo = $roomNoTo;
 				
 			} 
-			$result=EventLocation::performEdit($conferenceId, $roomNo, $description, $url);
+			$result = EventLocation::performEdit( $conferenceId, $roomNo, $description, $url );
 			$resultApi = $this->getResult();
-			$resultApi->addValue(null, $this->getModuleName(), $result);
+			$resultApi->addValue( null, $this->getModuleName(), $result );
 		}
 	}
-	private function mustValidateInputs($description , $url)
+	private function mustValidateInputs( $description , $url )
 	{
 		return array();
 	}
-	private function mustValidate($roomno)
+	private function mustValidate( $roomno )
 	{
 		return array();
 	}
@@ -160,21 +171,21 @@ class ApiConferenceLocationEdit extends ApiBase
 	public function getAllowedParams()
 	{
 		return array(
-		'roomno'=>array(
-		ApiBase::PARAM_TYPE=>'string',
-		ApiBase::PARAM_REQUIRED=>true),
-		'roomnoto'=>null,
-		'description'=>null,
-		'url'=>null
+		'roomno'		=>array(
+			ApiBase::PARAM_TYPE=>'string',
+			ApiBase::PARAM_REQUIRED=>true),
+		'roomnoto'		=>null,
+		'description'	=>null,
+		'url'			=>null
 		);	
 	}
 	public function getParamDescription()
 	{
 		return array(
-		'roomno'=>'Room no of the location',
-		'roomnoto'=>'New room no of the location',
-		'description'=>'Description of the location',
-		'url'=>'Url which points to the image of the location'
+		'roomno'		=> 'Room no of the location',
+		'roomnoto'		=> 'New room no of the location',
+		'description'	=> 'Description of the location',
+		'url'			=> 'Url which points to the image of the location'
 		);
 	}
 	public function getDescription()
@@ -185,15 +196,15 @@ class ApiConferenceLocationEdit extends ApiBase
 	{	
 		$user = $this->getUser();
 		return array_merge(parent::getPossibleErrors(), array(
-		array('mustbeloggedin','conference'),
-		array('invaliduser',$user->getName()),
-		array('badaccess-groups'),
-		array('missingparam','roomno'),
-		array('code'=>'atleastparam','info'=>'Atleast params except roomno should be passed in the request'),
-		array('invalidtitle','roomno'),
-		array('invalidtitle','roomnoto'),
-		array('createonly-exists'),
-		array('nocreate-missing'),
+		array( 'mustbeloggedin', 'conference' ),
+		/*array('invaliduser',$user->getName()),*/
+		array( 'badaccess-groups' ),
+		array( 'missingparam', 'roomno' ),
+		array( 'code' => 'atleastparam', 'info' => 'Atleast params except roomno should be passed in the request' ),
+		array( 'invalidtitle', 'roomno' ),
+		array( 'invalidtitle', 'roomnoto' ),
+		array( 'createonly-exists' ),
+		array( 'nocreate-missing' ),
 		));
 	}
 	public function getExamples()
