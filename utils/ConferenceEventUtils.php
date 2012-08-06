@@ -10,27 +10,27 @@ class ConferenceEventUtils
 	 * is part of 
 	 * @param unknown_type $locationId
 	 */
-	public static function isPartOfAnyEvent($locationId)
+	public static function isPartOfAnyEvent( $locationId )
 	{
-		$dbr=wfGetDB(DB_SLAVE);
+		$dbr = wfGetDB( DB_SLAVE );
 		//important thing to remember here is that we can get more than one rows in the result set as more than 
 		//one event can point to the same location
-		$result=$dbr->select("page_props",
+		$result = $dbr->select( "page_props",
 		"*",
-		array("pp_propname"=>"cvext-event-location","pp_value"=>$locationId),
+		array( "pp_propname" => "cvext-event-location", "pp_value" => $locationId ),
 		__METHOD__,
 		array(),
-		array());
-		return $dbr->numRows($result)?true:false;
+		array() );
+		return $dbr->numRows( $result ) ? true : false;
 	}
 	
 	
-	public static function getLocationId($eventId)
+	public static function getLocationId( $eventId )
 	{
-		$dbr = wfGetDB(DB_SLAVE);
-		$res = $dbr->selectRow('page_props',
+		$dbr = wfGetDB( DB_SLAVE );
+		$res = $dbr->selectRow( 'page_props',
 				'pp_value',
-				array('pp_propname'=>'cvext-event-location','pp_page'=>$eventId));
+				array( 'pp_propname' => 'cvext-event-location', 'pp_page' => $eventId ) );
 		return $res ? $res->pp_value : null;
 	}
 }
