@@ -14,13 +14,25 @@ $wgExtensionCredits[ 'other' ][] = array(
 	'path' => __FILE__,
 	'name' => 'Convention Extension',
 	'author' =>'Akshay Chugh', 
-	'url' => 'https://www.mediawiki.org/wiki/Extension:Example', 
+	'url' => 'https://www.mediawiki.org/wiki/Extension:ConventionExtension', 
 	'description' => 'An extension to convert a wiki into a conference management system',
 	'version'  => 1.0,
 );
 $wgCurrentDir = dirname( __FILE__ ).'/';
+$extParserConf = array(
+		'class' => 'Parser',
+);
+$cvextParser = new StubObject( 'cvextParser', $extParserConf['class'], array( $extParserConf ) );
 
-/* model classes */
+/* variables (configuration)*/
+$wgModifySidebar = true;
+/*
+ *  an array specifying the index for categories within a page and posts within a category
+ *  $wgCategoryPostTree = array(array('category' => category-name, 'posts' => array('post1', 'post2'....))
+ */
+$wgCategoryPostTree = array();
+
+/* core and util classes */
 $wgAutoloadClasses['ConferenceUtils']=$wgCurrentDir.'utils/ConferenceUtils.php';
 $wgAutoloadClasses['ConferenceAuthorUtils']=$wgCurrentDir.'utils/ConferenceAuthorUtils.php';
 $wgAutoloadClasses['ConferenceAccountUtils']=$wgCurrentDir.'utils/ConferenceAccountUtils.php';
@@ -38,6 +50,9 @@ $wgAutoloadClasses['ConferenceRegistration']=$wgCurrentDir.'model/ConferenceRegi
 $wgAutoloadClasses['ConferencePassportInfo']=$wgCurrentDir.'model/ConferencePassportInfo.php';
 $wgAutoloadClasses['AuthorSubmission']=$wgCurrentDir.'model/AuthorSubmission.php';
 $wgAutoloadClasses['ConferenceHooks']=$wgCurrentDir.'ConferenceHooks.php';
+$wgAutoloadClasses['ConferenceScheduleTable'] = $wgCurrentDir.'model/ConferenceScheduleTable.php';
+$wgAutoloadClasses['CommonUtils'] = $wgCurrentDir.'utils/CommonUtils.php';
+$wgAutoloadClasses['ConferenceSchedule'] = $wgCurrentDir.'model/ConferenceSchedule.php';
 
 /* sample Special Page, will eventually be removed */
 $wgAutoloadClasses['SpecialSample']=$wgCurrentDir.'sample/SpecialSample.php';
@@ -92,8 +107,9 @@ $wgAPIModules['loccreate']='ApiConferenceLocationAdd';
 $wgAutoloadClasses['ApiConferenceEdit']=$wgCurrentDir.'api/ApiConferenceEdit.php';
 $wgAPIModules['confedit']='ApiConferenceEdit';
 
-/* other */
-$wgExtensionMessagesFiles['ConferenceSetup']=$wgCurrentDir.'ConventionExtension.i18n.php';
+/* message files */
+$wgExtensionMessagesFiles['ConventionExtension'] = $wgCurrentDir.'ConventionExtension.i18n.php';
+$wgExtensionMessagesFiles['ConventionExtensionMagic'] = $wgCurrentDir.'ConventionExtension.i18n.magic.php';
 
 /* resource modules */
 $wgResourceModules['ext.conventionExtension.confsetup']=array(
@@ -101,7 +117,7 @@ $wgResourceModules['ext.conventionExtension.confsetup']=array(
 	'dependencies'		=>'jquery.ui.datepicker',
 	'styles'			=>'conference.setup.css',
 	'localBasePath'		=>$wgCurrentDir.'resources/conference.setup',
-	'remoteExtPath'		=>'ConventionExtension/resources/conference.setup');
+	'remoteBasePath'		=>'ConventionExtension/resources/conference.setup');
 $wgResourceModules['ext.conventionExtension.authorregister']=array(
 	'scripts'			=>'conference.author.register.js',
 	'styles'			=>'conference.author.register.css',
@@ -116,8 +132,12 @@ $wgResourceModules['ext.conventionExtension.dashboard']=array(
 	'remoteBasePath'	=>'ConventionExtension/resources/conference.dashboard'
 );
 
-/* parser tag and test hooks */
+/* hooks */
+$wgHooks['SkinBuildSidebar'][] = 'ConferenceHooks::modifySidebar';
+$wgHooks['BeforePageDisplay'][] = 'ConferenceHooks::beforeTemplateDisplay';
 $wgHooks['ParserFirstCallInit'][]='ConferenceHooks::onParserFirstCallInit';
+$wgHooks['ParserGetVariableValueSwitch'][] = 'ConferenceHooks::assignMagicWords';
+$wgHooks['MagicWordwgVariableIDs'][] = 'ConferenceHooks::declareMagicIds';
 $wgHooks['UnitTestsList'][] = 'registerUnitTests';
 function registerUnitTests( &$files ) {
 
@@ -125,7 +145,6 @@ function registerUnitTests( &$files ) {
         $files[] = $wgCurrentDir . 'tests/ConferenceTest.php';
         return true;
 }
-
 
 $wgCountries = array("Unspecified",
 		"Afghanistan",
