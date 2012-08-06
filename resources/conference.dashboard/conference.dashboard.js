@@ -156,10 +156,11 @@
 							.end();
 						}	
 					} else {
+						msg = jsondata.error.info;
 						$(parent).parent()
 						.find('td > img')
 							.remove()
-							.after('   '+result.msg)
+							.after('   '+msg)
 						.end();
 					}		
 						
@@ -723,6 +724,17 @@
 						{
 							if(result['done'])
 							{
+								$('#cvext-dashsection-lcts fieldset:first')
+								.find('input:text:first')
+									.val('')
+								.end()	
+								.find('input:text:eq(1)')
+									.val('')
+								.end()
+								.find('input:text:eq(2)')
+									.val('')
+								.end();
+								
 								$fieldSets
 								.filter('fieldset:last')
 									.find('tbody')

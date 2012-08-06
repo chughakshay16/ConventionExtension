@@ -1,0 +1,33 @@
+tr#date-head {
+	background-color: #D8D8D8;
+	text-align: center;
+}
+
+tr#loc-head {
+	background-color: #F2F2F2;
+}
+
+td.timeslot-cell {
+	background-color: #F9F9F9;
+	height: 13px;
+	text-align: center;
+}
+
+td.loc-cell {
+	text-align: center;
+	width: 150px;
+}
+
+td#loc-empty {
+	height: 13px;
+	text-align: center;
+	vertical-align: bottom;
+	width: 150px;
+}
+td.event-cell {
+	vertical-align: top;
+}
+
+tr.event-row {
+}
+
