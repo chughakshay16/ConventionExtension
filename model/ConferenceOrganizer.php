@@ -173,7 +173,7 @@ class ConferenceOrganizer
 			$postString = $matches[2][0];
 			$categoryArray = explode(',', $categoryString);
 			$postArray = explode(',', $postString);
-			//The rule of thumb is that (category,post) combination should not be the same for the user in the same conference
+			//The rule of thumb is that (category,post) combination should not be same for a particular user in the same conference
 			$available = false;
 			foreach ($categoryArray as $index=>$category)
 			{
@@ -350,6 +350,23 @@ class ConferenceOrganizer
 
 		
 	}
+	public function getPostWikiText($user = null, $post)
+	{
+		$user = $user ? $user : User::newFromId($this->mUserId);
+		$userLink = $user->getUserPage()->getPrefixedDBKey();
+		$postSectionText = "===".$post."=== \n";
+		$realName = $user->getRealName();
+		$postSectionText .= "*'''[[".$userLink.'|'.($realName ? $realName : $user->getName())."]]''' \n";
+		$postSectionText .= "** Email : \n";
+		$postSectionText .= "** Phone : \n";
+		$postSectionText .= "** Cellphone : \n";
+		$postSectionText .= "** Skype : \n";
+		$postSectionText .= "** Other Contacts : \n";
+		$postSectionText .= "** City/Timezone : \n";
+		$postSectionText .= "** Accessibility : \n";
+		$postSectionText .= "** Languages : \n";
+		return $postSectionText;
+	}
 	/**
 	 * 
 	 * Parser Hook function
@@ -384,6 +401,20 @@ class ConferenceOrganizer
 		}
 		
 		return '';
+	}
+	public static function newFromUser($user, $conferenceTitle)
+	{
+		global $wgUser;
+		$user = $user ? $user : $wgUser;
+		$username = $user->getName();
+		$orgTitle = Title::newFromText($conferenceTitle.'/organizers/'.$username);
+		if($orgTitle && $orgTitle->exists())
+		{
+			$orgId = $orgTitle->getArticleID();
+			$organizer = self::loadFromId($orgId);
+			return $organizer;
+		}
+		return null;
 	}	
 	/**
 	 * 

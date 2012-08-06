@@ -182,7 +182,7 @@ class AuthorSubmission
 	 */
 	public function getDBKey()
 	{
-		$dbr = wfGetDB( DB_SLAVE );
+		/*$dbr = wfGetDB( DB_SLAVE );
 		if($this->getId())
 		{
 			$resultRow = $dbr->selectRow('page',
@@ -191,7 +191,15 @@ class AuthorSubmission
 			);
 		} 
 		
-		return $resultRow ? $resultRow->page_title : null ;
+		return $resultRow ? $resultRow->page_title : null ;*/
+		/* as suggested */
+		if($this->getId())
+		{
+			$id = $this->getId();			
+			$title = Title::newFromID($id);
+			return $title->getDBkey();
+		}
+		return null;
 	}
 	/**
 	 * 
