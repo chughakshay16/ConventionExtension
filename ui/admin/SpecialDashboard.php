@@ -60,12 +60,14 @@ class SpecialDashboard extends SpecialPage
 			if(!$title && false)
 			{
 
-				$out->addHTML($this->invalidParValue());
+				/*$out->addHTML($this->invalidParValue());*/
+				$out->addHTML($this->loadErrorPage('dash-invalid-par'));
 
 			} elseif (!$title->exists()) {
 
 				//title doesnt exist
-				$out->addHTML($this->titleNotExists());
+				/*$out->addHTML($this->titleNotExists());*/
+				$out->addHTML($this->loadErrorPage('dash-no-conference'));
 
 			} else {
 				//valid title and exists
@@ -73,15 +75,16 @@ class SpecialDashboard extends SpecialPage
 					
 				if(!$user->isLoggedIn())
 				{
-					$out->addHTML($this->userNotLogged());
+					/*$out->addHTML($this->userNotLogged());*/
+					$out->addHTML($this->loadErrorPage('dash-user-notlogged'));
 
 				} else {
 					$groups = $user->getGroups();
-					if(session_id()=='')
+					/*if(session_id()=='')
 					{
 						//this step is not necessary because if a cookie is passed along in the request then the session must have started in Setup.php
 						wfSetupSession();
-					}
+					}*/
 					if(in_array('sysop',$groups))
 					{
 							
@@ -121,7 +124,8 @@ class SpecialDashboard extends SpecialPage
 							
 					} else {
 							
-						$out->addHTML($this->userNoRights());
+						/*$out->addHTML($this->userNoRights());*/
+						$out->addHTML($this->loadErrorPage('dash-user-norights'));
 							
 					}
 
@@ -159,7 +163,15 @@ class SpecialDashboard extends SpecialPage
 		
 		return $html;
 	}
-	private function userNoRights()
+	private function loadErrorPage($msg)
+	{
+		$html ='';
+		$html.= '<p>'.
+				$msg == 'dash-nopar-msg' ? (wfMsg($msg).' index.php/Special:Dashboard/$par where $par is the valid title of the conference') : (wfMsg($msg)).
+				'</p>';
+		return $html;
+	}
+	/*private function userNoRights()
 	{
 		$html ='';
 		$html.= '<p>'.
@@ -199,7 +211,7 @@ class SpecialDashboard extends SpecialPage
 				wfMsg('dash-nopar-msg').' index.php/Special:Dashboard/$par where $par is the valid title of the conference'.
 				'</p>';
 		return $html;
-	}
+	}*/
 	private function createDashboard($forOrganizer = false , $organizerRights = array())
 	{
 		$html = '';
@@ -487,7 +499,7 @@ class SpecialDashboard extends SpecialPage
 		$pageTitles = $this->conference->getPageTitles();
 		$exists = false;
 		//$allVisibleTitles = $pageTitles + $this->pageTypes ;
-		$union = array_unique(array_merge($this->pageTypes,$pageTitles));
+		$union = array_unique(array_merge(ConferencePage::$mPreloadedTypes,$pageTitles));
 		foreach ($union as $page)
 		{
 			if(in_array($page, $pageTitles))
@@ -1046,16 +1058,16 @@ class SpecialDashboard extends SpecialPage
 	{
 
 
-		$startDate = $this->parseDate($this->conference->getStartDate());
-		$endDate = $this->parseDate($this->conference->getEndDate());
+		$startDate = $this->conference->getStartDate();
+		$endDate = $this->conference->getEndDate();
 		//calculate the days between startdate and enddate
 		//I assume we have it in an array called $days['date'], $days['month'], $days['year']
-		$days = array(array('date'=>'12','month'=>'Jul','year'=>'2012'),array('date'=>'13','month'=>'Jul','year'=>'2012'),array('date'=>'14','month'=>'Jul','year'=>'2012'));
+		$days = CommonUtils::getAllConferenceDays($startDate, $endDate);
 		$html ='<select id="day" name="day" >';
 		foreach ($days as $day)
 		{
 			$html.= '<option>'.
-					$day['month'].' '.$day['date'].', '.$day['year'].
+					$day.
 					'</option>';
 		}
 		$html.= '</select>';

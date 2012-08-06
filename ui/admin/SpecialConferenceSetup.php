@@ -34,7 +34,7 @@ class SpecialConferenceSetup extends SpecialPage
 		$request = $this->getRequest();
 		$action = $request->getVal('action');
 		$out = $this->getOutput();
-		$pageTitle = wfMsg('conference-setup');
+		$pageTitle = wfMsg('conferencesetup');
 		$out->setPageTitle($pageTitle);
 		$this->htmlText='';
 		if($user->isLoggedIn())
@@ -70,9 +70,22 @@ class SpecialConferenceSetup extends SpecialPage
 						{
 							//everything went okay , now redirect towards Special:Dashboard/$par
 							//where $par is the title of the conference
+							/* add new schedule templates */
+							$days = CommonUtils::getAllConferenceDays($startDate, $endDate);
+							$status = true;
+							$conferenceTitle = ConferenceUtils::getTitle($conference->getId());
+							foreach ($days as $day)
+							{
+								$status = ConferenceSchedule::createNew($conferenceTitle,$day);
+								if(!$status)
+								{
+									/* rollback operation */
+									break;
+								}
+							}
 							$conferenceSessionArray = array();
 							$conferenceSessionArray['id']=$conference->getId();
-							$conferenceSessionArray['title']=ConferenceUtils::getTitle($conference->getId());
+							$conferenceSessionArray['title']=$conferenceTitle;
 							$request->setSessionData('conference', $conferenceSessionArray);
 							$title = self::getSafeTitleFor('Dashboard',$conferenceSessionArray['title']);
 							$url = $title->getLocalURL();
